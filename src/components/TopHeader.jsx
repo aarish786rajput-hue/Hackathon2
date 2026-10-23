@@ -524,42 +524,47 @@ export default function TopHeader({
             <div 
               className="glass-panel notranslate"
               translate="no"
-              lang="zxx"
               style={{
                 position: "absolute",
                 top: "calc(100% + 8px)",
                 right: 0,
-                minWidth: "220px",
+                width: "270px",
                 background: "var(--bg-card)",
+                backdropFilter: "blur(20px)",
+                WebkitBackdropFilter: "blur(20px)",
                 border: "1px solid var(--border-color)",
                 borderRadius: "14px",
-                boxShadow: "var(--shadow-lg)",
+                boxShadow: "0 14px 40px -8px rgba(0, 0, 0, 0.25), 0 4px 12px rgba(0, 0, 0, 0.1)",
                 padding: "8px",
                 zIndex: 120,
                 display: "flex",
                 flexDirection: "column",
-                gap: "3px",
-                maxHeight: "340px",
+                gap: "4px",
+                maxHeight: "360px",
                 overflowY: "auto",
                 animation: "fadeIn 0.15s ease"
               }}
             >
               <div 
-                className="notranslate lang-static-title"
-                data-title="SELECT LANGUAGE"
+                className="notranslate"
                 translate="no"
-                lang="zxx"
                 style={{ 
-                  fontSize: "0.7rem", 
+                  fontSize: "0.72rem", 
                   fontWeight: 800, 
                   color: "var(--text-dim)", 
                   textTransform: "uppercase", 
-                  letterSpacing: "0.04em",
-                  padding: "4px 8px 6px 8px",
+                  letterSpacing: "0.05em",
+                  padding: "6px 10px 8px 10px",
                   borderBottom: "1px solid var(--border-color)",
-                  marginBottom: "4px"
+                  marginBottom: "4px",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between"
                 }} 
-              />
+              >
+                <span>Select Language</span>
+                <span style={{ fontSize: "0.68rem", fontWeight: 600, color: "var(--primary)" }}>भाषा चुनें</span>
+              </div>
 
               {SUPPORTED_NAV_LANGUAGES.map((l) => {
                 const isSelected = lang === l.id;
@@ -569,7 +574,6 @@ export default function TopHeader({
                     type="button"
                     className="notranslate"
                     translate="no"
-                    lang="zxx"
                     aria-label={`${l.label} (${l.native})`}
                     onClick={() => {
                       setLang(l.id);
@@ -584,15 +588,16 @@ export default function TopHeader({
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "space-between",
-                      padding: "8px 12px",
-                      borderRadius: "8px",
-                      border: "none",
+                      padding: "9px 12px",
+                      borderRadius: "10px",
+                      border: isSelected ? "1px solid var(--primary-border)" : "1px solid transparent",
                       background: isSelected ? "var(--primary-soft)" : "transparent",
                       color: isSelected ? "var(--primary)" : "var(--text-main)",
                       cursor: "pointer",
                       textAlign: "left",
                       width: "100%",
-                      transition: "background 0.15s ease"
+                      transition: "all 0.15s ease",
+                      gap: "10px"
                     }}
                     onMouseEnter={(e) => {
                       if (!isSelected) e.currentTarget.style.background = "var(--bg-elevated)";
@@ -601,21 +606,29 @@ export default function TopHeader({
                       if (!isSelected) e.currentTarget.style.background = "transparent";
                     }}
                   >
-                    <div className="notranslate" translate="no" lang="zxx" style={{ display: "flex", alignItems: "center", gap: "9px" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "10px", minWidth: 0 }}>
                       {l.country === "uk" ? <UKFlagIcon /> : <IndiaFlagIcon />}
-                      <span className="lang-static-label notranslate" data-label={l.label} translate="no" lang="zxx" />
+                      <span style={{ 
+                        fontWeight: isSelected ? 700 : 600, 
+                        fontSize: "0.88rem", 
+                        color: isSelected ? "var(--primary)" : "var(--text-main)",
+                        whiteSpace: "nowrap"
+                      }}>
+                        {l.label}
+                      </span>
                       <span 
-                        className="lang-static-native notranslate" 
-                        data-native={`(${l.native})`} 
-                        translate="no" 
-                        lang="zxx"
                         style={{ 
+                          fontSize: "0.8rem", 
+                          fontWeight: 500,
                           color: isSelected ? "var(--primary)" : "var(--text-dim)", 
-                          opacity: 0.85 
+                          opacity: 0.85,
+                          whiteSpace: "nowrap"
                         }} 
-                      />
+                      >
+                        ({l.native})
+                      </span>
                     </div>
-                    {isSelected && <Check size={14} color="var(--primary)" />}
+                    {isSelected && <Check size={16} color="var(--primary)" style={{ flexShrink: 0 }} />}
                   </button>
                 );
               })}

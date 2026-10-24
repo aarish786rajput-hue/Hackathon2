@@ -17,7 +17,9 @@ import {
   Pill,
   User,
   Menu,
-  Key
+  Key,
+  ChevronDown,
+  ChevronRight
 } from "lucide-react";
 import { translations } from "../data/translations";
 import { triggerGoogleTranslate } from "../utils/translator";
@@ -128,20 +130,22 @@ export default function TopHeader({
   const t = translations[lang] || translations.en;
   const [searchQuery, setSearchQuery] = useState("");
   const [isSearchOpen, setIsSearchOpen] = useState(false);
-  const [isLangOpen, setIsLangOpen] = useState(false);
+  const [isQuickMenuOpen, setIsQuickMenuOpen] = useState(false);
+  const [isSubLangOpen, setIsSubLangOpen] = useState(false);
 
   const searchContainerRef = useRef(null);
   const searchInputRef = useRef(null);
-  const langContainerRef = useRef(null);
+  const quickMenuRef = useRef(null);
 
-  // Close search & language dropdown on click outside
+  // Close search & quick menu dropdown on click outside
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (searchContainerRef.current && !searchContainerRef.current.contains(e.target)) {
         setIsSearchOpen(false);
       }
-      if (langContainerRef.current && !langContainerRef.current.contains(e.target)) {
-        setIsLangOpen(false);
+      if (quickMenuRef.current && !quickMenuRef.current.contains(e.target)) {
+        setIsQuickMenuOpen(false);
+        setIsSubLangOpen(false);
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
@@ -336,7 +340,7 @@ export default function TopHeader({
                 setIsSearchOpen(true);
               }}
               onFocus={() => setIsSearchOpen(true)}
-              placeholder={t.searchPlaceholder || "Search..."}
+              placeholder="Search"
               style={{
                 background: "transparent",
                 border: "none",
@@ -464,197 +468,405 @@ export default function TopHeader({
         )}
       </div>
 
-      {/* ── ZONE 3 (RIGHT): Action Cluster (Passport + SOS + Theme + Language) ── */}
-      <div style={{ display: "flex", alignItems: "center", gap: "8px", flexShrink: 0 }}>
-        {/* Doctor Health Passport Quick Button */}
-        {onOpenHealthPassport && (
-          <button
-            onClick={onOpenHealthPassport}
-            className="header-icon-btn"
-            title={t.healthPassportPdf || "Doctor Health Passport (PDF)"}
-            aria-label="Doctor Health Passport"
-            style={{
-              color: "#10b981",
-              borderColor: "rgba(16, 185, 129, 0.35)",
-              background: "rgba(16, 185, 129, 0.12)",
-              boxShadow: "0 2px 8px rgba(16, 185, 129, 0.18)"
-            }}
-          >
-            <FileCheck2 size={17} />
-          </button>
-        )}
-
-        {/* SOS Emergency Button (Icon Only, Prominent Red Alert Pulse) */}
+      {/* ── ZONE 3 (RIGHT): Three Lines (≡) Quick Actions Menu (Passport + SOS + Theme + Key + Language) ── */}
+      <div ref={quickMenuRef} style={{ position: "relative", display: "flex", alignItems: "center", flexShrink: 0 }}>
+        {/* Three Lines Button */}
         <button
-          onClick={onOpenEmergency}
-          className="sos-icon-btn"
-          title={t.sosIce || "Emergency SOS ID"}
-          aria-label="Emergency SOS ID"
+          type="button"
+          onClick={() => setIsQuickMenuOpen(prev => !prev)}
+          className={`header-icon-btn ${isQuickMenuOpen ? "is-active" : ""}`}
+          title="Menu (Health Passport, SOS, Theme, Key, Language)"
+          aria-label="Quick Actions Menu"
+          style={{
+            width: "40px",
+            height: "40px",
+            borderRadius: "11px",
+            color: isQuickMenuOpen ? "var(--primary)" : "var(--text-highlight)",
+            background: isQuickMenuOpen ? "var(--primary-soft)" : "var(--bg-elevated)",
+            borderColor: isQuickMenuOpen ? "var(--primary-border)" : "var(--border-color)",
+            boxShadow: isQuickMenuOpen ? "0 0 12px rgba(2, 132, 199, 0.3)" : "var(--shadow-sm)"
+          }}
         >
-          <AlertOctagon size={18} strokeWidth={2.4} />
+          {isQuickMenuOpen ? <X size={20} /> : <Menu size={20} strokeWidth={2.4} />}
         </button>
 
-        {/* Vertical Divider */}
-        <div className="nav-vertical-divider" style={{ margin: "0 2px" }} />
-
-        {/* Light / Dark Mode Toggle Button */}
-        {setTheme && (
-          <button
-            onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-            className="header-icon-btn"
-            title={theme === "dark" ? "Switch to Light Mode" : "Switch to Dark Mode"}
-            aria-label="Toggle theme"
-          >
-            {theme === "dark" ? <Sun size={17} color="#fbbf24" /> : <Moon size={17} color="#0284c7" />}
-          </button>
-        )}
-
-        {/* Gemini AI Key Configuration Button */}
-        {onOpenApiKeyModal && (
-          <button
-            type="button"
-            onClick={onOpenApiKeyModal}
-            className="header-icon-btn"
-            title="Google Gemini API Key (एआई की सेटिंग्स)"
-            aria-label="Gemini API Key Settings"
+        {/* Dropdown containing the 5 items: Health Passport, SOS, Dark/Light mode, Key, Language */}
+        {isQuickMenuOpen && (
+          <div
+            className="glass-panel notranslate"
+            translate="no"
             style={{
-              color: "var(--primary)",
-              borderColor: "var(--primary-border)",
-              background: "var(--primary-soft)"
+              position: "absolute",
+              top: "calc(100% + 8px)",
+              right: 0,
+              width: "290px",
+              background: "var(--bg-card)",
+              backdropFilter: "blur(20px)",
+              WebkitBackdropFilter: "blur(20px)",
+              border: "1px solid var(--border-color)",
+              borderRadius: "16px",
+              boxShadow: "0 18px 45px -10px rgba(0, 0, 0, 0.3), 0 4px 16px rgba(0, 0, 0, 0.12)",
+              padding: "10px",
+              zIndex: 120,
+              display: "flex",
+              flexDirection: "column",
+              gap: "6px",
+              maxHeight: "440px",
+              overflowY: "auto",
+              animation: "fadeIn 0.15s ease"
             }}
           >
-            <Key size={17} />
-          </button>
-        )}
-
-        {/* Multilingual Selector Icon Button with Dropdown Popup */}
-        <div ref={langContainerRef} style={{ position: "relative" }} className="notranslate" translate="no" lang="zxx">
-          <button
-            onClick={() => setIsLangOpen(prev => !prev)}
-            className={`header-icon-btn notranslate ${isLangOpen ? "is-active" : ""}`}
-            translate="no"
-            lang="zxx"
-            title="Change Language / भाषा बदलें"
-            aria-label="Language Selector"
-          >
-            <Languages size={17} color="var(--primary)" />
-          </button>
-
-          {isLangOpen && (
+            {/* Header */}
             <div 
-              className="glass-panel notranslate"
-              translate="no"
-              style={{
-                position: "absolute",
-                top: "calc(100% + 8px)",
-                right: 0,
-                width: "270px",
-                background: "var(--bg-card)",
-                backdropFilter: "blur(20px)",
-                WebkitBackdropFilter: "blur(20px)",
-                border: "1px solid var(--border-color)",
-                borderRadius: "14px",
-                boxShadow: "0 14px 40px -8px rgba(0, 0, 0, 0.25), 0 4px 12px rgba(0, 0, 0, 0.1)",
-                padding: "8px",
-                zIndex: 120,
+              style={{ 
+                fontSize: "0.72rem", 
+                fontWeight: 800, 
+                color: "var(--text-dim)", 
+                textTransform: "uppercase", 
+                letterSpacing: "0.06em",
+                padding: "4px 8px 6px 8px",
+                borderBottom: "1px solid var(--border-color)",
+                marginBottom: "2px",
                 display: "flex",
-                flexDirection: "column",
-                gap: "4px",
-                maxHeight: "360px",
-                overflowY: "auto",
-                animation: "fadeIn 0.15s ease"
-              }}
+                alignItems: "center",
+                justifyContent: "space-between"
+              }} 
             >
-              <div 
-                className="notranslate"
-                translate="no"
-                style={{ 
-                  fontSize: "0.72rem", 
-                  fontWeight: 800, 
-                  color: "var(--text-dim)", 
-                  textTransform: "uppercase", 
-                  letterSpacing: "0.05em",
-                  padding: "6px 10px 8px 10px",
-                  borderBottom: "1px solid var(--border-color)",
-                  marginBottom: "4px",
+              <span>Quick Menu</span>
+              <span style={{ fontSize: "0.68rem", fontWeight: 600, color: "var(--primary)" }}>त्वरित मेनू</span>
+            </div>
+
+            {/* 1. Health Passport */}
+            {onOpenHealthPassport && (
+              <button
+                type="button"
+                onClick={() => {
+                  onOpenHealthPassport();
+                  setIsQuickMenuOpen(false);
+                }}
+                className="interactive-card notranslate"
+                style={{
                   display: "flex",
                   alignItems: "center",
-                  justifyContent: "space-between"
-                }} 
+                  justifyContent: "space-between",
+                  width: "100%",
+                  padding: "9px 12px",
+                  borderRadius: "11px",
+                  background: "var(--bg-elevated)",
+                  border: "1px solid rgba(16, 185, 129, 0.28)",
+                  cursor: "pointer",
+                  textAlign: "left",
+                  gap: "10px",
+                  transition: "all 0.15s ease"
+                }}
               >
-                <span>Select Language</span>
-                <span style={{ fontSize: "0.68rem", fontWeight: 600, color: "var(--primary)" }}>भाषा चुनें</span>
-              </div>
-
-              {SUPPORTED_NAV_LANGUAGES.map((l) => {
-                const isSelected = lang === l.id;
-                return (
-                  <button
-                    key={l.id}
-                    type="button"
-                    className="notranslate"
-                    translate="no"
-                    aria-label={`${l.label} (${l.native})`}
-                    onClick={() => {
-                      setLang(l.id);
-                      setIsLangOpen(false);
-                      try {
-                        triggerGoogleTranslate(l.id);
-                      } catch {
-                        // Ignored
-                      }
-                    }}
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "space-between",
-                      padding: "9px 12px",
-                      borderRadius: "10px",
-                      border: isSelected ? "1px solid var(--primary-border)" : "1px solid transparent",
-                      background: isSelected ? "var(--primary-soft)" : "transparent",
-                      color: isSelected ? "var(--primary)" : "var(--text-main)",
-                      cursor: "pointer",
-                      textAlign: "left",
-                      width: "100%",
-                      transition: "all 0.15s ease",
-                      gap: "10px"
-                    }}
-                    onMouseEnter={(e) => {
-                      if (!isSelected) e.currentTarget.style.background = "var(--bg-elevated)";
-                    }}
-                    onMouseLeave={(e) => {
-                      if (!isSelected) e.currentTarget.style.background = "transparent";
-                    }}
-                  >
-                    <div style={{ display: "flex", alignItems: "center", gap: "10px", minWidth: 0 }}>
-                      {l.country === "uk" ? <UKFlagIcon /> : <IndiaFlagIcon />}
-                      <span style={{ 
-                        fontWeight: isSelected ? 700 : 600, 
-                        fontSize: "0.88rem", 
-                        color: isSelected ? "var(--primary)" : "var(--text-main)",
-                        whiteSpace: "nowrap"
-                      }}>
-                        {l.label}
-                      </span>
-                      <span 
-                        style={{ 
-                          fontSize: "0.8rem", 
-                          fontWeight: 500,
-                          color: isSelected ? "var(--primary)" : "var(--text-dim)", 
-                          opacity: 0.85,
-                          whiteSpace: "nowrap"
-                        }} 
-                      >
-                        ({l.native})
-                      </span>
+                <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                  <div style={{
+                    width: "32px",
+                    height: "32px",
+                    borderRadius: "9px",
+                    background: "rgba(16, 185, 129, 0.14)",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    color: "#10b981",
+                    flexShrink: 0
+                  }}>
+                    <FileCheck2 size={17} />
+                  </div>
+                  <div>
+                    <div style={{ fontSize: "0.86rem", fontWeight: 700, color: "var(--text-highlight)" }}>
+                      Health Passport
                     </div>
-                    {isSelected && <Check size={16} color="var(--primary)" style={{ flexShrink: 0 }} />}
-                  </button>
-                );
-              })}
+                    <div style={{ fontSize: "0.72rem", color: "var(--text-muted)" }}>
+                      Doctor PDF Summary
+                    </div>
+                  </div>
+                </div>
+                <span style={{ fontSize: "0.72rem", color: "#10b981", fontWeight: 700 }}>
+                  PDF →
+                </span>
+              </button>
+            )}
+
+            {/* 2. SOS Emergency */}
+            <button
+              type="button"
+              onClick={() => {
+                if (onOpenEmergency) onOpenEmergency();
+                setIsQuickMenuOpen(false);
+              }}
+              className="interactive-card notranslate"
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                width: "100%",
+                padding: "9px 12px",
+                borderRadius: "11px",
+                background: "linear-gradient(135deg, rgba(239, 68, 68, 0.12), rgba(220, 38, 38, 0.06))",
+                border: "1px solid rgba(239, 68, 68, 0.35)",
+                cursor: "pointer",
+                textAlign: "left",
+                gap: "10px",
+                transition: "all 0.15s ease"
+              }}
+            >
+              <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                <div style={{
+                  width: "32px",
+                  height: "32px",
+                  borderRadius: "9px",
+                  background: "linear-gradient(135deg, #ef4444, #dc2626)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  color: "#ffffff",
+                  flexShrink: 0,
+                  boxShadow: "0 2px 8px rgba(239, 68, 68, 0.35)"
+                }}>
+                  <AlertOctagon size={17} strokeWidth={2.4} />
+                </div>
+                <div>
+                  <div style={{ fontSize: "0.86rem", fontWeight: 800, color: "#ef4444" }}>
+                    SOS Emergency
+                  </div>
+                  <div style={{ fontSize: "0.72rem", color: "var(--text-muted)" }}>
+                    Medical ID & ICE Contacts
+                  </div>
+                </div>
+              </div>
+              <span style={{
+                fontSize: "0.68rem",
+                fontWeight: 800,
+                background: "#ef4444",
+                color: "#ffffff",
+                padding: "2px 7px",
+                borderRadius: "6px"
+              }}>
+                ALERT
+              </span>
+            </button>
+
+            {/* 3. Dark / Light Mode */}
+            {setTheme && (
+              <button
+                type="button"
+                onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+                className="interactive-card notranslate"
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  width: "100%",
+                  padding: "9px 12px",
+                  borderRadius: "11px",
+                  background: "var(--bg-elevated)",
+                  border: "1px solid var(--border-color)",
+                  cursor: "pointer",
+                  textAlign: "left",
+                  gap: "10px",
+                  transition: "all 0.15s ease"
+                }}
+              >
+                <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                  <div style={{
+                    width: "32px",
+                    height: "32px",
+                    borderRadius: "9px",
+                    background: theme === "dark" ? "rgba(251, 191, 36, 0.16)" : "rgba(2, 132, 199, 0.14)",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    color: theme === "dark" ? "#fbbf24" : "#0284c7",
+                    flexShrink: 0
+                  }}>
+                    {theme === "dark" ? <Sun size={17} color="#fbbf24" /> : <Moon size={17} color="#0284c7" />}
+                  </div>
+                  <div>
+                    <div style={{ fontSize: "0.86rem", fontWeight: 700, color: "var(--text-highlight)" }}>
+                      {theme === "dark" ? "Light Mode" : "Dark Mode"}
+                    </div>
+                    <div style={{ fontSize: "0.72rem", color: "var(--text-muted)" }}>
+                      Toggle visual appearance
+                    </div>
+                  </div>
+                </div>
+                <span style={{
+                  fontSize: "0.72rem",
+                  fontWeight: 700,
+                  padding: "3px 8px",
+                  borderRadius: "6px",
+                  background: "var(--bg-card)",
+                  border: "1px solid var(--border-color)",
+                  color: "var(--text-dim)"
+                }}>
+                  {theme === "dark" ? "🌙 Dark" : "☀️ Light"}
+                </span>
+              </button>
+            )}
+
+            {/* 4. Gemini AI Key */}
+            {onOpenApiKeyModal && (
+              <button
+                type="button"
+                onClick={() => {
+                  onOpenApiKeyModal();
+                  setIsQuickMenuOpen(false);
+                }}
+                className="interactive-card notranslate"
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  width: "100%",
+                  padding: "9px 12px",
+                  borderRadius: "11px",
+                  background: "var(--bg-elevated)",
+                  border: "1px solid var(--primary-border)",
+                  cursor: "pointer",
+                  textAlign: "left",
+                  gap: "10px",
+                  transition: "all 0.15s ease"
+                }}
+              >
+                <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                  <div style={{
+                    width: "32px",
+                    height: "32px",
+                    borderRadius: "9px",
+                    background: "var(--primary-soft)",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    color: "var(--primary)",
+                    flexShrink: 0
+                  }}>
+                    <Key size={17} />
+                  </div>
+                  <div>
+                    <div style={{ fontSize: "0.86rem", fontWeight: 700, color: "var(--text-highlight)" }}>
+                      Gemini API Key
+                    </div>
+                    <div style={{ fontSize: "0.72rem", color: "var(--text-muted)" }}>
+                      Configure AI & Vision Key
+                    </div>
+                  </div>
+                </div>
+                <span style={{ fontSize: "0.72rem", color: "var(--primary)", fontWeight: 700 }}>
+                  Key 🔑
+                </span>
+              </button>
+            )}
+
+            {/* 5. Language Selector */}
+            <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+              <button
+                type="button"
+                onClick={() => setIsSubLangOpen(prev => !prev)}
+                className="interactive-card notranslate"
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  width: "100%",
+                  padding: "9px 12px",
+                  borderRadius: "11px",
+                  background: "var(--bg-elevated)",
+                  border: "1px solid var(--border-color)",
+                  cursor: "pointer",
+                  textAlign: "left",
+                  gap: "10px",
+                  transition: "all 0.15s ease"
+                }}
+              >
+                <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                  <div style={{
+                    width: "32px",
+                    height: "32px",
+                    borderRadius: "9px",
+                    background: "rgba(6, 182, 212, 0.14)",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    color: "#06b6d4",
+                    flexShrink: 0
+                  }}>
+                    <Languages size={17} />
+                  </div>
+                  <div>
+                    <div style={{ fontSize: "0.86rem", fontWeight: 700, color: "var(--text-highlight)" }}>
+                      Language
+                    </div>
+                    <div style={{ fontSize: "0.72rem", color: "var(--text-muted)" }}>
+                      {SUPPORTED_NAV_LANGUAGES.find(l => l.id === lang)?.label || "English"} ({SUPPORTED_NAV_LANGUAGES.find(l => l.id === lang)?.native || "English"})
+                    </div>
+                  </div>
+                </div>
+                <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                  {lang === "en" ? <UKFlagIcon /> : <IndiaFlagIcon />}
+                  {isSubLangOpen ? <ChevronDown size={14} color="var(--text-dim)" /> : <ChevronRight size={14} color="var(--text-dim)" />}
+                </div>
+              </button>
+
+              {/* Expandable Language Picker Submenu */}
+              {isSubLangOpen && (
+                <div style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "3px",
+                  padding: "6px",
+                  borderRadius: "10px",
+                  background: "var(--bg-card)",
+                  border: "1px solid var(--border-color)",
+                  maxHeight: "180px",
+                  overflowY: "auto",
+                  marginTop: "2px"
+                }}>
+                  {SUPPORTED_NAV_LANGUAGES.map((l) => {
+                    const isSelected = lang === l.id;
+                    return (
+                      <button
+                        key={l.id}
+                        type="button"
+                        className="notranslate"
+                        onClick={() => {
+                          setLang(l.id);
+                          setIsQuickMenuOpen(false);
+                          setIsSubLangOpen(false);
+                          try { triggerGoogleTranslate(l.id); } catch {}
+                        }}
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "space-between",
+                          padding: "7px 10px",
+                          borderRadius: "8px",
+                          border: isSelected ? "1px solid var(--primary-border)" : "1px solid transparent",
+                          background: isSelected ? "var(--primary-soft)" : "transparent",
+                          color: isSelected ? "var(--primary)" : "var(--text-main)",
+                          cursor: "pointer",
+                          textAlign: "left",
+                          width: "100%",
+                          transition: "all 0.15s ease",
+                          gap: "8px",
+                          fontSize: "0.82rem"
+                        }}
+                      >
+                        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                          {l.country === "uk" ? <UKFlagIcon /> : <IndiaFlagIcon />}
+                          <span style={{ fontWeight: isSelected ? 700 : 500 }}>{l.label}</span>
+                          <span style={{ fontSize: "0.74rem", opacity: 0.85 }}>({l.native})</span>
+                        </div>
+                        {isSelected && <Check size={14} color="var(--primary)" />}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
             </div>
-          )}
-        </div>
+          </div>
+        )}
       </div>
     </header>
   );

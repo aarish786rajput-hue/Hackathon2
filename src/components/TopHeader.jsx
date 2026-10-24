@@ -19,6 +19,7 @@ import {
   Menu,
   Key,
   ChevronDown,
+  ChevronUp,
   ChevronRight,
   Bell,
   BellRing,
@@ -154,6 +155,7 @@ export default function TopHeader({
   const [isNotifOpen, setIsNotifOpen] = useState(false);
   const [notifPermission, setNotifPermission] = useState(() => getNotificationPermission());
   const [notifFilterTab, setNotifFilterTab] = useState("all"); // 'all' | 'meds' | 'appointments'
+  const [expandedNotifId, setExpandedNotifId] = useState(null);
 
   const searchContainerRef = useRef(null);
   const searchInputRef = useRef(null);
@@ -811,126 +813,215 @@ export default function TopHeader({
                 </div>
               )}
 
+              {/* Micro Helper Hint */}
+              {totalAlertsCount > 0 && (
+                <div style={{
+                  fontSize: "0.68rem",
+                  color: "var(--text-dim)",
+                  padding: "0 4px",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "5px"
+                }}>
+                  <span>💡</span>
+                  <span>
+                    {lang === "hi" 
+                      ? "विवरण देखने के लिए नोटिफिकेशन पर क्लिक करें" 
+                      : lang === "hinglish"
+                        ? "Details dekhne ke liye notification par tap karein"
+                        : "Tap notification to view full details"}
+                  </span>
+                </div>
+              )}
+
               {/* ── SECTION 1: DOCTOR APPOINTMENTS BASED ON SELECTED DATE ── */}
               {(notifFilterTab === "all" || notifFilterTab === "appointments") && activeAppointments.length > 0 && (
-                <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
                   <div style={{
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "space-between",
                     padding: "2px 4px"
                   }}>
-                    <span style={{ fontSize: "0.76rem", fontWeight: 800, color: "var(--text-highlight)", display: "flex", alignItems: "center", gap: "5px" }}>
-                      <Stethoscope size={14} color="var(--primary)" />
-                      <span>{lang === "hi" ? "डॉक्टर अपॉइंटमेंट अलर्ट" : "Doctor Appointments"}</span>
+                    <span style={{ fontSize: "0.74rem", fontWeight: 800, color: "var(--text-highlight)", display: "flex", alignItems: "center", gap: "5px" }}>
+                      <Stethoscope size={13} color="var(--primary)" />
+                      <span>{lang === "hi" ? "डॉक्टर अपॉइंटमेंट" : "Doctor Appointments"}</span>
                     </span>
-                    <span style={{ fontSize: "0.7rem", color: "var(--text-muted)" }}>
+                    <span style={{ fontSize: "0.68rem", color: "var(--text-muted)" }}>
                       {activeAppointments.length} Scheduled
                     </span>
                   </div>
 
                   {activeAppointments.map((apt) => {
                     const status = apt.statusInfo || {};
+                    const notifId = apt.id || apt.token || apt.doctorName;
+                    const isExpanded = expandedNotifId === notifId;
+                    
+                    // Very short, clean language text
+                    let shortSubtext = "";
+                    if (status.isToday) {
+                      shortSubtext = lang === "hi" 
+                        ? `आज ${apt.time || ""} • टोकन ${apt.token || "OK"}`
+                        : lang === "hinglish"
+                          ? `Aaj ${apt.time || ""} • Token ${apt.token || "OK"}`
+                          : `Today ${apt.time || ""} • Token ${apt.token || "OK"}`;
+                    } else if (status.isTomorrow) {
+                      shortSubtext = lang === "hi" 
+                        ? `कल ${apt.time || ""} • टोकन ${apt.token || "OK"}`
+                        : lang === "hinglish"
+                          ? `Kal ${apt.time || ""} • Token ${apt.token || "OK"}`
+                          : `Tomorrow ${apt.time || ""} • Token ${apt.token || "OK"}`;
+                    } else {
+                      shortSubtext = `${status.label || apt.date} ${apt.time ? `• ${apt.time}` : ""}`;
+                    }
+
                     return (
                       <div
-                        key={apt.id || apt.token}
+                        key={notifId}
+                        onClick={() => setExpandedNotifId(prev => prev === notifId ? null : notifId)}
                         style={{
-                          background: "var(--bg-elevated)",
-                          border: `1.5px solid ${status.isToday ? "rgba(239, 68, 68, 0.45)" : status.isTomorrow ? "rgba(234, 88, 12, 0.4)" : "var(--border-color)"}`,
-                          borderRadius: "12px",
-                          padding: "10px 12px",
+                          background: isExpanded ? "var(--bg-elevated)" : "var(--bg-card)",
+                          border: `1.5px solid ${isExpanded ? "var(--primary)" : status.isToday ? "rgba(239, 68, 68, 0.4)" : "var(--border-color)"}`,
+                          borderRadius: "11px",
+                          padding: "8px 11px",
                           display: "flex",
                           flexDirection: "column",
-                          gap: "8px",
-                          boxShadow: status.isToday ? "0 2px 10px rgba(239, 68, 68, 0.12)" : "var(--shadow-sm)"
+                          gap: isExpanded ? "9px" : "0px",
+                          cursor: "pointer",
+                          transition: "all 0.18s ease",
+                          boxShadow: isExpanded ? "var(--shadow-md)" : status.isToday ? "0 2px 8px rgba(239, 68, 68, 0.08)" : "none"
                         }}
                       >
-                        <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: "8px" }}>
-                          <div style={{ display: "flex", alignItems: "center", gap: "9px" }}>
+                        {/* Compact Row (Always visible, very short language) */}
+                        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "8px" }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: "8px", minWidth: 0, flex: 1 }}>
                             <div style={{
-                              width: "32px",
-                              height: "32px",
-                              borderRadius: "9px",
-                              background: "rgba(14, 165, 233, 0.14)",
-                              color: "var(--primary)",
+                              width: "28px",
+                              height: "28px",
+                              borderRadius: "8px",
+                              background: status.isToday ? "rgba(239, 68, 68, 0.12)" : "rgba(14, 165, 233, 0.12)",
+                              color: status.isToday ? "#dc2626" : "var(--primary)",
                               display: "flex",
                               alignItems: "center",
                               justifyContent: "center",
                               flexShrink: 0
                             }}>
-                              <Stethoscope size={17} />
+                              <Stethoscope size={14} />
                             </div>
-                            <div>
-                              <div style={{ fontSize: "0.88rem", fontWeight: 800, color: "var(--text-highlight)" }}>
+                            <div style={{ minWidth: 0, flex: 1 }}>
+                              <div style={{
+                                fontSize: "0.83rem",
+                                fontWeight: 800,
+                                color: "var(--text-highlight)",
+                                whiteSpace: "nowrap",
+                                overflow: "hidden",
+                                textOverflow: "ellipsis"
+                              }}>
                                 {apt.doctorName}
                               </div>
-                              <div style={{ fontSize: "0.72rem", color: "var(--text-muted)" }}>
-                                {apt.specialty} • {apt.clinic || apt.hospital}
+                              <div style={{
+                                fontSize: "0.71rem",
+                                fontWeight: status.isToday ? 700 : 500,
+                                color: status.isToday ? "#dc2626" : "var(--text-muted)",
+                                whiteSpace: "nowrap",
+                                overflow: "hidden",
+                                textOverflow: "ellipsis",
+                                marginTop: "1px"
+                              }}>
+                                {shortSubtext}
                               </div>
                             </div>
                           </div>
 
-                          {/* Selected Date & Time Status Badge */}
-                          <span style={{
-                            fontSize: "0.68rem",
-                            fontWeight: 800,
-                            padding: "3px 7px",
-                            borderRadius: "5px",
-                            whiteSpace: "nowrap",
-                            background: status.badgeBg || "rgba(14, 165, 233, 0.16)",
-                            color: status.badgeColor || "var(--primary)",
-                            border: `1px solid ${status.badgeColor || "var(--primary-border)"}`
-                          }}>
-                            {status.label || apt.date}
-                          </span>
-                        </div>
-
-                        {/* Token & Time Info */}
-                        <div style={{
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "space-between",
-                          background: "var(--bg-card)",
-                          padding: "6px 9px",
-                          borderRadius: "7px",
-                          fontSize: "0.72rem",
-                          color: "var(--text-main)"
-                        }}>
-                          <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                            <Clock size={12} color="var(--primary)" />
-                            <span>{apt.time || "Scheduled Slot"}</span>
-                            <span>•</span>
-                            <span>{apt.type || "In-Clinic Visit"}</span>
+                          {/* Right: Badge + Expand Chevron */}
+                          <div style={{ display: "flex", alignItems: "center", gap: "6px", flexShrink: 0 }}>
+                            <span style={{
+                              fontSize: "0.64rem",
+                              fontWeight: 800,
+                              padding: "2px 6px",
+                              borderRadius: "5px",
+                              background: status.badgeBg || "rgba(14, 165, 233, 0.14)",
+                              color: status.badgeColor || "var(--primary)",
+                              border: `1px solid ${status.badgeColor || "var(--primary-border)"}`
+                            }}>
+                              {status.isToday ? (lang === "hi" ? "आज" : "Today") : (status.label || apt.date)}
+                            </span>
+                            {isExpanded ? <ChevronUp size={14} color="var(--primary)" /> : <ChevronDown size={14} color="var(--text-dim)" />}
                           </div>
-                          <span style={{ fontWeight: 800, color: "var(--secondary)" }}>
-                            {apt.token ? `Token: ${apt.token}` : "Confirmed"}
-                          </span>
                         </div>
 
-                        {/* Action: Open Appointment Slip */}
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setIsNotifOpen(false);
-                            if (onNavigate) onNavigate("doctors");
-                          }}
-                          className="btn btn-secondary"
-                          style={{
-                            width: "100%",
-                            padding: "6px 10px",
-                            fontSize: "0.75rem",
-                            borderRadius: "7px",
-                            display: "inline-flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            gap: "5px",
-                            cursor: "pointer",
-                            background: "var(--bg-card)"
-                          }}
-                        >
-                          <Calendar size={13} />
-                          <span>{lang === "hi" ? "अपॉइंटमेंट पर्ची देखें / विवरण" : "View Doctor Slip & Details →"}</span>
-                        </button>
+                        {/* Expanded Details (Shown ONLY after click) */}
+                        {isExpanded && (
+                          <div 
+                            onClick={(e) => e.stopPropagation()} 
+                            style={{
+                              display: "flex",
+                              flexDirection: "column",
+                              gap: "8px",
+                              borderTop: "1px solid var(--border-color)",
+                              paddingTop: "8px",
+                              animation: "fadeIn 0.15s ease"
+                            }}
+                          >
+                            <div style={{
+                              background: "var(--bg-elevated)",
+                              padding: "7px 10px",
+                              borderRadius: "8px",
+                              fontSize: "0.73rem",
+                              color: "var(--text-main)"
+                            }}>
+                              <div style={{ fontWeight: 700, color: "var(--text-highlight)" }}>{apt.specialty}</div>
+                              <div style={{ color: "var(--text-muted)", marginTop: "2px" }}>{apt.clinic || apt.hospital}</div>
+                            </div>
+
+                            <div style={{
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "space-between",
+                              background: "var(--bg-elevated)",
+                              padding: "6px 9px",
+                              borderRadius: "7px",
+                              fontSize: "0.71rem"
+                            }}>
+                              <div style={{ display: "flex", alignItems: "center", gap: "5px", color: "var(--text-main)" }}>
+                                <Clock size={12} color="var(--primary)" />
+                                <span>{apt.time || "Scheduled"}</span>
+                                <span>•</span>
+                                <span>{apt.type || "In-Clinic Visit"}</span>
+                              </div>
+                              <span style={{ fontWeight: 800, color: "var(--secondary)" }}>
+                                {apt.token ? `Token: ${apt.token}` : "Confirmed"}
+                              </span>
+                            </div>
+
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setIsNotifOpen(false);
+                                if (onNavigate) onNavigate("doctors");
+                              }}
+                              className="btn btn-secondary"
+                              style={{
+                                width: "100%",
+                                padding: "6px 10px",
+                                fontSize: "0.74rem",
+                                borderRadius: "7px",
+                                display: "inline-flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                gap: "5px",
+                                cursor: "pointer",
+                                background: "var(--primary-soft)",
+                                color: "var(--primary)",
+                                borderColor: "var(--primary-border)",
+                                fontWeight: 700
+                              }}
+                            >
+                              <Calendar size={13} />
+                              <span>{lang === "hi" ? "अपॉइंटमेंट पर्ची व विवरण देखें →" : "View Doctor Slip & Details →"}</span>
+                            </button>
+                          </div>
+                        )}
                       </div>
                     );
                   })}
@@ -939,140 +1030,202 @@ export default function TopHeader({
 
               {/* ── SECTION 2: MEDICATION OVERDUE / PENDING REMINDERS ── */}
               {(notifFilterTab === "all" || notifFilterTab === "meds") && overdueMeds.length > 0 && (
-                <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
                   <div style={{
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "space-between",
                     padding: "2px 4px"
                   }}>
-                    <span style={{ fontSize: "0.76rem", fontWeight: 800, color: "var(--text-highlight)", display: "flex", alignItems: "center", gap: "5px" }}>
-                      <Pill size={14} color="#ea580c" />
-                      <span>{lang === "hi" ? "छूटी हुई दवाइयां (Missed Dose)" : "Medication Reminders"}</span>
+                    <span style={{ fontSize: "0.74rem", fontWeight: 800, color: "var(--text-highlight)", display: "flex", alignItems: "center", gap: "5px" }}>
+                      <Pill size={13} color="#ea580c" />
+                      <span>{lang === "hi" ? "दवाइयां (Missed Dose)" : "Medication Reminders"}</span>
                     </span>
-                    <span style={{ fontSize: "0.7rem", color: "#dc2626", fontWeight: 700 }}>
+                    <span style={{ fontSize: "0.68rem", color: "#dc2626", fontWeight: 700 }}>
                       {overdueMeds.length} Pending
                     </span>
                   </div>
 
-                  <div style={{
-                    background: "linear-gradient(135deg, rgba(245, 158, 11, 0.15), rgba(239, 68, 68, 0.1))",
-                    border: "1px solid rgba(245, 158, 11, 0.35)",
-                    borderRadius: "10px",
-                    padding: "8px 10px",
-                    fontSize: "0.76rem",
-                    color: "var(--text-highlight)",
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "6px"
-                  }}>
-                    <span style={{ fontSize: "1rem" }}>⚠️</span>
-                    <span>
-                      {lang === "hi"
-                        ? "आपने समय पर दवा नहीं ली है! कृपया अभी लें या स्नूज़ करें:"
-                        : lang === "hinglish"
-                          ? "Aapne set time par medicine nahi li! Please Take Now ya Snooze karein:"
-                          : "Scheduled dose missed at set time! Please take now or snooze:"}
-                    </span>
-                  </div>
-
                   {/* List of overdue/due meds */}
-                  <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                  <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
                     {overdueMeds.map((med) => {
                       const dueInfo = getMedicationDueStatus(med);
+                      const isExpanded = expandedNotifId === med.id;
+                      
+                      // Very short, clean language text
+                      let shortMedSubtext = "";
+                      if (med.snoozedMinutes) {
+                        shortMedSubtext = lang === "hi" 
+                          ? `स्नूज़ की गई (+${med.snoozedMinutes}m)` 
+                          : `Snoozed (+${med.snoozedMinutes}m)`;
+                      } else {
+                        shortMedSubtext = lang === "hi" 
+                          ? `छूटी खुराक • अभी लें` 
+                          : lang === "hinglish"
+                            ? `Missed Dose • Take Now`
+                            : `Missed Dose • Take Now`;
+                      }
+
                       return (
                         <div
                           key={med.id}
+                          onClick={() => setExpandedNotifId(prev => prev === med.id ? null : med.id)}
                           style={{
-                            background: "var(--bg-elevated)",
-                            border: "1px solid var(--border-color)",
+                            background: isExpanded ? "var(--bg-elevated)" : "var(--bg-card)",
+                            border: `1.5px solid ${isExpanded ? "#ea580c" : "var(--border-color)"}`,
                             borderRadius: "11px",
-                            padding: "10px 12px",
+                            padding: "8px 11px",
                             display: "flex",
                             flexDirection: "column",
-                            gap: "8px"
+                            gap: isExpanded ? "9px" : "0px",
+                            cursor: "pointer",
+                            transition: "all 0.18s ease",
+                            boxShadow: isExpanded ? "var(--shadow-md)" : "none"
                           }}
                         >
-                          <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: "8px" }}>
-                            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                              <span style={{ fontSize: "1.2rem" }}>💊</span>
-                              <div>
-                                <div style={{ fontSize: "0.88rem", fontWeight: 800, color: "var(--text-highlight)" }}>
-                                  {med.name} <span style={{ color: "var(--primary)", fontSize: "0.78rem" }}>({med.dosage})</span>
+                          {/* Compact Row (Always visible, very short language) */}
+                          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "8px" }}>
+                            <div style={{ display: "flex", alignItems: "center", gap: "8px", minWidth: 0, flex: 1 }}>
+                              <div style={{
+                                width: "28px",
+                                height: "28px",
+                                borderRadius: "8px",
+                                background: med.snoozedMinutes ? "rgba(245, 158, 11, 0.14)" : "rgba(239, 68, 68, 0.14)",
+                                color: med.snoozedMinutes ? "#d97706" : "#dc2626",
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                flexShrink: 0
+                              }}>
+                                <Pill size={14} />
+                              </div>
+                              <div style={{ minWidth: 0, flex: 1 }}>
+                                <div style={{
+                                  fontSize: "0.83rem",
+                                  fontWeight: 800,
+                                  color: "var(--text-highlight)",
+                                  whiteSpace: "nowrap",
+                                  overflow: "hidden",
+                                  textOverflow: "ellipsis"
+                                }}>
+                                  {med.name} <span style={{ fontSize: "0.72rem", color: "var(--primary)", fontWeight: 600 }}>({med.dosage})</span>
                                 </div>
-                                <div style={{ fontSize: "0.72rem", color: "var(--text-muted)", marginTop: "1px" }}>
-                                  {med.withFood 
-                                    ? (lang === "hi" ? "भोजन के साथ लें" : "Take with meals") 
-                                    : (lang === "hi" ? "खाली पेट लें" : "Take on empty stomach")}
+                                <div style={{
+                                  fontSize: "0.71rem",
+                                  fontWeight: 700,
+                                  color: med.snoozedMinutes ? "#d97706" : "#dc2626",
+                                  whiteSpace: "nowrap",
+                                  overflow: "hidden",
+                                  textOverflow: "ellipsis",
+                                  marginTop: "1px"
+                                }}>
+                                  {shortMedSubtext}
                                 </div>
                               </div>
                             </div>
 
-                            <span style={{
-                              fontSize: "0.68rem",
-                              fontWeight: 800,
-                              padding: "2px 6px",
-                              borderRadius: "4px",
-                              whiteSpace: "nowrap",
-                              background: med.snoozedMinutes ? "rgba(245, 158, 11, 0.2)" : "rgba(239, 68, 68, 0.16)",
-                              color: med.snoozedMinutes ? "#d97706" : "#dc2626"
-                            }}>
-                              {dueInfo.label}
-                            </span>
+                            {/* Right: Badge + Expand Chevron */}
+                            <div style={{ display: "flex", alignItems: "center", gap: "6px", flexShrink: 0 }}>
+                              <span style={{
+                                fontSize: "0.64rem",
+                                fontWeight: 800,
+                                padding: "2px 6px",
+                                borderRadius: "5px",
+                                whiteSpace: "nowrap",
+                                background: med.snoozedMinutes ? "rgba(245, 158, 11, 0.16)" : "rgba(239, 68, 68, 0.14)",
+                                color: med.snoozedMinutes ? "#d97706" : "#dc2626"
+                              }}>
+                                {med.snoozedMinutes ? "+15m" : (lang === "hi" ? "छूटी हुई" : "Overdue")}
+                              </span>
+                              {isExpanded ? <ChevronUp size={14} color="#ea580c" /> : <ChevronDown size={14} color="var(--text-dim)" />}
+                            </div>
                           </div>
 
-                          {/* Quick Actions: Take Now + Snooze (+15m) */}
-                          <div style={{ display: "flex", alignItems: "center", gap: "6px", marginTop: "2px" }}>
-                            <button
-                              type="button"
-                              onClick={() => {
-                                if (onToggleMedication) onToggleMedication(med.id);
-                              }}
-                              className="btn btn-primary"
+                          {/* Expanded Details (Shown ONLY after click) */}
+                          {isExpanded && (
+                            <div 
+                              onClick={(e) => e.stopPropagation()} 
                               style={{
-                                flex: 1,
-                                padding: "6px 8px",
-                                fontSize: "0.76rem",
-                                borderRadius: "7px",
-                                display: "inline-flex",
-                                alignItems: "center",
-                                justifyContent: "center",
-                                gap: "4px",
-                                cursor: "pointer"
+                                display: "flex",
+                                flexDirection: "column",
+                                gap: "8px",
+                                borderTop: "1px solid var(--border-color)",
+                                paddingTop: "8px",
+                                animation: "fadeIn 0.15s ease"
                               }}
                             >
-                              <CheckCircle2 size={13} />
-                              <span>{lang === "hi" ? "अभी लें (Take Now)" : "Take Now"}</span>
-                            </button>
+                              <div style={{
+                                background: "var(--bg-elevated)",
+                                padding: "7px 10px",
+                                borderRadius: "8px",
+                                fontSize: "0.73rem",
+                                display: "flex",
+                                justifyContent: "space-between",
+                                alignItems: "center"
+                              }}>
+                                <span style={{ color: "var(--text-muted)" }}>
+                                  {med.withFood 
+                                    ? (lang === "hi" ? "भोजन के साथ लें" : "Take with meals") 
+                                    : (lang === "hi" ? "खाली पेट लें" : "Take on empty stomach")}
+                                </span>
+                                <span style={{ fontWeight: 700, color: med.snoozedMinutes ? "#d97706" : "#dc2626" }}>
+                                  {dueInfo.label}
+                                </span>
+                              </div>
 
-                            <button
-                              type="button"
-                              onClick={() => {
-                                if (onSnoozeMedication) {
-                                  onSnoozeMedication(med.id, 15);
-                                  scheduleSnoozeNotification(med, 15);
-                                }
-                              }}
-                              style={{
-                                flex: 1,
-                                padding: "6px 8px",
-                                fontSize: "0.76rem",
-                                fontWeight: 700,
-                                borderRadius: "7px",
-                                background: "rgba(245, 158, 11, 0.16)",
-                                color: "#d97706",
-                                border: "1px solid rgba(245, 158, 11, 0.4)",
-                                display: "inline-flex",
-                                alignItems: "center",
-                                justifyContent: "center",
-                                gap: "4px",
-                                cursor: "pointer"
-                              }}
-                            >
-                              <Clock size={13} />
-                              <span>{lang === "hi" ? "+15 मिनट बाद" : "Snooze (+15m)"}</span>
-                            </button>
-                          </div>
+                              <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    if (onToggleMedication) onToggleMedication(med.id);
+                                  }}
+                                  className="btn btn-primary"
+                                  style={{
+                                    flex: 1,
+                                    padding: "6px 8px",
+                                    fontSize: "0.73rem",
+                                    borderRadius: "7px",
+                                    display: "inline-flex",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                    gap: "4px",
+                                    cursor: "pointer"
+                                  }}
+                                >
+                                  <CheckCircle2 size={13} />
+                                  <span>{lang === "hi" ? "अभी लें (Take Now)" : "Take Now"}</span>
+                                </button>
+
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    if (onSnoozeMedication) {
+                                      onSnoozeMedication(med.id, 15);
+                                      scheduleSnoozeNotification(med, 15);
+                                    }
+                                  }}
+                                  style={{
+                                    flex: 1,
+                                    padding: "6px 8px",
+                                    fontSize: "0.73rem",
+                                    fontWeight: 700,
+                                    borderRadius: "7px",
+                                    background: "rgba(245, 158, 11, 0.16)",
+                                    color: "#d97706",
+                                    border: "1px solid rgba(245, 158, 11, 0.4)",
+                                    display: "inline-flex",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                    gap: "4px",
+                                    cursor: "pointer"
+                                  }}
+                                >
+                                  <Clock size={13} />
+                                  <span>{lang === "hi" ? "+15 मिनट बाद" : "Snooze (+15m)"}</span>
+                                </button>
+                              </div>
+                            </div>
+                          )}
                         </div>
                       );
                     })}

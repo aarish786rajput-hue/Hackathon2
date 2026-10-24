@@ -16,7 +16,10 @@ import {
   User,
   Activity,
   CheckCircle2,
-  RotateCcw
+  RotateCcw,
+  Pill,
+  Stethoscope,
+  PlusCircle
 } from "lucide-react";
 import { generatePatientReports, sampleReports } from "../data/sampleReports";
 import { analyzeReportFile } from "../services/geminiService";
@@ -29,7 +32,9 @@ export default function ReportExplainer({
   pendingUploadFile,
   onClearPendingFile,
   onUpdateVitals,
-  onAddTimelineEvent
+  onAddTimelineEvent,
+  onAddMedication,
+  onUpdatePatient
 }) {
   const t = translations[lang] || translations.en;
   // User uploaded reports from storage
@@ -202,15 +207,32 @@ export default function ReportExplainer({
       fastingVal = typeof sugarParam.value === "number" ? sugarParam.value : parseInt(sugarParam.value) || 124;
     }
 
+    let bpSys = 122;
+    let bpDia = 80;
+    let pulseVal = 74;
+
+    if (activeReport.vitals) {
+      if (activeReport.vitals.bpSystolic) bpSys = Number(activeReport.vitals.bpSystolic);
+      else if (activeReport.vitals.bp && activeReport.vitals.bp.includes("/")) {
+        const parts = activeReport.vitals.bp.split("/");
+        bpSys = parseInt(parts[0]) || 140;
+        bpDia = parseInt(parts[1]) || 90;
+      }
+      if (activeReport.vitals.bpDiastolic) bpDia = Number(activeReport.vitals.bpDiastolic);
+      if (activeReport.vitals.pulseRate || activeReport.vitals.pulse) {
+        pulseVal = Number(activeReport.vitals.pulseRate || parseInt(activeReport.vitals.pulse) || 80);
+      }
+    }
+
     if (onUpdateVitals) {
       const newVital = {
         date: new Date().toISOString().split("T")[0],
         time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
         bloodSugarFasting: fastingVal,
         bloodSugarPost: Math.round(fastingVal * 1.25),
-        bpSystolic: 122,
-        bpDiastolic: 80,
-        pulse: 74,
+        bpSystolic: bpSys,
+        bpDiastolic: bpDia,
+        pulse: pulseVal,
         weight: patient?.weight || 72,
         bmi: 24.2,
         source: `Report: ${activeReport.title}`
@@ -233,10 +255,10 @@ export default function ReportExplainer({
       onAddTimelineEvent({
         id: `evt_rep_${Date.now()}`,
         date: eventDate,
-        category: "Lab Test",
+        category: activeReport.documentType === "prescription" ? "Prescription" : "Lab Test",
         title: activeReport.title,
-        doctor: activeReport.lab || "Diagnostic Pathology",
-        summary: activeReport.headlineSummary || "Laboratory diagnostic report analyzed.",
+        doctor: activeReport.doctorName || activeReport.clinicName || activeReport.lab || "Attending Physician",
+        summary: activeReport.headlineSummary || "Medical report analyzed.",
         badge: activeReport.overallRisk || "Report Logged",
         status:
           activeReport.overallRisk === "Attention Needed"
@@ -249,8 +271,46 @@ export default function ReportExplainer({
 
     showToast(
       lang === "hi"
-        ? `✅ "${activeReport.title}" का डेटा सफलतापूर्वक वाइटल्स व टाइमलाइन में सिंक हो गया!`
-        : `✅ "${activeReport.title}" data synced to Vitals & Timeline!`
+        ? `✅ "${activeReport.title}" का डेटा (BP ${bpSys}/${bpDia}, PR ${pulseVal}) वाइटल्स व टाइमलाइन में सिंक हो गया!`
+        : `✅ "${activeReport.title}" vitals (BP ${bpSys}/${bpDia}, PR ${pulseVal}) synced to profile & timeline!`
+    );
+  };
+
+  const handleSyncMedications = () => {
+    if (!activeReport?.medications || !activeReport.medications.length) return;
+    if (onAddMedication) {
+      activeReport.medications.forEach((med, idx) => {
+        onAddMedication({
+          id: `med_rx_${Date.now()}_${idx}`,
+          name: med.name,
+          dosage: med.dosage || "5mg",
+          timing: med.timing || "Morning",
+          slot: med.slot || (med.timing?.toLowerCase().includes("night") || med.timing?.includes("रात") ? "night" : "morning"),
+          taken: false,
+          purpose: med.purpose || med.instructions || "Prescribed by Doctor",
+          refillDaysLeft: 30,
+          withFood: med.withFood !== undefined ? med.withFood : true
+        });
+      });
+      showToast(
+        lang === "hi"
+          ? `✅ पर्ची की सभी ${activeReport.medications.length} दवाएं मेडिसिन ट्रैकर में जुड़ गईं!`
+          : `✅ All ${activeReport.medications.length} prescribed medications added to Medicine Tracker!`
+      );
+    }
+  };
+
+  const handleApplyPatientProfile = () => {
+    if (!activeReport?.patientName || !onUpdatePatient) return;
+    onUpdatePatient({
+      name: activeReport.patientName,
+      age: activeReport.age,
+      gender: activeReport.gender
+    });
+    showToast(
+      lang === "hi"
+        ? `✅ मरीज़ का नाम '${activeReport.patientName}' और उम्र '${activeReport.age}' प्रोफ़ाइल में सेट हो गए!`
+        : `✅ Patient profile updated: '${activeReport.patientName}' (${activeReport.age} Yrs, ${activeReport.gender})!`
     );
   };
 
@@ -531,6 +591,18 @@ export default function ReportExplainer({
               >
                 <FileText size={16} color={isSelected ? "#ffffff" : "#6366f1"} />
                 <span>{r.title}</span>
+                {r.documentType === "prescription" && (
+                  <span style={{
+                    fontSize: "0.68rem",
+                    padding: "1px 6px",
+                    borderRadius: "6px",
+                    fontWeight: 800,
+                    background: isSelected ? "rgba(255, 255, 255, 0.28)" : "rgba(239, 68, 68, 0.16)",
+                    color: isSelected ? "#ffffff" : "#ef4444"
+                  }}>
+                    Rx
+                  </span>
+                )}
                 <span style={{
                   fontSize: "0.74rem",
                   padding: "2px 8px",
@@ -539,7 +611,7 @@ export default function ReportExplainer({
                   background: isSelected ? "rgba(255, 255, 255, 0.28)" : "var(--bg-elevated)",
                   color: isSelected ? "#ffffff" : "var(--text-muted)"
                 }}>
-                  {r.parameters?.length || 0} {lang === "hi" ? "टेस्ट" : "tests"}
+                  {r.documentType === "prescription" && r.medications?.length ? `${r.medications.length} ${lang === "hi" ? "दवाएं" : "meds"}` : `${r.parameters?.length || 0} ${lang === "hi" ? "टेस्ट" : "tests"}`}
                 </span>
                 {r.overallRisk && (
                   <span style={{
@@ -622,8 +694,11 @@ export default function ReportExplainer({
                   </span>
                 )}
                 <span style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}>
-                  <User size={16} color="var(--text-dim)" />
-                  <span>{lang === "hi" ? "मरीज़:" : "Patient:"} {activeReport.patientName || patient?.name || "Aarish Rajput"}</span>
+                  <User size={16} color="var(--primary)" />
+                  <span>
+                    {lang === "hi" ? "मरीज़:" : "Patient:"} <strong style={{ color: "var(--text-highlight)" }}>{activeReport.patientName || patient?.name || "Test"}</strong>
+                    {activeReport.age ? ` (${activeReport.age} ${lang === "hi" ? "वर्ष" : "Yrs"} / ${activeReport.gender || "M"})` : ""}
+                  </span>
                 </span>
               </div>
             </div>
@@ -741,6 +816,319 @@ export default function ReportExplainer({
           <button onClick={handleRestoreSamples} className="btn btn-primary" style={{ marginTop: "16px" }}>
             {lang === "hi" ? "डिफ़ॉल्ट रिपोर्ट रीसेट करें" : "Restore Sample Reports"}
           </button>
+        </div>
+      )}
+
+      {/* Doctor Handwritten Prescription Dedicated Overview */}
+      {activeReport && (activeReport.documentType === "prescription" || activeReport.medications?.length > 0 || activeReport.vitals) && (
+        <div
+          className="glass-panel"
+          style={{
+            padding: "24px 28px",
+            borderRadius: "18px",
+            background: "linear-gradient(135deg, rgba(79, 70, 229, 0.08), var(--bg-card))",
+            border: "1.5px solid rgba(99, 102, 241, 0.35)",
+            display: "flex",
+            flexDirection: "column",
+            gap: "20px",
+            boxShadow: "0 6px 20px rgba(79, 70, 229, 0.12)"
+          }}
+        >
+          {/* Clinic & Doctors Info Banner */}
+          <div style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "flex-start",
+            flexWrap: "wrap",
+            gap: "14px",
+            paddingBottom: "16px",
+            borderBottom: "1px dashed var(--border-color)"
+          }}>
+            <div>
+              <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                <span style={{
+                  fontSize: "1.2rem",
+                  background: "linear-gradient(135deg, #4f46e5, #6366f1)",
+                  color: "#ffffff",
+                  padding: "4px 10px",
+                  borderRadius: "8px",
+                  fontWeight: 900,
+                  fontFamily: "serif"
+                }}>
+                  ℞
+                </span>
+                <h3 style={{ fontSize: "1.3rem", fontWeight: 800, margin: 0, color: "var(--text-highlight)" }}>
+                  {activeReport.clinicName || activeReport.lab || "SAI CLINIC"}
+                </h3>
+                <span className="badge badge-primary" style={{ fontSize: "0.76rem" }}>
+                  {lang === "hi" ? "हस्तलिखित डॉक्टर पर्ची (OPD)" : "Handwritten Prescription (OPD)"}
+                </span>
+              </div>
+              {activeReport.clinicAddress && (
+                <div style={{ fontSize: "0.84rem", color: "var(--text-muted)", marginTop: "4px" }}>
+                  📍 {activeReport.clinicAddress}
+                </div>
+              )}
+              {activeReport.doctorName && (
+                <div style={{ fontSize: "0.88rem", fontWeight: 700, color: "var(--primary)", marginTop: "6px", display: "flex", alignItems: "center", gap: "6px" }}>
+                  <Stethoscope size={16} />
+                  <span>{activeReport.doctorName}</span>
+                  {activeReport.doctorRegNo && (
+                    <span style={{ fontSize: "0.75rem", color: "var(--text-dim)", fontWeight: 500 }}>
+                      (Regd No: {activeReport.doctorRegNo})
+                    </span>
+                  )}
+                </div>
+              )}
+            </div>
+
+            <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
+              {onUpdatePatient && activeReport.patientName && (
+                <button
+                  type="button"
+                  onClick={handleApplyPatientProfile}
+                  className="btn btn-secondary"
+                  style={{
+                    fontSize: "0.82rem",
+                    height: "36px",
+                    padding: "0 12px",
+                    borderRadius: "10px",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: "6px",
+                    border: "1.5px solid var(--primary-border)",
+                    color: "var(--primary)",
+                    background: "var(--primary-soft)"
+                  }}
+                  title={lang === "hi" ? "मरीज़ का नाम व उम्र अपने प्रोफ़ाइल में लागू करें" : "Apply extracted patient name & age to active profile"}
+                >
+                  <User size={15} />
+                  <span>{lang === "hi" ? "प्रोफ़ाइल में मरीज़ का नाम सेट करें" : "Set Patient Name in Profile"}</span>
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Extracted Patient Demographics & Recorded Vitals Badges */}
+          <div style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
+            gap: "12px",
+            background: "var(--bg-elevated)",
+            padding: "16px",
+            borderRadius: "14px",
+            border: "1px solid var(--border-color)"
+          }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
+              <span style={{ fontSize: "0.75rem", fontWeight: 700, textTransform: "uppercase", color: "var(--text-dim)" }}>
+                👤 {lang === "hi" ? "निकाला गया मरीज़ का नाम" : "Extracted Patient Name"}
+              </span>
+              <span style={{ fontSize: "1.25rem", fontWeight: 800, color: "var(--primary)" }}>
+                {activeReport.patientName || "Test"}
+              </span>
+            </div>
+
+            <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
+              <span style={{ fontSize: "0.75rem", fontWeight: 700, textTransform: "uppercase", color: "var(--text-dim)" }}>
+                🎂 {lang === "hi" ? "उम्र / लिंग" : "Age & Gender"}
+              </span>
+              <span style={{ fontSize: "1.05rem", fontWeight: 700, color: "var(--text-highlight)" }}>
+                {activeReport.age || 30} {lang === "hi" ? "वर्ष" : "Yrs"} / {activeReport.gender || "Male"}
+              </span>
+            </div>
+
+            <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
+              <span style={{ fontSize: "0.75rem", fontWeight: 700, textTransform: "uppercase", color: "var(--text-dim)" }}>
+                📅 {lang === "hi" ? "पर्ची की तारीख" : "Prescription Date"}
+              </span>
+              <span style={{ fontSize: "1.05rem", fontWeight: 700, color: "var(--text-highlight)" }}>
+                {activeReport.date || "17/Oct/2022"}
+              </span>
+            </div>
+
+            {activeReport.vitals && (
+              <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
+                <span style={{ fontSize: "0.75rem", fontWeight: 700, textTransform: "uppercase", color: "#ef4444" }}>
+                  🩺 {lang === "hi" ? "क्लिनिकल वाइटल्स" : "Recorded Vitals"}
+                </span>
+                <span style={{ fontSize: "1.05rem", fontWeight: 800, color: "var(--text-highlight)" }}>
+                  BP: <span style={{ color: "#ef4444" }}>{activeReport.vitals.bp || "140/90"}</span> • PR: <span style={{ color: "#10b981" }}>{activeReport.vitals.pulse || "80 bpm"}</span>
+                </span>
+              </div>
+            )}
+          </div>
+
+          {/* Clinical Complaints & History */}
+          {activeReport.clinicalHistory && (
+            <div style={{
+              background: "rgba(245, 158, 11, 0.08)",
+              border: "1px solid rgba(245, 158, 11, 0.28)",
+              borderRadius: "12px",
+              padding: "12px 18px",
+              fontSize: "0.9rem",
+              display: "flex",
+              alignItems: "center",
+              gap: "10px"
+            }}>
+              <span style={{ fontSize: "1.2rem" }}>📋</span>
+              <div>
+                <strong style={{ color: "#d97706" }}>
+                  {lang === "hi" ? "क्लिनिकल इतिहास व शिकायत: " : "Clinical History & Complaints: "}
+                </strong>
+                <span style={{ color: "var(--text-main)", fontWeight: 500 }}>
+                  {activeReport.clinicalHistory}
+                </span>
+              </div>
+            </div>
+          )}
+
+          {/* Prescribed Medications Section */}
+          {activeReport.medications && activeReport.medications.length > 0 && (
+            <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "10px" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                  <Pill size={18} color="var(--primary)" />
+                  <h4 style={{ fontSize: "1.08rem", fontWeight: 800, margin: 0, color: "var(--text-highlight)" }}>
+                    {lang === "hi" ? "डॉक्टर द्वारा लिखी गई दवाएं (Prescribed Medications):" : "Doctor Prescribed Medications (Rx):"}
+                  </h4>
+                  <span className="badge badge-primary">{activeReport.medications.length}</span>
+                </div>
+
+                {onAddMedication && (
+                  <button
+                    type="button"
+                    onClick={handleSyncMedications}
+                    className="btn btn-primary"
+                    style={{
+                      height: "36px",
+                      padding: "0 14px",
+                      fontSize: "0.82rem",
+                      fontWeight: 700,
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: "6px",
+                      borderRadius: "10px",
+                      boxShadow: "0 2px 8px rgba(79, 70, 229, 0.25)"
+                    }}
+                  >
+                    <PlusCircle size={15} />
+                    <span>{lang === "hi" ? "सभी दवाएं मेडिसिन ट्रैकर में जोड़ें" : "Add All to Medicine Tracker"}</span>
+                  </button>
+                )}
+              </div>
+
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "12px" }}>
+                {activeReport.medications.map((med, idx) => (
+                  <div
+                    key={idx}
+                    style={{
+                      background: "var(--bg-elevated)",
+                      border: "1.5px solid var(--border-color)",
+                      borderRadius: "14px",
+                      padding: "14px 18px",
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: "8px",
+                      transition: "all 0.2s ease"
+                    }}
+                  >
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "8px" }}>
+                      <div>
+                        <div style={{ fontSize: "1rem", fontWeight: 800, color: "var(--text-highlight)" }}>
+                          {idx + 1}. {med.name}
+                        </div>
+                        {med.generic && (
+                          <div style={{ fontSize: "0.78rem", color: "var(--text-dim)" }}>
+                            {med.generic}
+                          </div>
+                        )}
+                      </div>
+                      <span className="badge badge-secondary" style={{ fontSize: "0.74rem" }}>
+                        {med.duration || "30 Days"}
+                      </span>
+                    </div>
+
+                    <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap", fontSize: "0.84rem" }}>
+                      <span style={{
+                        padding: "4px 10px",
+                        borderRadius: "8px",
+                        background: "var(--primary-soft)",
+                        color: "var(--primary)",
+                        fontWeight: 700
+                      }}>
+                        ⏰ {med.timing || med.frequency || "1-0-0"}
+                      </span>
+                      {med.instructions && (
+                        <span style={{ color: "var(--text-muted)", fontSize: "0.82rem" }}>
+                          {med.instructions}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Recommended Investigations / Tests Section */}
+          {activeReport.investigations && activeReport.investigations.length > 0 && (
+            <div style={{ display: "flex", flexDirection: "column", gap: "10px", marginTop: "4px" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "10px" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                  <Activity size={17} color="var(--secondary)" />
+                  <h4 style={{ fontSize: "1.05rem", fontWeight: 800, margin: 0, color: "var(--text-highlight)" }}>
+                    {lang === "hi" ? "डॉक्टर द्वारा अनुशंसित जांचें (Investigations Advised):" : "Recommended Investigations (Lab Tests Advised):"}
+                  </h4>
+                  <span className="badge badge-secondary">{activeReport.investigations.length}</span>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => onAskCopilot(`Explain why my doctor ordered these tests on my prescription: ${activeReport.investigations.join(", ")}`)}
+                  style={{
+                    background: "none",
+                    border: "none",
+                    color: "var(--primary)",
+                    fontSize: "0.82rem",
+                    fontWeight: 800,
+                    cursor: "pointer",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: "4px"
+                  }}
+                >
+                  {lang === "hi" ? "इन जांचों के बारे में कोपायलट से पूछें" : "Ask Copilot About These Tests"} <ArrowRight size={14} />
+                </button>
+              </div>
+
+              <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
+                {activeReport.investigations.map((testName, i) => (
+                  <div
+                    key={i}
+                    onClick={() => onAskCopilot(`What is the purpose of the ${testName} test prescribed in my doctor's prescription?`)}
+                    style={{
+                      background: "var(--bg-elevated)",
+                      border: "1px solid var(--border-color)",
+                      padding: "8px 14px",
+                      borderRadius: "10px",
+                      fontSize: "0.84rem",
+                      fontWeight: 600,
+                      color: "var(--text-main)",
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: "6px",
+                      cursor: "pointer",
+                      transition: "all 0.15s ease"
+                    }}
+                    title={lang === "hi" ? "क्लिक करके कोपायलट से इस टेस्ट का महत्व पूछें" : "Click to ask Copilot about this test"}
+                  >
+                    <span style={{ color: "var(--secondary)", fontWeight: 800 }}>•</span>
+                    <span>{testName}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       )}
 
@@ -976,20 +1364,63 @@ export default function ReportExplainer({
 
             <div style={{ padding: "20px", overflowY: "auto", background: "var(--bg-elevated)", minHeight: "350px" }}>
               {activeReport.previewUrl ? (
-                <div style={{ textAlign: "center", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                  {activeReport.fileType?.includes("pdf") ? (
-                    <iframe
-                      src={activeReport.previewUrl}
-                      title="PDF Preview"
-                      style={{ width: "100%", height: "560px", border: "none", borderRadius: "8px" }}
-                    />
-                  ) : (
-                    <img
-                      src={activeReport.previewUrl}
-                      alt="Scanned Report"
-                      style={{ maxWidth: "100%", maxHeight: "560px", objectFit: "contain", borderRadius: "8px", boxShadow: "var(--shadow-md)" }}
-                    />
-                  )}
+                <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+                  <div style={{ textAlign: "center", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    {activeReport.fileType?.includes("pdf") ? (
+                      <iframe
+                        src={activeReport.previewUrl}
+                        title="PDF Preview"
+                        style={{ width: "100%", height: "560px", border: "none", borderRadius: "8px" }}
+                      />
+                    ) : (
+                      <img
+                        src={activeReport.previewUrl}
+                        alt="Scanned Report"
+                        style={{ maxWidth: "100%", maxHeight: "560px", objectFit: "contain", borderRadius: "8px", boxShadow: "var(--shadow-md)" }}
+                      />
+                    )}
+                  </div>
+
+                  {/* Extracted Details Dossier for Uploaded Prescription / Report */}
+                  <div style={{ background: "var(--bg-card)", border: "1.5px solid var(--border-color)", borderRadius: "12px", padding: "20px" }}>
+                    <div style={{ borderBottom: "1.5px solid var(--border-color)", paddingBottom: "10px", marginBottom: "14px", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "10px" }}>
+                      <div>
+                        <h4 style={{ margin: 0, fontSize: "16px", fontWeight: 800, color: "var(--text-highlight)" }}>
+                          {activeReport.clinicName || activeReport.lab || "Clinical Document"}
+                        </h4>
+                        {activeReport.doctorName && (
+                          <div style={{ fontSize: "12px", color: "var(--primary)", marginTop: "2px", fontWeight: 600 }}>
+                            {activeReport.doctorName} {activeReport.doctorRegNo ? `(Regd: ${activeReport.doctorRegNo})` : ""}
+                          </div>
+                        )}
+                      </div>
+                      <span className="badge badge-primary">{activeReport.date}</span>
+                    </div>
+
+                    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: "10px", fontSize: "12px", marginBottom: "14px" }}>
+                      <div><span style={{ color: "var(--text-muted)" }}>Patient:</span> <strong style={{ color: "var(--text-highlight)" }}>{activeReport.patientName || patient?.name}</strong></div>
+                      <div><span style={{ color: "var(--text-muted)" }}>Age / Gender:</span> <strong style={{ color: "var(--text-highlight)" }}>{activeReport.age || patient?.age} Yrs / {activeReport.gender || patient?.gender}</strong></div>
+                      {activeReport.vitals && (
+                        <div><span style={{ color: "var(--text-muted)" }}>Vitals:</span> <strong style={{ color: "#ef4444" }}>BP: {activeReport.vitals.bp || "140/90"} • PR: {activeReport.vitals.pulse || "80 bpm"}</strong></div>
+                      )}
+                    </div>
+
+                    {activeReport.medications && activeReport.medications.length > 0 && (
+                      <div style={{ marginTop: "12px" }}>
+                        <div style={{ fontSize: "12px", fontWeight: 800, color: "var(--primary)", marginBottom: "6px" }}>
+                          Prescribed Medications (Rx):
+                        </div>
+                        <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                          {activeReport.medications.map((m, i) => (
+                            <div key={i} style={{ display: "flex", justifyContent: "space-between", background: "var(--bg-elevated)", padding: "8px 12px", borderRadius: "8px", fontSize: "12px" }}>
+                              <strong>{i + 1}. {m.name}</strong>
+                              <span style={{ color: "var(--primary)", fontWeight: 700 }}>{m.timing || m.schedule}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
               ) : (
                 <div style={{ background: "#ffffff", color: "#0f172a", borderRadius: "12px", padding: "24px", border: "1.5px solid #cbd5e1" }}>

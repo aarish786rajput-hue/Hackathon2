@@ -388,6 +388,8 @@ export default function App() {
                 onClearPendingFile={() => setPendingUploadFile(null)}
                 onUpdateVitals={handleAddVital}
                 onAddTimelineEvent={handleAddTimelineEvent}
+                onAddMedication={handleAddMedication}
+                onUpdatePatient={updateCurrentPatient}
               />
             )}
             {activeTab === 'discharge' && (

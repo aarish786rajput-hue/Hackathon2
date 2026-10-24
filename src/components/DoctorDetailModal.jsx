@@ -823,47 +823,6 @@ export default function DoctorDetailModal({
                   style={{ resize: "none" }}
                 />
               </div>
-
-              {/* In-Form Action Row */}
-              <div style={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                marginTop: "12px",
-                paddingTop: "14px",
-                borderTop: "1px dashed var(--border-color)",
-                flexWrap: "wrap",
-                gap: "12px"
-              }}>
-                <div>
-                  <div style={{ fontSize: "0.74rem", color: "var(--text-muted)" }}>
-                    {lang === "hi" ? "कुल देय शुल्क:" : "Total Payable Fee:"}
-                  </div>
-                  <div style={{ fontWeight: 800, fontSize: "1.1rem", color: doctor.isFreeOpd ? "var(--secondary)" : "var(--primary)" }}>
-                    {doctor.isFreeOpd ? (lang === "hi" ? "मुफ़्त (आयुष्मान ओपीडी)" : "FREE (Ayushman OPD)") : `₹${doctor.fee}`}
-                  </div>
-                </div>
-
-                <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
-                  <button
-                    type="button"
-                    onClick={onClose}
-                    className="btn btn-secondary"
-                    style={{ padding: "10px 18px", fontSize: "0.88rem", fontWeight: 700 }}
-                  >
-                    <span>{lang === "hi" ? "रद्द करें (Cancel)" : "Cancel"}</span>
-                  </button>
-
-                  <button
-                    type="submit"
-                    className="btn btn-primary"
-                    style={{ padding: "10px 24px", fontSize: "0.92rem", fontWeight: 800 }}
-                  >
-                    <CheckCircle2 size={16} />
-                    <span>{lang === "hi" ? "अपॉइंटमेंट कन्फर्म करें" : "Confirm Appointment"}</span>
-                  </button>
-                </div>
-              </div>
             </form>
           )}
         </div>

@@ -1,0 +1,187 @@
+// PulseAI Clinical Wellness & Preventive Care Engine
+// Provides personalized lifestyle recommendations, repeat tests due schedules, and appointment reminders
+
+export const PATIENT_WELLNESS_PROFILES = {
+  pat_1: {
+    // Rahul Sharma (45M, Type 2 Diabetes, Essential Hypertension, Dyslipidemia)
+    wellnessPillars: [
+      {
+        id: "diet",
+        title: "Low-GI & Sodium-Controlled Nutrition",
+        icon: "Utensils",
+        color: "#10b981",
+        badge: "Diabetes & BP Tailored",
+        recommendation: "Focus on complex low-glycemic carbohydrates (millets, oats, quinoa) paired with soluble fiber (methi seeds, flaxseeds, legumes). Restrict dietary sodium to under 2,000 mg/day (less than 1 tsp salt).",
+        whyRecommended: "Suggested because your latest HbA1c is 7.2% and you take Telmisartan 40mg. Low-GI foods blunt rapid post-prandial glucose surges, while sodium control reduces vascular resistance.",
+        category: "Nutrition"
+      },
+      {
+        id: "activity",
+        title: "Post-Meal Glucose-Clearing Walks",
+        icon: "Activity",
+        color: "#3b82f6",
+        badge: "Insulin Sensitivity",
+        recommendation: "Target 25-30 minutes of moderate brisk walking within 30 minutes following lunch or dinner, 5 days per week. Include 2 days of light resistance bands.",
+        whyRecommended: "Contracting leg skeletal muscles activates GLUT-4 glucose transporters independently of insulin, immediately absorbing excess circulating blood sugar without stressing your joints.",
+        category: "Exercise"
+      },
+      {
+        id: "sleep",
+        title: "Restorative Circadian Sleep Hygiene",
+        icon: "Moon",
+        color: "#8b5cf6",
+        badge: "Cortisol Management",
+        recommendation: "Aim for 7 to 7.5 hours of uninterrupted sleep in a cool, dark room. Discontinue electronic blue-light screens 45 minutes before bedtime.",
+        whyRecommended: "Sleep deprivation spikes early-morning cortisol and epinephrine, directly triggering dawn phenomenon (high fasting glucose) and elevated morning blood pressure.",
+        category: "Sleep"
+      },
+      {
+        id: "hydration",
+        title: "Kidney Hydration & Metabolic Flush",
+        icon: "Droplets",
+        color: "#06b6d4",
+        badge: "Renal Safeguard",
+        recommendation: "Drink 2.5 to 2.8 Liters of fresh water evenly throughout the daytime hours. Avoid drinking large volumes immediately before bedtime.",
+        whyRecommended: "Adequate hydration supports renal tubular clearance and optimal glomerular filtration rate (eGFR 88) while taking Metformin ER and Telmisartan.",
+        category: "Hydration"
+      }
+    ],
+    repeatTestsDue: [
+      {
+        id: "test_hba1c",
+        testName: "Glycated Hemoglobin (HbA1c & Fasting Sugar)",
+        timeframe: "Due in 45 Days (Dec 2026)",
+        frequency: "Every 90 Days",
+        urgency: "due-soon",
+        urgencyBadge: "Due Soon",
+        guidelineReason: "ADA clinical guidelines mandate repeating HbA1c every 3 months until target (< 6.5%) is achieved from current 7.2% baseline.",
+        provider: "Thyrocare / Lal PathLabs"
+      },
+      {
+        id: "test_lipid",
+        testName: "Comprehensive Lipid Profile (Cholesterol & Triglycerides)",
+        timeframe: "Due in 60 Days (Jan 2027)",
+        frequency: "Every 6 Months",
+        urgency: "scheduled",
+        urgencyBadge: "Scheduled",
+        guidelineReason: "Monitor therapeutic response to daily Rosuvastatin 10mg aiming to bring LDL from 134 mg/dL down to < 100 mg/dL.",
+        provider: "Apollo Diagnostics"
+      },
+      {
+        id: "test_eye",
+        testName: "Diabetic Retinopathy Screening (Fundoscopy)",
+        timeframe: "On Track • Due Aug 2027",
+        frequency: "Annual",
+        urgency: "good",
+        urgencyBadge: "On Track",
+        guidelineReason: "Last fundoscopy on Aug 10, 2026 showed clear retinas with zero microaneurysms. Annual surveillance maintains vision security.",
+        provider: "Eye Care Clinic"
+      },
+      {
+        id: "test_renal",
+        testName: "Renal Panel (Urine Albumin/Creatinine & eGFR)",
+        timeframe: "Due in 75 Days (Jan 2027)",
+        frequency: "Annual",
+        urgency: "scheduled",
+        urgencyBadge: "Scheduled",
+        guidelineReason: "Annual microalbuminuria screening ensures early detection of hypertensive or diabetic nephropathy.",
+        provider: "Thyrocare Pathlabs"
+      }
+    ],
+    upcomingAppointment: {
+      doctorName: "Dr. Arvind Mehta, MD",
+      specialty: "Chief Consultant Cardiologist",
+      clinic: "Apollo Health City, New Delhi",
+      date: "Nov 15, 2026",
+      time: "11:30 AM",
+      daysLeft: 22,
+      purpose: "Quarterly Blood Pressure & Statin Therapy Evaluation",
+      notes: "Review 30-day vitals log (BP average 128/82, fasting glucose 115 mg/dL). Discuss Metformin tolerance."
+    }
+  },
+
+  pat_2: {
+    // Ananya Sen (32F, Hypothyroidism, Mild Allergic Asthma)
+    wellnessPillars: [
+      {
+        id: "diet",
+        title: "Thyroid-Supportive Nutrient Timing",
+        icon: "Utensils",
+        color: "#10b981",
+        badge: "Thyroid Balance",
+        recommendation: "Take Levothyroxine on an empty stomach with a full glass of water, waiting at least 45 minutes before breakfast or tea/coffee. Ensure adequate dietary selenium (brazil nuts, sunflower seeds). Avoid excessive raw cruciferous vegetables.",
+        whyRecommended: "Coffee, calcium, and iron interfere with Levothyroxine intestinal absorption. Selenium is a necessary cofactor for deiodinase enzymes that convert T4 to active T3.",
+        category: "Nutrition"
+      },
+      {
+        id: "activity",
+        title: "Gentle Aerobic & Pulmonary Yoga",
+        icon: "Activity",
+        color: "#3b82f6",
+        badge: "Asthma Friendly",
+        recommendation: "Engage in 30 minutes of low-impact yoga, pilates, and diaphragmatic breathing (pranayama) in a clean, dust-free indoor environment 4 times a week.",
+        whyRecommended: "Gentle aerobic conditioning enhances vital lung capacity and diaphragmatic efficiency without triggering exercise-induced bronchospasms.",
+        category: "Exercise"
+      },
+      {
+        id: "sleep",
+        title: "Hypoallergenic Rest Environment",
+        icon: "Moon",
+        color: "#8b5cf6",
+        badge: "Airway Protection",
+        recommendation: "Maintain 7.5 to 8 hours of sleep using hypoallergenic dust-mite barrier bedding. Keep bedroom humidity between 40-50% with clean air filtration.",
+        whyRecommended: "Nocturnal histamine peaks occur between 2:00 AM and 5:00 AM. A clean bedroom prevents nighttime wheezing and morning bronchial stiffness.",
+        category: "Sleep"
+      },
+      {
+        id: "hydration",
+        title: "Airway Hydration & Warm Liquids",
+        icon: "Droplets",
+        color: "#06b6d4",
+        badge: "Mucosal Integrity",
+        recommendation: "Consume 2 to 2.5 Liters of warm or room-temperature water daily. Sip warm herbal teas (ginger, tulsi) during cooler morning hours.",
+        whyRecommended: "Warm hydration thins respiratory secretions and soothes airway hyper-responsiveness.",
+        category: "Hydration"
+      }
+    ],
+    repeatTestsDue: [
+      {
+        id: "test_tsh",
+        testName: "Thyroid Function Test (TSH, Free T3, Free T4)",
+        timeframe: "Due in 60 Days (Dec 2026)",
+        frequency: "Every 6 Months",
+        urgency: "due-soon",
+        urgencyBadge: "Due Soon",
+        guidelineReason: "Monitor maintenance dosage of Levothyroxine 75 mcg to ensure TSH remains stable around 2.45 mIU/L target range.",
+        provider: "Dr. Lal PathLabs"
+      },
+      {
+        id: "test_spirometry",
+        testName: "Peak Expiratory Flow & Spirometry Screening",
+        timeframe: "Due in 90 Days (Jan 2027)",
+        frequency: "Bi-Annual",
+        urgency: "scheduled",
+        urgencyBadge: "Scheduled",
+        guidelineReason: "Assess airway reversibility and verify protection provided by Montelukast + Levocetirizine regimen.",
+        provider: "Fortis Pulmonary Lab"
+      }
+    ],
+    upcomingAppointment: {
+      doctorName: "Dr. Shalini Ray, MD",
+      specialty: "Consultant Endocrinologist",
+      clinic: "Fortis Escorts Care, Kolkata",
+      date: "Nov 28, 2026",
+      time: "4:00 PM",
+      daysLeft: 35,
+      purpose: "Bi-Annual Thyroid Panel & Winter Asthma Management Review",
+      notes: "Assess Levothyroxine 75 mcg efficacy and discuss winter allergy prophylaxis."
+    }
+  }
+};
+
+/**
+ * Returns wellness pillars, repeat tests, and appointments for a given patient
+ */
+export function getPatientWellnessData(patientId) {
+  return PATIENT_WELLNESS_PROFILES[patientId] || PATIENT_WELLNESS_PROFILES.pat_1;
+}

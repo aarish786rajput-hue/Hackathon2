@@ -16,7 +16,15 @@ import {
   Activity,
   Ban,
   RotateCcw,
-  Timer
+  Timer,
+  Utensils,
+  Moon,
+  Droplets,
+  Users,
+  Check,
+  FlaskConical,
+  CalendarCheck,
+  ChevronRight
 } from "lucide-react";
 import { translations } from "../data/translations";
 import { translateMedicalTerm } from "../utils/translator";
@@ -28,9 +36,12 @@ import {
   sendDesktopNotification,
   scheduleSnoozeNotification 
 } from "../utils/reminderService";
+import { getPatientWellnessData } from "../data/wellnessData";
 
 export default function Dashboard({
   patient,
+  patients = [],
+  onSelectPatient,
   onNavigate,
   onToggleMedication,
   onSnoozeMedication,
@@ -43,6 +54,16 @@ export default function Dashboard({
   const [isDragActive, setIsDragActive] = useState(false);
   const fileInputRef = useRef(null);
   const [notifPermission, setNotifPermission] = useState(() => getNotificationPermission());
+  const [toastMessage, setToastMessage] = useState(null);
+  const [appointmentAlertActive, setAppointmentAlertActive] = useState(false);
+
+  const showToast = (msg) => {
+    setToastMessage(msg);
+    setTimeout(() => setToastMessage(null), 3500);
+  };
+
+  const wellnessData = getPatientWellnessData(patient.id);
+  const { wellnessPillars = [], repeatTestsDue = [], upcomingAppointment } = wellnessData;
 
   const t = translations[lang] || translations.en;
   const latestVital = patient.vitalsHistory[patient.vitalsHistory.length - 1] || {};
@@ -100,6 +121,58 @@ export default function Dashboard({
 
         <div className="dashboard-banner-grid">
           <div style={{ minWidth: 0 }}>
+            {/* Family Profile Switcher Pill Bar (Section 4 Bonus) */}
+            {Array.isArray(patients) && patients.length > 1 && (
+              <div style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "8px",
+                background: "rgba(15, 23, 42, 0.45)",
+                padding: "5px 12px",
+                borderRadius: "30px",
+                border: "1px solid var(--border-color)",
+                marginBottom: "14px",
+                backdropFilter: "blur(10px)"
+              }}>
+                <span style={{ fontSize: "0.76rem", fontWeight: 700, color: "var(--text-muted)", display: "flex", alignItems: "center", gap: "6px" }}>
+                  <Users size={14} color="var(--primary)" />
+                  {t.familyProfileSwitcher || "Family Profiles"}:
+                </span>
+                <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                  {patients.map((p) => {
+                    const isSelected = p.id === patient.id;
+                    const relationLabel = p.id === "pat_1" ? (t.selfProfile || "Self") : (t.familyMember || "Sister");
+                    return (
+                      <button
+                        key={p.id}
+                        type="button"
+                        onClick={() => onSelectPatient && onSelectPatient(p)}
+                        style={{
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: "6px",
+                          padding: "4px 12px",
+                          borderRadius: "20px",
+                          fontSize: "0.78rem",
+                          fontWeight: 700,
+                          cursor: isSelected ? "default" : "pointer",
+                          background: isSelected ? "linear-gradient(135deg, var(--primary), var(--secondary))" : "rgba(255, 255, 255, 0.05)",
+                          color: isSelected ? "#ffffff" : "var(--text-main)",
+                          border: isSelected ? "1px solid rgba(255, 255, 255, 0.2)" : "1px solid var(--border-color)",
+                          boxShadow: isSelected ? "0 2px 8px rgba(14, 165, 233, 0.35)" : "none",
+                          transition: "all 0.2s ease"
+                        }}
+                      >
+                        <span style={{ fontSize: "0.85rem" }}>{p.id === "pat_1" ? "👨‍💼" : "👩‍💼"}</span>
+                        <span>{p.name.split(" ")[0]} ({relationLabel})</span>
+                        {isSelected && <Check size={12} strokeWidth={3} />}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
             <h1 style={{ fontSize: "1.85rem", fontWeight: 800, color: "var(--text-highlight)", marginBottom: "6px" }}>
               {t.welcomeBack}, {patient.name}
             </h1>
@@ -429,6 +502,118 @@ export default function Dashboard({
                 </div>
               );
             })}
+          </div>
+        </div>
+      )}
+
+      {/* Upcoming Doctor Follow-Up Appointment Banner (Section 3.2) */}
+      {upcomingAppointment && (
+        <div
+          className="glass-panel"
+          style={{
+            padding: "20px 24px",
+            borderRadius: "18px",
+            background: "linear-gradient(135deg, rgba(59, 130, 246, 0.12), rgba(139, 92, 246, 0.08), var(--bg-card) 60%)",
+            border: "1.5px solid rgba(59, 130, 246, 0.35)",
+            boxShadow: "0 6px 20px rgba(59, 130, 246, 0.1)",
+            display: "flex",
+            flexDirection: "column",
+            gap: "14px"
+          }}
+        >
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "12px" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
+              <div style={{
+                width: "46px",
+                height: "46px",
+                borderRadius: "14px",
+                background: "linear-gradient(135deg, #3b82f6, #2563eb)",
+                color: "#ffffff",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                boxShadow: "0 4px 14px rgba(59, 130, 246, 0.35)",
+                flexShrink: 0
+              }}>
+                <CalendarCheck size={24} />
+              </div>
+              <div>
+                <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
+                  <h3 style={{ fontSize: "1.12rem", fontWeight: 800, color: "var(--text-highlight)", margin: 0 }}>
+                    {t.upcomingFollowUp || "Upcoming Doctor Follow-Up"}
+                  </h3>
+                  <span className="badge badge-primary" style={{ fontSize: "0.76rem", fontWeight: 800 }}>
+                    🗓️ In {upcomingAppointment.daysLeft} {t.daysRemaining || "days"} ({upcomingAppointment.date})
+                  </span>
+                </div>
+                <p style={{ fontSize: "0.88rem", color: "var(--text-muted)", margin: "4px 0 0 0" }}>
+                  <strong>{upcomingAppointment.doctorName}</strong> ({upcomingAppointment.specialty}) • {upcomingAppointment.clinic}
+                </p>
+              </div>
+            </div>
+
+            <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
+              <button
+                type="button"
+                onClick={() => onOpenDoctorPrep && onOpenDoctorPrep()}
+                className="btn btn-primary"
+                style={{ padding: "8px 14px", fontSize: "0.82rem", borderRadius: "8px", display: "inline-flex", alignItems: "center", gap: "6px" }}
+              >
+                <Calendar size={14} />
+                <span>{t.prepareVisit5Q || "Prepare for Visit (Top 5 Qs)"}</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setAppointmentAlertActive(true);
+                  showToast(t.appointmentReminderSet || "Appointment reminder notification scheduled!");
+                  if (notifPermission === "granted") {
+                    sendDesktopNotification("PulseAI Appointment Reminder 🗓️", {
+                      body: `Follow-up with ${upcomingAppointment.doctorName} on ${upcomingAppointment.date} at ${upcomingAppointment.time}.`
+                    });
+                  }
+                }}
+                className="btn btn-secondary"
+                style={{
+                  padding: "8px 14px",
+                  fontSize: "0.82rem",
+                  borderRadius: "8px",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "6px",
+                  background: appointmentAlertActive ? "rgba(16, 185, 129, 0.18)" : undefined,
+                  color: appointmentAlertActive ? "var(--secondary)" : undefined,
+                  borderColor: appointmentAlertActive ? "rgba(16, 185, 129, 0.45)" : undefined
+                }}
+              >
+                <BellRing size={14} />
+                <span>{appointmentAlertActive ? ("✓ " + (t.appointmentReminderSet ? "Reminder Active" : "Alert Set")) : (t.setAppointmentReminder || "Set Alert Reminder")}</span>
+              </button>
+            </div>
+          </div>
+
+          <div style={{
+            background: "var(--bg-card)",
+            border: "1px solid var(--border-color)",
+            borderRadius: "12px",
+            padding: "12px 16px",
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            flexWrap: "wrap",
+            gap: "10px",
+            fontSize: "0.84rem"
+          }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+              <span style={{ fontSize: "1rem" }}>🎯</span>
+              <span style={{ color: "var(--text-main)" }}>
+                <strong>Purpose:</strong> {upcomingAppointment.purpose}
+              </span>
+            </div>
+            <div style={{ color: "var(--text-muted)", fontSize: "0.8rem", fontStyle: "italic" }}>
+              📌 {upcomingAppointment.notes}
+            </div>
           </div>
         </div>
       )}
@@ -1048,6 +1233,267 @@ export default function Dashboard({
           </div>
         </div>
       </div>
+
+      {/* Personalized Wellness & Lifestyle Guidance (Section 3.3) */}
+      <div>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "14px", flexWrap: "wrap", gap: "10px" }}>
+          <div>
+            <h2 style={{ fontSize: "1.2rem", fontWeight: 800, display: "flex", alignItems: "center", gap: "8px", color: "var(--text-highlight)", margin: 0 }}>
+              <Sparkles size={20} color="var(--secondary)" />
+              {t.wellnessGuidanceTitle || "Personalized Wellness & Lifestyle Guidance"}
+            </h2>
+            <p style={{ fontSize: "0.82rem", color: "var(--text-muted)", margin: "4px 0 0 0" }}>
+              {t.wellnessGuidanceSub || "Clinically-tailored daily habits based on your conditions, lab values, and age."}
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => onNavigate("copilot", `Please generate a personalized 7-day holistic diet, exercise, and sleep routine based on my diagnosis (${patient.conditions.map(c => typeof c === 'string' ? c : c.name).join(', ')}).`)}
+            className="btn btn-secondary"
+            style={{ padding: "6px 14px", fontSize: "0.82rem", display: "inline-flex", alignItems: "center", gap: "6px" }}
+          >
+            <Sparkles size={14} color="var(--primary)" />
+            <span>{t.askCopilotCustomPlan || "Ask AI for Custom Plan"}</span>
+          </button>
+        </div>
+
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "16px" }}>
+          {wellnessPillars.map((pillar) => {
+            const getPillarIcon = (id) => {
+              switch (id) {
+                case "diet": return <Utensils size={20} color={pillar.color} />;
+                case "activity": return <Activity size={20} color={pillar.color} />;
+                case "sleep": return <Moon size={20} color={pillar.color} />;
+                case "hydration": return <Droplets size={20} color={pillar.color} />;
+                default: return <Sparkles size={20} color={pillar.color} />;
+              }
+            };
+
+            return (
+              <div
+                key={pillar.id}
+                className="glass-panel"
+                style={{
+                  padding: "20px",
+                  borderRadius: "16px",
+                  border: `1.5px solid ${pillar.color}35`,
+                  background: `linear-gradient(165deg, ${pillar.color}0a, var(--bg-card) 60%)`,
+                  display: "flex",
+                  flexDirection: "column",
+                  justifyContent: "space-between",
+                  gap: "12px"
+                }}
+              >
+                <div>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "10px", marginBottom: "8px" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                      <div style={{
+                        width: "36px",
+                        height: "36px",
+                        borderRadius: "10px",
+                        background: `${pillar.color}18`,
+                        border: `1px solid ${pillar.color}40`,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        flexShrink: 0
+                      }}>
+                        {getPillarIcon(pillar.id)}
+                      </div>
+                      <h3 style={{ fontSize: "0.98rem", fontWeight: 800, color: "var(--text-highlight)", margin: 0, lineHeight: 1.3 }}>
+                        {pillar.title}
+                      </h3>
+                    </div>
+                    <span style={{
+                      fontSize: "0.68rem",
+                      fontWeight: 800,
+                      padding: "3px 8px",
+                      borderRadius: "20px",
+                      background: `${pillar.color}18`,
+                      color: pillar.color,
+                      border: `1px solid ${pillar.color}40`,
+                      whiteSpace: "nowrap",
+                      flexShrink: 0
+                    }}>
+                      {pillar.badge}
+                    </span>
+                  </div>
+
+                  <p style={{ fontSize: "0.85rem", color: "var(--text-main)", lineHeight: 1.5, margin: "8px 0" }}>
+                    {pillar.recommendation}
+                  </p>
+
+                  {/* Clinical Why Suggested Box */}
+                  <div style={{
+                    background: "var(--bg-elevated)",
+                    borderLeft: `3px solid ${pillar.color}`,
+                    borderRadius: "8px",
+                    padding: "10px 12px",
+                    marginTop: "10px"
+                  }}>
+                    <div style={{ fontSize: "0.75rem", fontWeight: 800, color: pillar.color, display: "flex", alignItems: "center", gap: "4px", marginBottom: "3px" }}>
+                      <span>💡</span>
+                      <span>{t.whySuggested || "Why this is recommended for you:"}</span>
+                    </div>
+                    <p style={{ fontSize: "0.78rem", color: "var(--text-muted)", margin: 0, lineHeight: 1.4 }}>
+                      {pillar.whyRecommended}
+                    </p>
+                  </div>
+                </div>
+
+                <div style={{ display: "flex", justifyContent: "flex-end", paddingTop: "8px" }}>
+                  <button
+                    type="button"
+                    onClick={() => onNavigate("copilot", `Explain more about: ${pillar.title} and give me practical actionable tips for my condition.`)}
+                    style={{
+                      background: "none",
+                      border: "none",
+                      color: pillar.color,
+                      fontSize: "0.78rem",
+                      fontWeight: 700,
+                      cursor: "pointer",
+                      padding: 0,
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: "4px"
+                    }}
+                  >
+                    <span>{t.askCopilot || "Ask Copilot"}</span>
+                    <ChevronRight size={13} />
+                  </button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Repeat Tests & Preventive Care Due Tracker (Section 3.4) */}
+      <div>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "14px", flexWrap: "wrap", gap: "10px" }}>
+          <div>
+            <h2 style={{ fontSize: "1.2rem", fontWeight: 800, display: "flex", alignItems: "center", gap: "8px", color: "var(--text-highlight)", margin: 0 }}>
+              <FlaskConical size={20} color="var(--primary)" />
+              {t.preventiveTrackerTitle || "Preventive Health & Repeat Tests Due"}
+            </h2>
+            <p style={{ fontSize: "0.82rem", color: "var(--text-muted)", margin: "4px 0 0 0" }}>
+              {t.preventiveTrackerSub || "Clinical guidelines for periodic laboratory screenings and disease surveillance."}
+            </p>
+          </div>
+          <span className="badge badge-primary" style={{ fontSize: "0.76rem" }}>
+            🛡️ {repeatTestsDue.length} {t.navReports || "Clinical Screenings Tracked"}
+          </span>
+        </div>
+
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: "16px" }}>
+          {repeatTestsDue.map((test) => {
+            const isUrgent = test.urgency === "due-soon";
+            const isGood = test.urgency === "good";
+
+            return (
+              <div
+                key={test.id}
+                className="glass-panel"
+                style={{
+                  padding: "20px",
+                  borderRadius: "16px",
+                  border: isUrgent
+                    ? "1.5px solid rgba(245, 158, 11, 0.5)"
+                    : isGood
+                      ? "1.5px solid rgba(16, 185, 129, 0.4)"
+                      : "1px solid var(--border-color)",
+                  background: isUrgent
+                    ? "linear-gradient(165deg, rgba(245, 158, 11, 0.08), var(--bg-card) 60%)"
+                    : "var(--bg-card)",
+                  display: "flex",
+                  flexDirection: "column",
+                  justifyContent: "space-between",
+                  gap: "12px"
+                }}
+              >
+                <div>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "10px", marginBottom: "8px" }}>
+                    <h3 style={{ fontSize: "0.98rem", fontWeight: 800, color: "var(--text-highlight)", margin: 0, lineHeight: 1.35 }}>
+                      {test.testName}
+                    </h3>
+                    <span className={`badge ${isUrgent ? "badge-borderline" : isGood ? "badge-good" : "badge-primary"}`} style={{ whiteSpace: "nowrap", flexShrink: 0, fontSize: "0.72rem" }}>
+                      {isUrgent ? "⏳ " : isGood ? "✅ " : "🗓️ "}{test.timeframe}
+                    </span>
+                  </div>
+
+                  <div style={{ fontSize: "0.76rem", color: "var(--text-muted)", marginBottom: "8px" }}>
+                    <span>Frequency: <strong>{test.frequency}</strong></span> • <span>Partner: <strong>{test.provider}</strong></span>
+                  </div>
+
+                  <div style={{
+                    background: "var(--bg-elevated)",
+                    borderRadius: "10px",
+                    padding: "10px 12px",
+                    border: "1px solid var(--border-color)",
+                    fontSize: "0.8rem",
+                    color: "var(--text-main)",
+                    lineHeight: 1.45
+                  }}>
+                    <strong style={{ color: "var(--primary)" }}>📋 Clinical Guideline:</strong> {test.guidelineReason}
+                  </div>
+                </div>
+
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "8px", paddingTop: "8px", borderTop: "1px solid var(--border-color)", flexWrap: "wrap" }}>
+                  <button
+                    type="button"
+                    onClick={() => showToast(t.testBookedToast || "Lab test booking initiated with partner diagnostics!")}
+                    className="btn btn-primary"
+                    style={{ padding: "6px 12px", fontSize: "0.78rem", borderRadius: "8px", display: "inline-flex", alignItems: "center", gap: "5px" }}
+                  >
+                    <FlaskConical size={13} />
+                    <span>{t.bookHomeCollection || "Book Test"}</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => onNavigate("copilot", `What are the preparation rules and fasting requirements for ${test.testName}?`)}
+                    style={{
+                      background: "none",
+                      border: "none",
+                      color: "var(--primary)",
+                      fontSize: "0.78rem",
+                      fontWeight: 700,
+                      cursor: "pointer",
+                      padding: 0
+                    }}
+                  >
+                    {t.askCopilot || "Ask Copilot"} →
+                  </button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Floating Toast Feedback Pill */}
+      {toastMessage && (
+        <div style={{
+          position: "fixed",
+          bottom: "24px",
+          right: "24px",
+          background: "linear-gradient(135deg, #0ea5e9, #10b981)",
+          color: "#ffffff",
+          padding: "12px 20px",
+          borderRadius: "12px",
+          boxShadow: "0 10px 30px rgba(0, 0, 0, 0.35)",
+          fontSize: "0.88rem",
+          fontWeight: 700,
+          zIndex: 9999,
+          display: "flex",
+          alignItems: "center",
+          gap: "10px",
+          animation: "fadeIn 0.25s ease"
+        }}>
+          <span>✨</span>
+          <span>{toastMessage}</span>
+        </div>
+      )}
     </div>
   );
 }

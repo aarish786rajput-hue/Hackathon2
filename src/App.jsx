@@ -157,7 +157,25 @@ export default function App() {
     const meds = currentPatient.todayMedications || [];
     updateCurrentPatient({
       todayMedications: meds.map(m =>
-        m.id === medId ? { ...m, taken: !m.taken } : m
+        m.id === medId ? { ...m, taken: !m.taken, snoozedMinutes: null } : m
+      )
+    });
+  };
+
+  const handleSnoozeMedication = (medId, minutes = 15) => {
+    const meds = currentPatient.todayMedications || [];
+    updateCurrentPatient({
+      todayMedications: meds.map(m =>
+        m.id === medId ? { ...m, snoozedMinutes: (m.snoozedMinutes || 0) + minutes, taken: false } : m
+      )
+    });
+  };
+
+  const handleStopMedicationCourse = (medId) => {
+    const meds = currentPatient.todayMedications || [];
+    updateCurrentPatient({
+      todayMedications: meds.map(m =>
+        m.id === medId ? { ...m, stopped: !m.stopped } : m
       )
     });
   };
@@ -313,6 +331,8 @@ export default function App() {
                 patient={currentPatient}
                 onNavigate={handleNavigate}
                 onToggleMedication={handleToggleMedication}
+                onSnoozeMedication={handleSnoozeMedication}
+                onStopMedicationCourse={handleStopMedicationCourse}
                 onOpenDoctorPrep={() => setIsDoctorPrepOpen(true)}
                 onOpenAddVital={() => setActiveTab('vitals')}
                 onUploadReport={(file) => {
@@ -381,6 +401,8 @@ export default function App() {
                 lang={lang}
                 onToggleMedication={handleToggleMedication}
                 onAddMedication={handleAddMedication}
+                onSnoozeMedication={handleSnoozeMedication}
+                onStopMedicationCourse={handleStopMedicationCourse}
               />
             )}
             {activeTab === 'devices' && (

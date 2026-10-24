@@ -9,15 +9,27 @@ import {
   Plus, 
   Utensils, 
   Search,
-  BellRing
+  BellRing,
+  Ban,
+  RotateCcw,
+  Timer,
+  Check
 } from "lucide-react";
 import { analyzeMedicationList, checkPairInteraction } from "../data/drugInteractions";
 import { translations } from "../data/translations";
 import { translateMedicalTerm } from "../utils/translator";
 
-export default function MedicineTracker({ patient, onToggleMedication, onAddMedication, lang = 'en' }) {
+export default function MedicineTracker({ 
+  patient, 
+  onToggleMedication, 
+  onAddMedication, 
+  onSnoozeMedication,
+  onStopMedicationCourse,
+  lang = 'en' 
+}) {
   const t = translations[lang] || translations.en;
   const [activeTab, setActiveTab] = useState("schedule"); // 'schedule' | 'interactions'
+  const [medFilter, setMedFilter] = useState("all"); // 'all' | 'active' | 'stopped'
   const [testMedName, setTestMedName] = useState("");
   const [testResult, setTestResult] = useState(null);
   const [showAddForm, setShowAddForm] = useState(false);
@@ -191,10 +203,81 @@ export default function MedicineTracker({ patient, onToggleMedication, onAddMedi
       {/* Tab 1: Schedule */}
       {activeTab === "schedule" && (
         <div style={{ display: "flex", flexDirection: "column", gap: "18px" }}>
+          {/* Quick Regimen Filter Chips */}
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "10px" }}>
+            <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+              <button
+                type="button"
+                onClick={() => setMedFilter("all")}
+                style={{
+                  padding: "6px 14px",
+                  borderRadius: "20px",
+                  fontSize: "0.82rem",
+                  fontWeight: 700,
+                  cursor: "pointer",
+                  background: medFilter === "all" ? "var(--text-main)" : "var(--bg-elevated)",
+                  color: medFilter === "all" ? "var(--bg-card)" : "var(--text-muted)",
+                  border: "1px solid var(--border-color)",
+                  transition: "all 0.15s ease"
+                }}
+              >
+                {t.allCourses || "All Medications"} ({patient.todayMedications.length})
+              </button>
+              <button
+                type="button"
+                onClick={() => setMedFilter("active")}
+                style={{
+                  padding: "6px 14px",
+                  borderRadius: "20px",
+                  fontSize: "0.82rem",
+                  fontWeight: 700,
+                  cursor: "pointer",
+                  background: medFilter === "active" ? "linear-gradient(135deg, #10b981, #059669)" : "var(--bg-elevated)",
+                  color: medFilter === "active" ? "#ffffff" : "var(--text-muted)",
+                  border: medFilter === "active" ? "none" : "1px solid var(--border-color)",
+                  boxShadow: medFilter === "active" ? "0 2px 8px rgba(16, 185, 129, 0.3)" : "none",
+                  transition: "all 0.15s ease"
+                }}
+              >
+                🟢 {t.activeCourses || "Active Doses"} ({patient.todayMedications.filter(m => !m.stopped).length})
+              </button>
+              <button
+                type="button"
+                onClick={() => setMedFilter("stopped")}
+                style={{
+                  padding: "6px 14px",
+                  borderRadius: "20px",
+                  fontSize: "0.82rem",
+                  fontWeight: 700,
+                  cursor: "pointer",
+                  background: medFilter === "stopped" ? "linear-gradient(135deg, #ef4444, #dc2626)" : "var(--bg-elevated)",
+                  color: medFilter === "stopped" ? "#ffffff" : "var(--text-muted)",
+                  border: medFilter === "stopped" ? "none" : "1px solid var(--border-color)",
+                  boxShadow: medFilter === "stopped" ? "0 2px 8px rgba(239, 68, 68, 0.3)" : "none",
+                  transition: "all 0.15s ease"
+                }}
+              >
+                🛑 {t.stoppedCourses || "Stopped Courses"} ({patient.todayMedications.filter(m => m.stopped).length})
+              </button>
+            </div>
+
+            <div style={{ fontSize: "0.8rem", color: "var(--text-muted)" }}>
+              {t.tapCheckboxTaken || "Tap checkbox to record when taken"}
+            </div>
+          </div>
+
           {["morning", "afternoon", "night"].map((slotName) => {
-            const slotMeds = patient.todayMedications.filter(m => m.slot === slotName);
+            const rawSlotMeds = patient.todayMedications.filter(m => m.slot === slotName);
+            const slotMeds = rawSlotMeds.filter(m => {
+              if (medFilter === "active") return !m.stopped;
+              if (medFilter === "stopped") return !!m.stopped;
+              return true;
+            });
             const slotTitle = slotName === "morning" ? "Morning Routine" : slotName === "afternoon" ? "Afternoon Routine" : "Night Routine";
             const slotTime = slotName === "morning" ? "8:00 AM - 10:00 AM" : slotName === "afternoon" ? "1:00 PM - 2:30 PM" : "9:00 PM - 10:30 PM";
+
+            const activeMedsInSlot = rawSlotMeds.filter(m => !m.stopped);
+            const takenCount = activeMedsInSlot.filter(m => m.taken).length;
 
             return (
               <div key={slotName} className="glass-panel" style={{ padding: "20px" }}>
@@ -206,7 +289,7 @@ export default function MedicineTracker({ patient, onToggleMedication, onAddMedi
                     <div style={{ fontSize: "0.78rem", color: "var(--text-muted)" }}>{slotTime}</div>
                   </div>
                   <span className="badge badge-primary">
-                    {slotMeds.filter(m => m.taken).length} / {slotMeds.length} {translateMedicalTerm("Completed", lang)}
+                    {takenCount} / {activeMedsInSlot.length} {translateMedicalTerm("Completed", lang)}
                   </span>
                 </div>
 
@@ -219,46 +302,298 @@ export default function MedicineTracker({ patient, onToggleMedication, onAddMedi
                     {slotMeds.map((med) => (
                       <div
                         key={med.id}
-                        onClick={() => onToggleMedication(med.id)}
+                        onClick={() => {
+                          if (!med.stopped) {
+                            onToggleMedication(med.id);
+                          }
+                        }}
                         className="interactive-card"
                         style={{
                           display: "flex",
                           alignItems: "center",
                           justifyContent: "space-between",
-                          padding: "14px 18px",
-                          borderRadius: "12px",
-                          background: med.taken ? "var(--status-good-bg)" : "var(--bg-elevated)",
-                          border: med.taken ? "1px solid var(--status-good-border)" : "1px solid var(--border-color)",
-                          cursor: "pointer"
+                          padding: "16px 20px",
+                          borderRadius: "14px",
+                          background: med.stopped
+                            ? "rgba(100, 116, 139, 0.08)"
+                            : med.taken
+                              ? "var(--status-good-bg)"
+                              : med.snoozedMinutes
+                                ? "rgba(245, 158, 11, 0.08)"
+                                : "var(--bg-elevated)",
+                          border: med.stopped
+                            ? "1px dashed rgba(148, 163, 184, 0.45)"
+                            : med.taken
+                              ? "1px solid var(--status-good-border)"
+                              : med.snoozedMinutes
+                                ? "1px solid rgba(245, 158, 11, 0.55)"
+                                : "1px solid var(--border-color)",
+                          cursor: med.stopped ? "default" : "pointer",
+                          opacity: med.stopped ? 0.72 : 1,
+                          boxShadow: med.snoozedMinutes
+                            ? "0 4px 16px rgba(245, 158, 11, 0.15)"
+                            : "none",
+                          transition: "all 0.25s ease",
+                          gap: "16px",
+                          flexWrap: "wrap"
                         }}
                       >
-                        <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
-                          {med.taken ? (
-                            <CheckCircle2 size={24} color="var(--secondary)" />
+                        {/* Left Details */}
+                        <div style={{ display: "flex", alignItems: "center", gap: "14px", flex: "1 1 260px" }}>
+                          {med.stopped ? (
+                            <div
+                              title={t.courseStopped || "Course Discontinued"}
+                              style={{
+                                width: 30,
+                                height: 30,
+                                borderRadius: "50%",
+                                background: "rgba(239, 68, 68, 0.12)",
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                flexShrink: 0
+                              }}
+                            >
+                              <Ban size={18} color="#ef4444" />
+                            </div>
+                          ) : med.taken ? (
+                            <CheckCircle2 size={26} color="var(--secondary)" style={{ flexShrink: 0 }} />
+                          ) : med.snoozedMinutes ? (
+                            <div
+                              title={t.snoozedBadge || "Snoozed"}
+                              style={{
+                                width: 30,
+                                height: 30,
+                                borderRadius: "50%",
+                                background: "rgba(245, 158, 11, 0.15)",
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                flexShrink: 0
+                              }}
+                            >
+                              <Timer size={18} color="#f59e0b" />
+                            </div>
                           ) : (
-                            <Circle size={24} color="var(--text-dim)" />
+                            <Circle size={26} color="var(--text-dim)" style={{ flexShrink: 0 }} />
                           )}
+
                           <div>
                             <div style={{
                               fontWeight: 800,
-                              fontSize: "1rem",
-                              textDecoration: med.taken ? "line-through" : "none",
-                              color: med.taken ? "var(--text-muted)" : "var(--text-highlight)"
+                              fontSize: "1.02rem",
+                              textDecoration: (med.taken || med.stopped) ? "line-through" : "none",
+                              color: med.stopped
+                                ? "var(--text-muted)"
+                                : med.taken
+                                  ? "var(--text-muted)"
+                                  : "var(--text-highlight)",
+                              display: "flex",
+                              alignItems: "center",
+                              gap: "8px",
+                              flexWrap: "wrap"
                             }}>
-                              {med.name} <span style={{ color: "var(--primary)", fontSize: "0.85rem" }}>({med.dosage})</span>
+                              <span>{med.name}</span>
+                              <span style={{ color: "var(--primary)", fontSize: "0.85rem", fontWeight: 700 }}>
+                                ({med.dosage})
+                              </span>
+
+                              {med.stopped && (
+                                <span
+                                  style={{
+                                    fontSize: "0.72rem",
+                                    fontWeight: 700,
+                                    padding: "2px 8px",
+                                    borderRadius: "6px",
+                                    background: "rgba(239, 68, 68, 0.15)",
+                                    color: "#ef4444",
+                                    border: "1px solid rgba(239, 68, 68, 0.3)"
+                                  }}
+                                >
+                                  🛑 {t.courseStopped || "Course Discontinued"}
+                                </span>
+                              )}
+
+                              {med.snoozedMinutes && !med.taken && !med.stopped && (
+                                <span
+                                  style={{
+                                    fontSize: "0.72rem",
+                                    fontWeight: 800,
+                                    padding: "3px 9px",
+                                    borderRadius: "6px",
+                                    background: "linear-gradient(135deg, rgba(245, 158, 11, 0.25), rgba(217, 119, 6, 0.2))",
+                                    color: "#d97706",
+                                    border: "1px solid rgba(245, 158, 11, 0.6)",
+                                    display: "inline-flex",
+                                    alignItems: "center",
+                                    gap: "4px",
+                                    boxShadow: "0 2px 8px rgba(245, 158, 11, 0.25)"
+                                  }}
+                                >
+                                  <Timer size={12} />
+                                  {t.snoozedBadge || "Snoozed"} (+{med.snoozedMinutes}m)
+                                </span>
+                              )}
                             </div>
-                            <div style={{ fontSize: "0.8rem", color: "var(--text-muted)", display: "flex", alignItems: "center", gap: "12px", marginTop: "3px" }}>
+
+                            <div style={{ fontSize: "0.82rem", color: "var(--text-muted)", display: "flex", alignItems: "center", gap: "12px", marginTop: "4px", flexWrap: "wrap" }}>
                               <span>{translateMedicalTerm(med.purpose, lang)}</span>
                               <span style={{ display: "flex", alignItems: "center", gap: "4px" }}>
-                                <Utensils size={13} /> {med.withFood ? translateMedicalTerm("Take with/after meals", lang) : translateMedicalTerm("Take on empty stomach", lang)}
+                                <Utensils size={13} /> {med.withFood ? (t.takeWithFood || "Take with/after meals") : (t.emptyStomach || "Take on empty stomach")}
                               </span>
+                              {med.stopped && (
+                                <span style={{ color: "#ef4444", fontSize: "0.78rem" }}>
+                                  • {translateMedicalTerm("Alerts paused", lang)}
+                                </span>
+                              )}
                             </div>
                           </div>
                         </div>
 
-                        <span className={`badge ${med.refillDaysLeft <= 7 ? "badge-critical" : "badge-good"}`}>
-                          <BellRing size={12} /> {med.refillDaysLeft} {translateMedicalTerm("days supply", lang)}
-                        </span>
+                        {/* Right Actions: Snooze, Stop Course, Resume */}
+                        <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
+                          {med.stopped ? (
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                if (onStopMedicationCourse) onStopMedicationCourse(med.id);
+                              }}
+                              className="btn"
+                              style={{
+                                display: "inline-flex",
+                                alignItems: "center",
+                                gap: "6px",
+                                padding: "6px 14px",
+                                borderRadius: "8px",
+                                fontSize: "0.82rem",
+                                fontWeight: 700,
+                                background: "linear-gradient(135deg, rgba(16, 185, 129, 0.16), rgba(5, 150, 105, 0.12))",
+                                color: "var(--secondary)",
+                                border: "1px solid var(--secondary-border)",
+                                cursor: "pointer"
+                              }}
+                            >
+                              <RotateCcw size={14} />
+                              <span>{t.resumeCourse || "Resume Course"}</span>
+                            </button>
+                          ) : med.taken ? (
+                            <span className="badge badge-good" style={{ fontSize: "0.78rem", padding: "4px 10px" }}>
+                              <CheckCircle2 size={13} /> {t.optimal || "Taken"}
+                            </span>
+                          ) : (
+                            <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
+                              {/* SNOOZE BUTTON - HIGHLY VISIBLE AMBER ACCENT */}
+                              <div style={{
+                                display: "inline-flex",
+                                borderRadius: "8px",
+                                overflow: "hidden",
+                                border: "1px solid rgba(245, 158, 11, 0.55)",
+                                boxShadow: "0 2px 10px rgba(245, 158, 11, 0.22)"
+                              }}>
+                                <button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    if (onSnoozeMedication) onSnoozeMedication(med.id, 15);
+                                  }}
+                                  title="Delay dose reminder by 15 minutes"
+                                  style={{
+                                    display: "inline-flex",
+                                    alignItems: "center",
+                                    gap: "5px",
+                                    padding: "7px 12px",
+                                    fontSize: "0.82rem",
+                                    fontWeight: 800,
+                                    background: "linear-gradient(135deg, rgba(245, 158, 11, 0.22), rgba(217, 119, 6, 0.18))",
+                                    color: "#d97706",
+                                    border: "none",
+                                    borderRight: "1px solid rgba(245, 158, 11, 0.35)",
+                                    cursor: "pointer",
+                                    transition: "all 0.15s ease"
+                                  }}
+                                >
+                                  <Timer size={14} color="#d97706" />
+                                  <span>{t.snooze15m || "Snooze (+15m)"}</span>
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    if (onSnoozeMedication) onSnoozeMedication(med.id, 60);
+                                  }}
+                                  title="Delay dose reminder by 1 hour"
+                                  style={{
+                                    padding: "7px 10px",
+                                    fontSize: "0.78rem",
+                                    fontWeight: 700,
+                                    background: "linear-gradient(135deg, rgba(245, 158, 11, 0.18), rgba(217, 119, 6, 0.14))",
+                                    color: "#d97706",
+                                    border: "none",
+                                    cursor: "pointer"
+                                  }}
+                                >
+                                  +1h
+                                </button>
+                              </div>
+
+                              {/* STOP COURSE BUTTON - HIGHLY VISIBLE CRIMSON OUTLINE */}
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  if (onStopMedicationCourse) onStopMedicationCourse(med.id);
+                                }}
+                                title="Discontinue or finish treatment course"
+                                style={{
+                                  display: "inline-flex",
+                                  alignItems: "center",
+                                  gap: "5px",
+                                  padding: "7px 12px",
+                                  borderRadius: "8px",
+                                  fontSize: "0.82rem",
+                                  fontWeight: 800,
+                                  background: "linear-gradient(135deg, rgba(239, 68, 68, 0.18), rgba(220, 38, 38, 0.12))",
+                                  border: "1px solid rgba(239, 68, 68, 0.45)",
+                                  color: "#dc2626",
+                                  cursor: "pointer",
+                                  boxShadow: "0 2px 8px rgba(239, 68, 68, 0.2)",
+                                  transition: "all 0.15s ease"
+                                }}
+                              >
+                                <Ban size={14} color="#dc2626" />
+                                <span>{t.stopCourse || "Stop Course"}</span>
+                              </button>
+
+                              {/* QUICK TAKE NOW */}
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  onToggleMedication(med.id);
+                                }}
+                                title="Mark this dose as taken"
+                                className="btn btn-primary"
+                                style={{
+                                  padding: "7px 13px",
+                                  fontSize: "0.82rem",
+                                  fontWeight: 700,
+                                  borderRadius: "8px",
+                                  display: "inline-flex",
+                                  alignItems: "center",
+                                  gap: "4px"
+                                }}
+                              >
+                                <Check size={14} />
+                                <span>{t.takeNow || "Take Now"}</span>
+                              </button>
+                            </div>
+                          )}
+
+                          <span className={`badge ${med.refillDaysLeft <= 7 ? "badge-critical" : "badge-good"}`} style={{ marginLeft: "4px" }}>
+                            <BellRing size={12} /> {med.refillDaysLeft} {t.daysSupplyLeft || "days supply"}
+                          </span>
+                        </div>
                       </div>
                     ))}
                   </div>

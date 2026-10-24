@@ -13,7 +13,10 @@ import {
   BellRing,
   UploadCloud,
   Pill,
-  Activity
+  Activity,
+  Ban,
+  RotateCcw,
+  Timer
 } from "lucide-react";
 import { translations } from "../data/translations";
 import { translateMedicalTerm } from "../utils/translator";
@@ -22,6 +25,8 @@ export default function Dashboard({
   patient,
   onNavigate,
   onToggleMedication,
+  onSnoozeMedication,
+  onStopMedicationCourse,
   onOpenDoctorPrep,
   onOpenAddVital,
   onUploadReport,
@@ -34,9 +39,10 @@ export default function Dashboard({
   const latestVital = patient.vitalsHistory[patient.vitalsHistory.length - 1] || {};
   const previousVital = patient.vitalsHistory[patient.vitalsHistory.length - 2] || {};
 
-  const medsTakenCount = patient.todayMedications.filter(m => m.taken).length;
-  const totalMeds = patient.todayMedications.length;
-  const adherencePercent = Math.round((medsTakenCount / totalMeds) * 100);
+  const activeMeds = (patient.todayMedications || []).filter(m => !m.stopped);
+  const medsTakenCount = activeMeds.filter(m => m.taken).length;
+  const totalActiveMeds = activeMeds.length;
+  const adherencePercent = totalActiveMeds > 0 ? Math.round((medsTakenCount / totalActiveMeds) * 100) : 100;
 
   const handleFileSelected = (file) => {
     if (!file) return;
@@ -580,33 +586,71 @@ export default function Dashboard({
             {patient.todayMedications.map((med) => (
               <div
                 key={med.id}
-                onClick={() => onToggleMedication(med.id)}
+                onClick={() => {
+                  if (!med.stopped) {
+                    onToggleMedication(med.id);
+                  }
+                }}
                 style={{
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "space-between",
                   padding: "12px 16px",
                   borderRadius: "12px",
-                  background: med.taken ? "var(--status-good-bg)" : "var(--bg-elevated)",
-                  border: med.taken ? "1px solid var(--status-good-border)" : "1px solid var(--border-color)",
-                  cursor: "pointer",
-                  transition: "all 0.2s ease"
+                  background: med.stopped
+                    ? "rgba(100, 116, 139, 0.08)"
+                    : med.taken
+                      ? "var(--status-good-bg)"
+                      : med.snoozedMinutes
+                        ? "rgba(245, 158, 11, 0.08)"
+                        : "var(--bg-elevated)",
+                  border: med.stopped
+                    ? "1px dashed rgba(148, 163, 184, 0.45)"
+                    : med.taken
+                      ? "1px solid var(--status-good-border)"
+                      : med.snoozedMinutes
+                        ? "1px solid rgba(245, 158, 11, 0.55)"
+                        : "1px solid var(--border-color)",
+                  cursor: med.stopped ? "default" : "pointer",
+                  opacity: med.stopped ? 0.72 : 1,
+                  transition: "all 0.2s ease",
+                  gap: "12px",
+                  flexWrap: "wrap"
                 }}
               >
-                <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                  {med.taken ? (
-                    <CheckCircle2 size={22} color="var(--secondary)" />
+                <div style={{ display: "flex", alignItems: "center", gap: "12px", flex: "1 1 200px" }}>
+                  {med.stopped ? (
+                    <Ban size={20} color="#ef4444" style={{ flexShrink: 0 }} />
+                  ) : med.taken ? (
+                    <CheckCircle2 size={22} color="var(--secondary)" style={{ flexShrink: 0 }} />
+                  ) : med.snoozedMinutes ? (
+                    <Timer size={20} color="#f59e0b" style={{ flexShrink: 0 }} />
                   ) : (
-                    <Circle size={22} color="var(--text-dim)" />
+                    <Circle size={22} color="var(--text-dim)" style={{ flexShrink: 0 }} />
                   )}
                   <div>
                     <div style={{
                       fontWeight: 700,
                       fontSize: "0.95rem",
-                      textDecoration: med.taken ? "line-through" : "none",
-                      color: med.taken ? "var(--text-muted)" : "var(--text-highlight)"
+                      textDecoration: (med.taken || med.stopped) ? "line-through" : "none",
+                      color: med.stopped ? "var(--text-muted)" : med.taken ? "var(--text-muted)" : "var(--text-highlight)",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "8px",
+                      flexWrap: "wrap"
                     }}>
-                      {med.name} <span style={{ fontSize: "0.82rem", color: "var(--primary)" }}>({med.dosage})</span>
+                      <span>{med.name}</span>
+                      <span style={{ fontSize: "0.82rem", color: "var(--primary)" }}>({med.dosage})</span>
+                      {med.stopped && (
+                        <span style={{ fontSize: "0.68rem", fontWeight: 700, padding: "2px 6px", borderRadius: "4px", background: "rgba(239, 68, 68, 0.15)", color: "#ef4444" }}>
+                          🛑 {t.courseStopped || "Stopped"}
+                        </span>
+                      )}
+                      {med.snoozedMinutes && !med.taken && !med.stopped && (
+                        <span style={{ fontSize: "0.68rem", fontWeight: 800, padding: "2px 6px", borderRadius: "4px", background: "rgba(245, 158, 11, 0.2)", color: "#d97706", border: "1px solid rgba(245, 158, 11, 0.5)" }}>
+                          ⏰ {t.snoozedBadge || "Snoozed"} (+{med.snoozedMinutes}m)
+                        </span>
+                      )}
                     </div>
                     <div style={{ fontSize: "0.78rem", color: "var(--text-muted)" }}>
                       {translateMedicalTerm(med.timing, lang)} • {translateMedicalTerm(med.purpose, lang)}
@@ -614,11 +658,95 @@ export default function Dashboard({
                   </div>
                 </div>
 
-                {med.refillDaysLeft <= 7 && (
-                  <span className="badge badge-borderline" style={{ fontSize: "0.72rem" }}>
-                    <BellRing size={12} /> {med.refillDaysLeft} {t.daysSupplyLeft}
-                  </span>
-                )}
+                <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
+                  {med.stopped ? (
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (onStopMedicationCourse) onStopMedicationCourse(med.id);
+                      }}
+                      style={{
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: "4px",
+                        padding: "5px 10px",
+                        borderRadius: "6px",
+                        fontSize: "0.76rem",
+                        fontWeight: 700,
+                        background: "rgba(16, 185, 129, 0.12)",
+                        color: "var(--secondary)",
+                        border: "1px solid var(--secondary-border)",
+                        cursor: "pointer"
+                      }}
+                    >
+                      <RotateCcw size={12} />
+                      <span>{t.resumeCourse || "Resume"}</span>
+                    </button>
+                  ) : !med.taken ? (
+                    <>
+                      {/* Highlighted Snooze Button */}
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (onSnoozeMedication) onSnoozeMedication(med.id, 15);
+                        }}
+                        title="Snooze reminder by 15 minutes"
+                        style={{
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: "4px",
+                          padding: "5px 10px",
+                          borderRadius: "6px",
+                          fontSize: "0.76rem",
+                          fontWeight: 800,
+                          background: "linear-gradient(135deg, rgba(245, 158, 11, 0.22), rgba(217, 119, 6, 0.16))",
+                          color: "#d97706",
+                          border: "1px solid rgba(245, 158, 11, 0.55)",
+                          cursor: "pointer",
+                          boxShadow: "0 2px 6px rgba(245, 158, 11, 0.2)"
+                        }}
+                      >
+                        <Clock size={12} color="#d97706" />
+                        <span>{t.snooze15m || "Snooze"}</span>
+                      </button>
+
+                      {/* Highlighted Stop Course Button */}
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (onStopMedicationCourse) onStopMedicationCourse(med.id);
+                        }}
+                        title="Stop medication course"
+                        style={{
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: "4px",
+                          padding: "5px 10px",
+                          borderRadius: "6px",
+                          fontSize: "0.76rem",
+                          fontWeight: 800,
+                          background: "linear-gradient(135deg, rgba(239, 68, 68, 0.18), rgba(220, 38, 38, 0.12))",
+                          color: "#dc2626",
+                          border: "1px solid rgba(239, 68, 68, 0.45)",
+                          cursor: "pointer",
+                          boxShadow: "0 2px 6px rgba(239, 68, 68, 0.18)"
+                        }}
+                      >
+                        <Ban size={12} color="#dc2626" />
+                        <span>{t.stopCourse || "Stop"}</span>
+                      </button>
+                    </>
+                  ) : null}
+
+                  {med.refillDaysLeft <= 7 && (
+                    <span className="badge badge-borderline" style={{ fontSize: "0.72rem" }}>
+                      <BellRing size={12} /> {med.refillDaysLeft} {t.daysSupplyLeft}
+                    </span>
+                  )}
+                </div>
               </div>
             ))}
           </div>

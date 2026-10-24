@@ -20,10 +20,13 @@ export function getStoredApiKey() {
 }
 
 export function setStoredApiKey(key) {
-  if (key) {
+  if (key && key.trim()) {
     localStorage.setItem(STORAGE_KEY_API_KEY, key.trim());
   } else {
     localStorage.removeItem(STORAGE_KEY_API_KEY);
+  }
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new CustomEvent("pulseai_apikey_updated"));
   }
 }
 
@@ -546,15 +549,14 @@ STRICT SIMPLICITY INSTRUCTIONS (MANDATORY):
 async function callGeminiWithFallback(apiKey, requestBody) {
   // Real Google Gemini production models cascade (supports modern & legacy API keys)
   const models = [
-    "gemini-3.5-flash",
-    "gemini-3.5-flash-lite",
-    "gemini-3.8-flash",
     "gemini-1.5-flash",
     "gemini-2.0-flash",
-    "gemini-flash-latest"
+    "gemini-1.5-flash-8b",
+    "gemini-1.5-pro",
+    "gemini-2.5-flash"
   ];
   const isVision = Boolean(requestBody?.contents?.[0]?.parts?.some(p => p.inlineData));
-  const timeoutMs = isVision ? 12000 : 5000;
+  const timeoutMs = isVision ? 14000 : 7000;
 
   for (const model of models) {
     try {

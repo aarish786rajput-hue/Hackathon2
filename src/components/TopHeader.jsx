@@ -1470,13 +1470,8 @@ export default function TopHeader({
                   }}>
                     <FileCheck2 size={17} />
                   </div>
-                  <div>
-                    <div style={{ fontSize: "0.86rem", fontWeight: 700, color: "var(--text-highlight)" }}>
-                      Health Passport
-                    </div>
-                    <div style={{ fontSize: "0.72rem", color: "var(--text-muted)" }}>
-                      Doctor PDF Summary
-                    </div>
+                  <div style={{ fontSize: "0.86rem", fontWeight: 700, color: "var(--text-highlight)" }}>
+                    Health Passport
                   </div>
                 </div>
                 <span style={{ fontSize: "0.72rem", color: "#10b981", fontWeight: 700 }}>
@@ -1523,13 +1518,8 @@ export default function TopHeader({
                 }}>
                   <AlertOctagon size={17} strokeWidth={2.4} />
                 </div>
-                <div>
-                  <div style={{ fontSize: "0.86rem", fontWeight: 800, color: "#ef4444" }}>
-                    SOS Emergency
-                  </div>
-                  <div style={{ fontSize: "0.72rem", color: "var(--text-muted)" }}>
-                    Medical ID & ICE Contacts
-                  </div>
+                <div style={{ fontSize: "0.86rem", fontWeight: 800, color: "#ef4444" }}>
+                  SOS Emergency
                 </div>
               </div>
               <span style={{
@@ -1579,13 +1569,8 @@ export default function TopHeader({
                   }}>
                     {theme === "dark" ? <Sun size={17} color="#fbbf24" /> : <Moon size={17} color="#0284c7" />}
                   </div>
-                  <div>
-                    <div style={{ fontSize: "0.86rem", fontWeight: 700, color: "var(--text-highlight)" }}>
-                      {theme === "dark" ? "Light Mode" : "Dark Mode"}
-                    </div>
-                    <div style={{ fontSize: "0.72rem", color: "var(--text-muted)" }}>
-                      Toggle visual appearance
-                    </div>
+                  <div style={{ fontSize: "0.86rem", fontWeight: 700, color: "var(--text-highlight)" }}>
+                    {theme === "dark" ? "Light Mode" : "Dark Mode"}
                   </div>
                 </div>
                 <span style={{
@@ -1640,13 +1625,8 @@ export default function TopHeader({
                   }}>
                     <Key size={17} />
                   </div>
-                  <div>
-                    <div style={{ fontSize: "0.86rem", fontWeight: 700, color: "var(--text-highlight)" }}>
-                      Gemini API Key
-                    </div>
-                    <div style={{ fontSize: "0.72rem", color: "var(--text-muted)" }}>
-                      Configure AI & Vision Key
-                    </div>
+                  <div style={{ fontSize: "0.86rem", fontWeight: 700, color: "var(--text-highlight)" }}>
+                    Gemini API Key
                   </div>
                 </div>
                 <span style={{ fontSize: "0.72rem", color: "var(--primary)", fontWeight: 700 }}>
@@ -1690,13 +1670,8 @@ export default function TopHeader({
                   }}>
                     <Languages size={17} />
                   </div>
-                  <div>
-                    <div style={{ fontSize: "0.86rem", fontWeight: 700, color: "var(--text-highlight)" }}>
-                      Language
-                    </div>
-                    <div style={{ fontSize: "0.72rem", color: "var(--text-muted)" }}>
-                      {SUPPORTED_NAV_LANGUAGES.find(l => l.id === lang)?.label || "English"} ({SUPPORTED_NAV_LANGUAGES.find(l => l.id === lang)?.native || "English"})
-                    </div>
+                  <div style={{ fontSize: "0.86rem", fontWeight: 700, color: "var(--text-highlight)" }}>
+                    Language
                   </div>
                 </div>
                 <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>

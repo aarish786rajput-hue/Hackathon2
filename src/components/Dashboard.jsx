@@ -604,44 +604,6 @@ export default function Dashboard({
               </div>
             </div>
           </div>
-
-          {/* Wellness & Prevention Shortcut Card */}
-          <div
-            onClick={() => onNavigate("wellness")}
-            className="glass-panel interactive-card"
-            style={{ 
-              padding: "24px 22px", 
-              display: "flex", 
-              alignItems: "center", 
-              gap: "18px", 
-              borderRadius: "18px",
-              border: "1.5px solid rgba(16, 185, 129, 0.35)",
-              background: "linear-gradient(135deg, rgba(16, 185, 129, 0.08), var(--bg-card) 60%)",
-              minHeight: "108px"
-            }}
-          >
-            <div style={{
-              width: "54px",
-              height: "54px",
-              borderRadius: "15px",
-              background: "linear-gradient(135deg, #10b981, #059669)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              flexShrink: 0,
-              boxShadow: "0 4px 14px rgba(16, 185, 129, 0.35)"
-            }}>
-              <Sparkles size={26} color="#ffffff" strokeWidth={2.2} />
-            </div>
-            <div>
-              <div style={{ fontWeight: 800, fontSize: "1.12rem", color: "var(--text-highlight)", lineHeight: 1.25, marginBottom: "4px" }}>
-                {t.navWellness || "Wellness & Prevention"}
-              </div>
-              <div style={{ fontSize: "0.84rem", color: "var(--text-muted)", lineHeight: 1.35 }}>
-                {t.wellnessGuidanceSub || "Daily habits & repeat tests due"}
-              </div>
-            </div>
-          </div>
         </div>
     </div>
 

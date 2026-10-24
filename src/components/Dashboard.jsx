@@ -39,10 +39,11 @@ export default function Dashboard({
   const latestVital = patient.vitalsHistory[patient.vitalsHistory.length - 1] || {};
   const previousVital = patient.vitalsHistory[patient.vitalsHistory.length - 2] || {};
 
-  const activeMeds = (patient.todayMedications || []).filter(m => !m.stopped);
+  const allMeds = patient.todayMedications || [];
+  const activeMeds = allMeds.filter(m => !m.stopped);
+  const totalMeds = activeMeds.length;
   const medsTakenCount = activeMeds.filter(m => m.taken).length;
-  const totalActiveMeds = activeMeds.length;
-  const adherencePercent = totalActiveMeds > 0 ? Math.round((medsTakenCount / totalActiveMeds) * 100) : 100;
+  const adherencePercent = totalMeds > 0 ? Math.round((medsTakenCount / totalMeds) * 100) : 100;
 
   const handleFileSelected = (file) => {
     if (!file) return;

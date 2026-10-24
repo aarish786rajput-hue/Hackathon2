@@ -207,6 +207,7 @@ export default function DoctorsDashboard({
       const updated = [newAppointment, ...prev.filter((a) => a.id !== newAppointment.id)];
       try {
         localStorage.setItem("pulseai_booked_appointments", JSON.stringify(updated));
+        window.dispatchEvent(new CustomEvent("pulseai_appointment_updated"));
       } catch (e) {
         console.error(e);
       }
@@ -253,6 +254,7 @@ export default function DoctorsDashboard({
         const updated = prev.filter((a) => a.id !== id);
         try {
           localStorage.setItem("pulseai_booked_appointments", JSON.stringify(updated));
+          window.dispatchEvent(new CustomEvent("pulseai_appointment_updated"));
         } catch (e) {
           console.error(e);
         }

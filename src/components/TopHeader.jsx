@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useMemo } from "react";
 import { LogoIcon } from "./BrandLogo";
 import { 
   AlertOctagon, 
@@ -23,7 +23,8 @@ import {
   Bell,
   BellRing,
   Clock,
-  CheckCircle2
+  CheckCircle2,
+  Calendar
 } from "lucide-react";
 import { translations } from "../data/translations";
 import { triggerGoogleTranslate } from "../utils/translator";
@@ -33,8 +34,11 @@ import {
   scheduleSnoozeNotification,
   getNotificationPermission,
   requestNotificationPermission,
-  sendDesktopNotification
+  sendDesktopNotification,
+  getAppointmentReminderStatus,
+  getActiveAppointmentNotifications
 } from "../utils/reminderService";
+import { getPatientWellnessData } from "../data/wellnessData";
 
 // Crisp vector SVG flags for UK and India to prevent Windows "GB" / "IN" font fallback
 const UKFlagIcon = () => (
@@ -149,14 +153,73 @@ export default function TopHeader({
   const [isSubLangOpen, setIsSubLangOpen] = useState(false);
   const [isNotifOpen, setIsNotifOpen] = useState(false);
   const [notifPermission, setNotifPermission] = useState(() => getNotificationPermission());
+  const [notifFilterTab, setNotifFilterTab] = useState("all"); // 'all' | 'meds' | 'appointments'
 
   const searchContainerRef = useRef(null);
   const searchInputRef = useRef(null);
   const quickMenuRef = useRef(null);
   const notifContainerRef = useRef(null);
 
+  // Persistent Booked Appointments from localStorage & custom event sync
+  const [bookedAppointments, setBookedAppointments] = useState(() => {
+    try {
+      const saved = localStorage.getItem("pulseai_booked_appointments");
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  useEffect(() => {
+    const handleAppointmentsUpdated = () => {
+      try {
+        const saved = localStorage.getItem("pulseai_booked_appointments");
+        setBookedAppointments(saved ? JSON.parse(saved) : []);
+      } catch (e) {
+        console.error(e);
+      }
+    };
+    window.addEventListener("pulseai_appointment_updated", handleAppointmentsUpdated);
+    window.addEventListener("storage", handleAppointmentsUpdated);
+    return () => {
+      window.removeEventListener("pulseai_appointment_updated", handleAppointmentsUpdated);
+      window.removeEventListener("storage", handleAppointmentsUpdated);
+    };
+  }, []);
+
   const allMeds = patient?.todayMedications || [];
   const overdueMeds = getOverdueAndDueMedications(allMeds);
+
+  // Combine user-booked appointments with scheduled follow-up from patient profile
+  const allAppointments = useMemo(() => {
+    const list = [...bookedAppointments];
+    const wellness = patient?.id ? getPatientWellnessData(patient.id) : null;
+    if (wellness?.upcomingAppointment) {
+      const hasMatch = list.some(a => 
+        (a.doctorName && a.doctorName.includes(wellness.upcomingAppointment.doctorName)) ||
+        (a.date === wellness.upcomingAppointment.date)
+      );
+      if (!hasMatch) {
+        list.push({
+          id: `profile-apt-${patient.id}`,
+          doctorName: wellness.upcomingAppointment.doctorName,
+          specialty: wellness.upcomingAppointment.specialty,
+          clinic: wellness.upcomingAppointment.clinic,
+          date: wellness.upcomingAppointment.date,
+          time: wellness.upcomingAppointment.time,
+          token: "TK-08",
+          type: "In-Clinic Follow-Up"
+        });
+      }
+    }
+    return list;
+  }, [bookedAppointments, patient?.id]);
+
+  const activeAppointments = useMemo(() => {
+    return getActiveAppointmentNotifications(allAppointments, lang);
+  }, [allAppointments, lang]);
+
+  const totalAlertsCount = overdueMeds.length + activeAppointments.length;
 
   const toggleNotifMenu = () => {
     setIsNotifOpen(prev => {
@@ -522,38 +585,38 @@ export default function TopHeader({
             type="button"
             onClick={toggleNotifMenu}
             className={`header-icon-btn ${isNotifOpen ? "is-active" : ""}`}
-            title={overdueMeds.length > 0 
-              ? `${overdueMeds.length} pending medication alerts` 
-              : "Medication Reminders"}
-            aria-label="Medication Reminders Notification"
+            title={totalAlertsCount > 0 
+              ? `${totalAlertsCount} pending alerts (${overdueMeds.length} meds, ${activeAppointments.length} appointments)` 
+              : "Notifications & Reminders"}
+            aria-label="Medication & Appointment Notifications"
             style={{
               width: "40px",
               height: "40px",
               borderRadius: "11px",
-              color: overdueMeds.length > 0 ? "#ea580c" : isNotifOpen ? "var(--primary)" : "var(--text-highlight)",
-              background: overdueMeds.length > 0 
+              color: totalAlertsCount > 0 ? "#ea580c" : isNotifOpen ? "var(--primary)" : "var(--text-highlight)",
+              background: totalAlertsCount > 0 
                 ? "rgba(249, 115, 22, 0.12)" 
                 : isNotifOpen 
                   ? "var(--primary-soft)" 
                   : "var(--bg-elevated)",
-              borderColor: overdueMeds.length > 0 
+              borderColor: totalAlertsCount > 0 
                 ? "rgba(249, 115, 22, 0.45)" 
                 : isNotifOpen 
                   ? "var(--primary-border)" 
                   : "var(--border-color)",
-              boxShadow: overdueMeds.length > 0 
+              boxShadow: totalAlertsCount > 0 
                 ? "0 0 10px rgba(249, 115, 22, 0.25)" 
                 : "var(--shadow-sm)"
             }}
           >
-            {overdueMeds.length > 0 ? (
+            {totalAlertsCount > 0 ? (
               <BellRing size={20} className="bell-shake" color="#ea580c" />
             ) : (
               <Bell size={19} />
             )}
 
-            {/* Overdue Count Badge */}
-            {overdueMeds.length > 0 && (
+            {/* Total Alert Count Badge */}
+            {totalAlertsCount > 0 && (
               <span
                 className="notif-badge-pulse"
                 style={{
@@ -575,7 +638,7 @@ export default function TopHeader({
                   border: "1.5px solid var(--bg-card)"
                 }}
               >
-                {overdueMeds.length}
+                {totalAlertsCount}
               </span>
             )}
           </button>
@@ -589,7 +652,7 @@ export default function TopHeader({
                 position: "absolute",
                 top: "calc(100% + 8px)",
                 right: 0,
-                width: "350px",
+                width: "380px",
                 maxWidth: "calc(100vw - 28px)",
                 background: "var(--bg-card)",
                 backdropFilter: "blur(20px)",
@@ -602,7 +665,7 @@ export default function TopHeader({
                 display: "flex",
                 flexDirection: "column",
                 gap: "10px",
-                maxHeight: "460px",
+                maxHeight: "490px",
                 overflowY: "auto",
                 animation: "fadeIn 0.15s ease"
               }}
@@ -617,34 +680,44 @@ export default function TopHeader({
               }}>
                 <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                   <div style={{
-                    width: "30px",
-                    height: "30px",
-                    borderRadius: "8px",
-                    background: overdueMeds.length > 0 ? "rgba(249, 115, 22, 0.16)" : "rgba(16, 185, 129, 0.16)",
-                    color: overdueMeds.length > 0 ? "#ea580c" : "#10b981",
+                    width: "32px",
+                    height: "32px",
+                    borderRadius: "9px",
+                    background: totalAlertsCount > 0 ? "rgba(249, 115, 22, 0.16)" : "rgba(16, 185, 129, 0.16)",
+                    color: totalAlertsCount > 0 ? "#ea580c" : "#10b981",
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center"
                   }}>
-                    {overdueMeds.length > 0 ? <BellRing size={16} /> : <CheckCircle2 size={16} />}
+                    {totalAlertsCount > 0 ? <BellRing size={17} /> : <CheckCircle2 size={17} />}
                   </div>
                   <div>
-                    <h4 style={{ margin: 0, fontSize: "0.92rem", fontWeight: 800, color: "var(--text-highlight)" }}>
-                      {lang === "hi" ? "दवा रिमाइंडर सूचनाएं" : lang === "hinglish" ? "Medicine Alerts" : "Medication Reminders"}
+                    <h4 style={{ margin: 0, fontSize: "0.94rem", fontWeight: 800, color: "var(--text-highlight)" }}>
+                      {lang === "hi" 
+                        ? "दवा व डॉक्टर अपॉइंटमेंट" 
+                        : lang === "hinglish" 
+                          ? "Medicine & Doctor Alerts" 
+                          : "Notifications & Reminders"}
                     </h4>
                     <span style={{ fontSize: "0.72rem", color: "var(--text-muted)" }}>
-                      {overdueMeds.length > 0
-                        ? (lang === "hi" 
-                            ? `${overdueMeds.length} दवा समय पर नहीं ली गई` 
-                            : lang === "hinglish"
-                              ? `${overdueMeds.length} medicine pending`
-                              : `${overdueMeds.length} pending scheduled dose${overdueMeds.length > 1 ? "s" : ""}`)
-                        : (lang === "hi" ? "सभी दवाइयां समय पर ली गईं" : "All caught up on time")}
+                      {totalAlertsCount > 0 ? (
+                        <>
+                          {overdueMeds.length > 0 && (
+                            <span>{overdueMeds.length} {lang === "hi" ? "दवा पेंडिंग" : "meds due"}</span>
+                          )}
+                          {overdueMeds.length > 0 && activeAppointments.length > 0 && " • "}
+                          {activeAppointments.length > 0 && (
+                            <span>{activeAppointments.length} {lang === "hi" ? "अपॉइंटमेंट" : "doctor visit"}</span>
+                          )}
+                        </>
+                      ) : (
+                        lang === "hi" ? "सभी दवाएं व अपॉइंटमेंट अप-टू-डेट हैं" : "All caught up on time"
+                      )}
                     </span>
                   </div>
                 </div>
 
-                {overdueMeds.length > 0 ? (
+                {totalAlertsCount > 0 ? (
                   <span style={{
                     fontSize: "0.7rem",
                     fontWeight: 800,
@@ -654,7 +727,7 @@ export default function TopHeader({
                     color: "#dc2626",
                     border: "1px solid rgba(239, 68, 68, 0.3)"
                   }}>
-                    {overdueMeds.length} Overdue
+                    {totalAlertsCount} Alert{totalAlertsCount > 1 ? "s" : ""}
                   </span>
                 ) : (
                   <span style={{
@@ -671,9 +744,217 @@ export default function TopHeader({
                 )}
               </div>
 
-              {/* Status Notice when overdue */}
-              {overdueMeds.length > 0 ? (
-                <>
+              {/* Category Filter Tabs (visible when both meds & appointments exist) */}
+              {overdueMeds.length > 0 && activeAppointments.length > 0 && (
+                <div style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "6px",
+                  background: "var(--bg-elevated)",
+                  padding: "3px",
+                  borderRadius: "9px"
+                }}>
+                  <button
+                    type="button"
+                    onClick={() => setNotifFilterTab("all")}
+                    style={{
+                      flex: 1,
+                      border: "none",
+                      padding: "4px 8px",
+                      borderRadius: "7px",
+                      fontSize: "0.72rem",
+                      fontWeight: 700,
+                      cursor: "pointer",
+                      background: notifFilterTab === "all" ? "var(--primary)" : "transparent",
+                      color: notifFilterTab === "all" ? "#ffffff" : "var(--text-muted)",
+                      transition: "all 0.15s ease"
+                    }}
+                  >
+                    All ({totalAlertsCount})
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setNotifFilterTab("appointments")}
+                    style={{
+                      flex: 1,
+                      border: "none",
+                      padding: "4px 8px",
+                      borderRadius: "7px",
+                      fontSize: "0.72rem",
+                      fontWeight: 700,
+                      cursor: "pointer",
+                      background: notifFilterTab === "appointments" ? "var(--primary)" : "transparent",
+                      color: notifFilterTab === "appointments" ? "#ffffff" : "var(--text-muted)",
+                      transition: "all 0.15s ease"
+                    }}
+                  >
+                    🩺 Doctor ({activeAppointments.length})
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setNotifFilterTab("meds")}
+                    style={{
+                      flex: 1,
+                      border: "none",
+                      padding: "4px 8px",
+                      borderRadius: "7px",
+                      fontSize: "0.72rem",
+                      fontWeight: 700,
+                      cursor: "pointer",
+                      background: notifFilterTab === "meds" ? "var(--primary)" : "transparent",
+                      color: notifFilterTab === "meds" ? "#ffffff" : "var(--text-muted)",
+                      transition: "all 0.15s ease"
+                    }}
+                  >
+                    💊 Meds ({overdueMeds.length})
+                  </button>
+                </div>
+              )}
+
+              {/* ── SECTION 1: DOCTOR APPOINTMENTS BASED ON SELECTED DATE ── */}
+              {(notifFilterTab === "all" || notifFilterTab === "appointments") && activeAppointments.length > 0 && (
+                <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                  <div style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    padding: "2px 4px"
+                  }}>
+                    <span style={{ fontSize: "0.76rem", fontWeight: 800, color: "var(--text-highlight)", display: "flex", alignItems: "center", gap: "5px" }}>
+                      <Stethoscope size={14} color="var(--primary)" />
+                      <span>{lang === "hi" ? "डॉक्टर अपॉइंटमेंट अलर्ट" : "Doctor Appointments"}</span>
+                    </span>
+                    <span style={{ fontSize: "0.7rem", color: "var(--text-muted)" }}>
+                      {activeAppointments.length} Scheduled
+                    </span>
+                  </div>
+
+                  {activeAppointments.map((apt) => {
+                    const status = apt.statusInfo || {};
+                    return (
+                      <div
+                        key={apt.id || apt.token}
+                        style={{
+                          background: "var(--bg-elevated)",
+                          border: `1.5px solid ${status.isToday ? "rgba(239, 68, 68, 0.45)" : status.isTomorrow ? "rgba(234, 88, 12, 0.4)" : "var(--border-color)"}`,
+                          borderRadius: "12px",
+                          padding: "10px 12px",
+                          display: "flex",
+                          flexDirection: "column",
+                          gap: "8px",
+                          boxShadow: status.isToday ? "0 2px 10px rgba(239, 68, 68, 0.12)" : "var(--shadow-sm)"
+                        }}
+                      >
+                        <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: "8px" }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: "9px" }}>
+                            <div style={{
+                              width: "32px",
+                              height: "32px",
+                              borderRadius: "9px",
+                              background: "rgba(14, 165, 233, 0.14)",
+                              color: "var(--primary)",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              flexShrink: 0
+                            }}>
+                              <Stethoscope size={17} />
+                            </div>
+                            <div>
+                              <div style={{ fontSize: "0.88rem", fontWeight: 800, color: "var(--text-highlight)" }}>
+                                {apt.doctorName}
+                              </div>
+                              <div style={{ fontSize: "0.72rem", color: "var(--text-muted)" }}>
+                                {apt.specialty} • {apt.clinic || apt.hospital}
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Selected Date & Time Status Badge */}
+                          <span style={{
+                            fontSize: "0.68rem",
+                            fontWeight: 800,
+                            padding: "3px 7px",
+                            borderRadius: "5px",
+                            whiteSpace: "nowrap",
+                            background: status.badgeBg || "rgba(14, 165, 233, 0.16)",
+                            color: status.badgeColor || "var(--primary)",
+                            border: `1px solid ${status.badgeColor || "var(--primary-border)"}`
+                          }}>
+                            {status.label || apt.date}
+                          </span>
+                        </div>
+
+                        {/* Token & Time Info */}
+                        <div style={{
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "space-between",
+                          background: "var(--bg-card)",
+                          padding: "6px 9px",
+                          borderRadius: "7px",
+                          fontSize: "0.72rem",
+                          color: "var(--text-main)"
+                        }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                            <Clock size={12} color="var(--primary)" />
+                            <span>{apt.time || "Scheduled Slot"}</span>
+                            <span>•</span>
+                            <span>{apt.type || "In-Clinic Visit"}</span>
+                          </div>
+                          <span style={{ fontWeight: 800, color: "var(--secondary)" }}>
+                            {apt.token ? `Token: ${apt.token}` : "Confirmed"}
+                          </span>
+                        </div>
+
+                        {/* Action: Open Appointment Slip */}
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setIsNotifOpen(false);
+                            if (onNavigate) onNavigate("doctors");
+                          }}
+                          className="btn btn-secondary"
+                          style={{
+                            width: "100%",
+                            padding: "6px 10px",
+                            fontSize: "0.75rem",
+                            borderRadius: "7px",
+                            display: "inline-flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            gap: "5px",
+                            cursor: "pointer",
+                            background: "var(--bg-card)"
+                          }}
+                        >
+                          <Calendar size={13} />
+                          <span>{lang === "hi" ? "अपॉइंटमेंट पर्ची देखें / विवरण" : "View Doctor Slip & Details →"}</span>
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+
+              {/* ── SECTION 2: MEDICATION OVERDUE / PENDING REMINDERS ── */}
+              {(notifFilterTab === "all" || notifFilterTab === "meds") && overdueMeds.length > 0 && (
+                <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                  <div style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    padding: "2px 4px"
+                  }}>
+                    <span style={{ fontSize: "0.76rem", fontWeight: 800, color: "var(--text-highlight)", display: "flex", alignItems: "center", gap: "5px" }}>
+                      <Pill size={14} color="#ea580c" />
+                      <span>{lang === "hi" ? "छूटी हुई दवाइयां (Missed Dose)" : "Medication Reminders"}</span>
+                    </span>
+                    <span style={{ fontSize: "0.7rem", color: "#dc2626", fontWeight: 700 }}>
+                      {overdueMeds.length} Pending
+                    </span>
+                  </div>
+
                   <div style={{
                     background: "linear-gradient(135deg, rgba(245, 158, 11, 0.15), rgba(239, 68, 68, 0.1))",
                     border: "1px solid rgba(245, 158, 11, 0.35)",
@@ -796,11 +1077,13 @@ export default function TopHeader({
                       );
                     })}
                   </div>
-                </>
-              ) : (
-                /* Empty state when all caught up */
+                </div>
+              )}
+
+              {/* Empty state when all caught up */}
+              {totalAlertsCount === 0 && (
                 <div style={{
-                  padding: "24px 16px",
+                  padding: "26px 16px",
                   textAlign: "center",
                   display: "flex",
                   flexDirection: "column",
@@ -820,50 +1103,82 @@ export default function TopHeader({
                   }}>
                     ✓
                   </div>
-                  <div style={{ fontSize: "0.92rem", fontWeight: 800, color: "var(--text-highlight)" }}>
-                    {lang === "hi" ? "सब ठीक है! कोई छूटी हुई दवा नहीं" : lang === "hinglish" ? "All Caught Up! Koi pending dawa nahi" : "All Caught Up!"}
-                  </div>
-                  <div style={{ fontSize: "0.76rem", color: "var(--text-muted)", maxWidth: "250px", lineHeight: 1.4 }}>
+                  <div style={{ fontSize: "0.94rem", fontWeight: 800, color: "var(--text-highlight)" }}>
                     {lang === "hi" 
-                      ? "आपने समय पर अपनी सभी निर्धारित दवाइयां ले ली हैं।" 
+                      ? "सब ठीक है! कोई छूटी दवा या अपॉइंटमेंट नहीं" 
+                      : lang === "hinglish" 
+                        ? "All Caught Up! Koi pending dawa ya appointment nahi" 
+                        : "All Caught Up!"}
+                  </div>
+                  <div style={{ fontSize: "0.76rem", color: "var(--text-muted)", maxWidth: "260px", lineHeight: 1.4 }}>
+                    {lang === "hi" 
+                      ? "आपने समय पर अपनी सभी दवाइयां ले ली हैं और कोई तत्काल अपॉइंटमेंट पेंडिंग नहीं है।" 
                       : lang === "hinglish"
-                        ? "Aapne time par apni sabhi medicines le li hain."
-                        : "Great job! You have taken all your scheduled medications on time."}
+                        ? "Aapne sabhi medicines le li hain aur doctor appointment schedule up to date hai."
+                        : "You have taken all scheduled medications and your doctor appointments are on track."}
                   </div>
                 </div>
               )}
 
-              {/* Footer: Full schedule link & push reminder */}
+              {/* Footer: Quick Links for Medications & Doctors */}
               <div style={{
                 borderTop: "1px solid var(--border-color)",
                 paddingTop: "8px",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "space-between",
+                flexWrap: "wrap",
                 gap: "8px"
               }}>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setIsNotifOpen(false);
-                    if (onNavigate) onNavigate("medications");
-                  }}
-                  style={{
-                    background: "none",
-                    border: "none",
-                    color: "var(--primary)",
-                    fontSize: "0.76rem",
-                    fontWeight: 700,
-                    cursor: "pointer",
-                    padding: "2px 4px",
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "4px"
-                  }}
-                >
-                  <Pill size={13} />
-                  <span>{lang === "hi" ? "पूरा शिड्यूल देखें →" : "View Medications →"}</span>
-                </button>
+                <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsNotifOpen(false);
+                      if (onNavigate) onNavigate("medications");
+                    }}
+                    style={{
+                      background: "none",
+                      border: "none",
+                      color: "var(--primary)",
+                      fontSize: "0.75rem",
+                      fontWeight: 700,
+                      cursor: "pointer",
+                      padding: "2px 0",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "4px"
+                    }}
+                  >
+                    <Pill size={13} />
+                    <span>{lang === "hi" ? "दवाइयां" : "Medications"}</span>
+                  </button>
+
+                  <span style={{ color: "var(--border-color)" }}>•</span>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsNotifOpen(false);
+                      if (onNavigate) onNavigate("doctors");
+                    }}
+                    style={{
+                      background: "none",
+                      border: "none",
+                      color: "var(--primary)",
+                      fontSize: "0.75rem",
+                      fontWeight: 700,
+                      cursor: "pointer",
+                      padding: "2px 0",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "4px"
+                    }}
+                  >
+                    <Stethoscope size={13} />
+                    <span>{lang === "hi" ? "डॉक्टर खोजें" : "Doctors"}</span>
+                  </button>
+                </div>
 
                 {notifPermission !== "granted" && (
                   <button
@@ -873,7 +1188,7 @@ export default function TopHeader({
                       setNotifPermission(granted ? "granted" : "denied");
                       if (granted) {
                         sendDesktopNotification("PulseAI Reminders 🔔", {
-                          body: "Live browser medication alerts activated."
+                          body: "Live browser medication & appointment alerts activated."
                         });
                       }
                     }}
@@ -888,7 +1203,7 @@ export default function TopHeader({
                       cursor: "pointer"
                     }}
                   >
-                    🔔 {lang === "hi" ? "लाइव अलर्ट चालू करें" : "Enable Push"}
+                    🔔 {lang === "hi" ? "लाइव अलर्ट" : "Live Push"}
                   </button>
                 )}
               </div>

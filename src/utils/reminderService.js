@@ -157,3 +157,152 @@ export function getOverdueAndDueMedications(medications = []) {
     return statusInfo.isOverdue || statusInfo.isDue || m.snoozedMinutes;
   });
 }
+
+/**
+ * Parse an appointment date/time and determine its notification status
+ * Handles: 'today' / 'आज', 'tomorrow' / 'कल', YYYY-MM-DD custom dates, and standard date strings
+ */
+export function getAppointmentReminderStatus(apt, lang = "en") {
+  if (!apt) return null;
+
+  const rawDate = (apt.date || "").toString().trim();
+  const rawTime = (apt.time || "").toString().trim();
+  const selectedDateType = (apt.selectedDateType || "").toString().toLowerCase();
+
+  // 1. Explicit 'today' or 'आज'
+  if (selectedDateType === "today" || rawDate.toLowerCase() === "today" || rawDate === "आज") {
+    return {
+      status: "today",
+      urgency: "urgent",
+      isToday: true,
+      isUpcoming: true,
+      label: lang === "hi" ? "🔴 आज का अपॉइंटमेंट" : lang === "hinglish" ? "🔴 Aaj Ka Appointment" : "🔴 Today's Appointment",
+      badgeColor: "#dc2626",
+      badgeBg: "rgba(239, 68, 68, 0.16)",
+      displayDate: lang === "hi" ? "आज" : "Today",
+      displayTime: rawTime,
+      alertText: lang === "hi" 
+        ? `आज डॉक्टर अपॉइंटमेंट है (${rawTime})` 
+        : lang === "hinglish"
+          ? `Aaj Doctor appointment hai (${rawTime})`
+          : `Doctor appointment scheduled today at ${rawTime}`
+    };
+  }
+
+  // 2. Explicit 'tomorrow' or 'कल'
+  if (selectedDateType === "tomorrow" || rawDate.toLowerCase() === "tomorrow" || rawDate === "कल") {
+    return {
+      status: "tomorrow",
+      urgency: "upcoming",
+      isTomorrow: true,
+      isUpcoming: true,
+      label: lang === "hi" ? "🟠 कल का अपॉइंटमेंट" : lang === "hinglish" ? "🟠 Kal Ka Appointment" : "🟠 Tomorrow's Appointment",
+      badgeColor: "#ea580c",
+      badgeBg: "rgba(234, 88, 12, 0.16)",
+      displayDate: lang === "hi" ? "कल" : "Tomorrow",
+      displayTime: rawTime,
+      alertText: lang === "hi" 
+        ? `कल डॉक्टर अपॉइंटमेंट है (${rawTime})` 
+        : lang === "hinglish"
+          ? `Kal Doctor appointment hai (${rawTime})`
+          : `Doctor appointment scheduled tomorrow at ${rawTime}`
+    };
+  }
+
+  // 3. Custom Date (e.g. 2026-10-25 or Nov 15, 2026)
+  const targetDateStr = apt.customDate || rawDate;
+  const parsedDate = new Date(targetDateStr);
+  if (!isNaN(parsedDate.getTime())) {
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const aptDay = new Date(parsedDate.getFullYear(), parsedDate.getMonth(), parsedDate.getDate());
+
+    const diffDays = Math.round((aptDay.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+
+    if (diffDays === 0) {
+      return {
+        status: "today",
+        urgency: "urgent",
+        isToday: true,
+        isUpcoming: true,
+        label: lang === "hi" ? "🔴 आज का अपॉइंटमेंट" : lang === "hinglish" ? "🔴 Aaj Ka Appointment" : "🔴 Today's Appointment",
+        badgeColor: "#dc2626",
+        badgeBg: "rgba(239, 68, 68, 0.16)",
+        displayDate: lang === "hi" ? "आज" : "Today",
+        displayTime: rawTime,
+        alertText: lang === "hi" ? `आज डॉक्टर अपॉइंटमेंट है (${rawTime})` : `Doctor appointment scheduled today at ${rawTime}`
+      };
+    } else if (diffDays === 1) {
+      return {
+        status: "tomorrow",
+        urgency: "upcoming",
+        isTomorrow: true,
+        isUpcoming: true,
+        label: lang === "hi" ? "🟠 कल का अपॉइंटमेंट" : lang === "hinglish" ? "🟠 Kal Ka Appointment" : "🟠 Tomorrow's Appointment",
+        badgeColor: "#ea580c",
+        badgeBg: "rgba(234, 88, 12, 0.16)",
+        displayDate: lang === "hi" ? "कल" : "Tomorrow",
+        displayTime: rawTime,
+        alertText: lang === "hi" ? `कल डॉक्टर अपॉइंटमेंट है (${rawTime})` : `Doctor appointment scheduled tomorrow at ${rawTime}`
+      };
+    } else if (diffDays > 1) {
+      return {
+        status: "upcoming",
+        urgency: "scheduled",
+        isUpcoming: true,
+        daysLeft: diffDays,
+        label: lang === "hi" 
+          ? `📅 ${diffDays} दिन बाद (${targetDateStr})` 
+          : lang === "hinglish"
+            ? `📅 ${diffDays} din baad (${targetDateStr})`
+            : `📅 In ${diffDays} days (${targetDateStr})`,
+        badgeColor: "#0284c7",
+        badgeBg: "rgba(2, 132, 199, 0.16)",
+        displayDate: targetDateStr,
+        displayTime: rawTime,
+        alertText: lang === "hi" 
+          ? `अपॉइंटमेंट तारीख: ${targetDateStr} (${rawTime})` 
+          : `Appointment scheduled: ${targetDateStr} at ${rawTime}`
+      };
+    } else {
+      return {
+        status: "past",
+        urgency: "completed",
+        isPast: true,
+        isUpcoming: false,
+        label: lang === "hi" ? `पिछला परामर्श (${targetDateStr})` : `Past (${targetDateStr})`,
+        badgeColor: "var(--text-muted)",
+        badgeBg: "rgba(100, 116, 139, 0.12)",
+        displayDate: targetDateStr,
+        displayTime: rawTime,
+        alertText: `Past consultation on ${targetDateStr}`
+      };
+    }
+  }
+
+  // 4. Default fallback
+  return {
+    status: "upcoming",
+    urgency: "scheduled",
+    isUpcoming: true,
+    label: `📅 ${rawDate || "Scheduled"}`,
+    badgeColor: "#0284c7",
+    badgeBg: "rgba(2, 132, 199, 0.16)",
+    displayDate: rawDate,
+    displayTime: rawTime,
+    alertText: `Doctor appointment: ${rawDate} at ${rawTime}`
+  };
+}
+
+/**
+ * Filter active upcoming doctor appointments for notifications
+ */
+export function getActiveAppointmentNotifications(appointments = [], lang = "en") {
+  return appointments
+    .map(apt => {
+      const statusInfo = getAppointmentReminderStatus(apt, lang);
+      return { ...apt, statusInfo };
+    })
+    .filter(apt => apt.statusInfo && apt.statusInfo.isUpcoming);
+}
+

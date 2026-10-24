@@ -65,6 +65,8 @@ export default function DoctorDetailModal({
       hospital: doctor.hospital,
       address: doctor.address,
       patientName: patient?.name || "Aarish Khan",
+      selectedDateType: selectedDate,
+      customDate: customDate,
       date: aptDate,
       time: selectedTimeSlot,
       type: consultType === "video" ? (lang === "hi" ? "ऑनलाइन वीडियो परामर्श" : "Online Video Consult") : (lang === "hi" ? "क्लीनिक विजिट" : "In-Clinic Visit"),

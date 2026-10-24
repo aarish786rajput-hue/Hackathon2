@@ -536,20 +536,30 @@ STRICT SIMPLICITY INSTRUCTIONS (MANDATORY):
  * Secondary: gemini-2.0-flash / gemini-1.5-flash-8b
  */
 async function callGeminiWithFallback(apiKey, requestBody) {
-  // Use real Google Gemini production models
-  const models = ["gemini-1.5-flash", "gemini-2.0-flash", "gemini-1.5-flash-8b"];
+  // Real Google Gemini production models cascade (supports modern & legacy API keys)
+  const models = [
+    "gemini-3.5-flash",
+    "gemini-3.5-flash-lite",
+    "gemini-3.8-flash",
+    "gemini-1.5-flash",
+    "gemini-2.0-flash",
+    "gemini-flash-latest"
+  ];
+  const isVision = Boolean(requestBody?.contents?.[0]?.parts?.some(p => p.inlineData));
+  const timeoutMs = isVision ? 12000 : 5000;
+
   for (const model of models) {
     try {
       const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(requestBody),
-        signal: typeof AbortSignal !== "undefined" && AbortSignal.timeout ? AbortSignal.timeout(3200) : undefined
+        signal: typeof AbortSignal !== "undefined" && AbortSignal.timeout ? AbortSignal.timeout(timeoutMs) : undefined
       });
       if (response.ok) {
         return await response.json();
       }
-      // If API key is rejected (400, 401, 403), stop querying to avoid cascading network delay
+      // If API key is rejected (400, 401, 403), stop querying to avoid cascading delay
       if (response.status === 400 || response.status === 401 || response.status === 403) {
         console.warn(`Gemini API key returned HTTP ${response.status}. Fast fallback to local clinical engine.`);
         break;

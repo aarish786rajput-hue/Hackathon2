@@ -22,7 +22,7 @@ import FloatingCopilot from './components/FloatingCopilot';
 import { mockPatients } from './data/mockPatientData';
 import { calculateAge } from './utils/dateUtils';
 import { translations } from './data/translations';
-import { applyDomTranslations, triggerGoogleTranslate } from './utils/translator';
+import { applyDomTranslations } from './utils/translator';
 
 export default function App() {
   // ── Patient list (from localStorage or mock data) ──────────────────────────
@@ -118,7 +118,7 @@ export default function App() {
 
   useEffect(() => {
     try {
-      triggerGoogleTranslate(lang);
+      applyDomTranslations(lang);
     } catch {
       // Ignored
     }
@@ -128,9 +128,9 @@ export default function App() {
       } catch {
         // Ignored
       }
-    }, 150);
+    }, 80);
     return () => clearTimeout(timer);
-  }, [lang, activeTab, currentPatientId]);
+  }, [lang, activeTab, currentPatientId, patients]);
 
   // ── Current patient — age always recomputed from DOB ──────────────────────
   const rawPatient = (patients && patients.find(p => p.id === currentPatientId)) || (patients && patients[0]) || mockPatients[0];

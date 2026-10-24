@@ -609,7 +609,7 @@ export default function Dashboard({
                       {med.name} <span style={{ fontSize: "0.82rem", color: "var(--primary)" }}>({med.dosage})</span>
                     </div>
                     <div style={{ fontSize: "0.78rem", color: "var(--text-muted)" }}>
-                      {med.timing} • {med.purpose}
+                      {translateMedicalTerm(med.timing, lang)} • {translateMedicalTerm(med.purpose, lang)}
                     </div>
                   </div>
                 </div>
@@ -648,10 +648,7 @@ export default function Dashboard({
                   {t.labReadyAlert || "Lab Report Ready: Thyrocare Metabolic Panel"}
                 </div>
                 <p style={{ fontSize: "0.85rem", color: "var(--text-main)", lineHeight: 1.4 }}>
-                  {t.labReportSummaryTip || (lang === "hi" 
-                    ? "आपका HbA1c 7.2% है। एआई ने डॉक्टर से पूछने के लिए 3 महत्वपूर्ण प्रश्न तैयार किए हैं।"
-                    : "Your HbA1c is 7.2%. AI has generated 3 doctor-targeted questions and plain-language breakdown.")
-                  }
+                  {t.labReportSummaryTip || translateMedicalTerm("Your HbA1c is 7.2%. AI has generated 3 doctor-targeted questions and plain-language breakdown.", lang)}
                 </p>
                 <button
                   onClick={() => onNavigate("reports")}

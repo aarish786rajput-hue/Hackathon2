@@ -340,41 +340,736 @@ export const MEDICAL_DICTIONARY = {
     gu: "💡 સુરક્ષિત વિકલ્પ:",
     pa: "💡 ਸੁਰੱਖਿਅਤ ਬਦਲ:",
     kn: "💡 ಸುರಕ್ಷಿತ ಪರ್ಯಾಯ:"
+  },
+
+  // ── Medications & Routines ──
+  "Morning (After breakfast)": {
+    hi: "सुबह (नाश्ते के बाद)",
+    hinglish: "Subah (Breakfast ke baad)",
+    pa: "ਸਵੇਰੇ (ਨਾਸ਼ਤੇ ਤੋਂ ਬਾਅਦ)",
+    bn: "সকালে (প্রাতঃরাশের পর)",
+    mr: "सकाळी (न्याहारीनंतर)",
+    te: "ఉదయం (అల్పాహారం తర్వాత)",
+    ta: "காலை (காலை உணவுக்குப் பின்)",
+    gu: "સવારે (નાસ્તા પછી)",
+    kn: "ಬೆಳಿಗ್ಗೆ (ಉಪಾಹಾರದ ನಂತರ)"
+  },
+  "Morning (8:00 AM)": {
+    hi: "सुबह (8:00 AM)",
+    hinglish: "Subah (8:00 AM)",
+    pa: "ਸਵੇਰੇ (8:00 AM)",
+    bn: "সকালে (৮:০০ AM)",
+    mr: "सकाळी (८:०० AM)",
+    te: "ఉదయం (8:00 AM)",
+    ta: "காலை (8:00 AM)",
+    gu: "સવારે (8:00 AM)",
+    kn: "ಬೆಳಿಗ್ಗೆ (8:00 AM)"
+  },
+  "Afternoon (1:30 PM)": {
+    hi: "दोपहर (1:30 PM)",
+    hinglish: "Dopahar (1:30 PM)",
+    pa: "ਦੁਪਹਿਰ (1:30 PM)",
+    bn: "দুপুরে (১:৩০ PM)",
+    mr: "दुपारी (१:३० PM)",
+    te: "మధ్యాహ్నం (1:30 PM)",
+    ta: "மதியம் (1:30 PM)",
+    gu: "બપોરે (1:30 PM)",
+    kn: "ಮಧ್ಯಾಹ್ನ (1:30 PM)"
+  },
+  "Night (9:30 PM)": {
+    hi: "रात (9:30 PM)",
+    hinglish: "Raat (9:30 PM)",
+    pa: "ਰਾਤ (9:30 PM)",
+    bn: "রাতে (৯:৩০ PM)",
+    mr: "रात्री (९:३० PM)",
+    te: "రాత్రి (9:30 PM)",
+    ta: "இரவு (9:30 PM)",
+    gu: "રાત્રે (9:30 PM)",
+    kn: "ರಾತ್ರಿ (9:30 PM)"
+  },
+  "Blood Glucose Regulation": {
+    hi: "ब्लड शुगर नियंत्रण",
+    hinglish: "Blood Sugar Control",
+    pa: "ਬਲੱਡ ਸ਼ੂਗਰ ਕੰਟਰੋਲ",
+    bn: "রক্তের শর্করা নিয়ন্ত্রণ",
+    mr: "रक्तातील साखर नियंत्रण",
+    te: "రక్తంలో చక్కెర నియంత్రణ",
+    ta: "இரத்த சர்க்கரை கட்டுப்பாடு",
+    gu: "બ્લડ શુગર નિયંત્રણ",
+    kn: "ರಕ್ತದ ಸಕ್ಕರೆ ನಿಯಂತ್ರಣ"
+  },
+  "Blood Pressure Control": {
+    hi: "ब्लड प्रेशर नियंत्रण",
+    hinglish: "Blood Pressure Control",
+    pa: "ਬਲੱਡ ਪ੍ਰੈਸ਼ਰ ਕੰਟਰੋਲ",
+    bn: "রক্তচাপ নিয়ন্ত্রণ",
+    mr: "रक्तदाब नियंत्रण",
+    te: "రక్తపోటు నియంత్రణ",
+    ta: "இரத்த அழுத்த கட்டுப்பாடு",
+    gu: "બ્લડ પ્રેશર નિયંત્રણ",
+    kn: "ರಕ್ತದೊತ್ತಡ ನಿಯಂತ್ರಣ"
+  },
+  "Stimulate Insulin Release": {
+    hi: "इंसुलिन स्राव प्रोत्साहन",
+    hinglish: "Insulin release stimulate karna",
+    pa: "ਇੰਸੁਲਿਨ ਰਿਲੀਜ਼ ਉਤਸ਼ਾਹਿਤ ਕਰਨਾ",
+    bn: "ইনসুলিন ক্ষরণ উদ্দীপনা",
+    mr: "इन्सुलिन स्राव उत्तेजन",
+    te: "ఇన్సులిన్ విడుదలను ప్రేరేపించడం",
+    ta: "இன்சுலின் சுரப்பை தூண்டுதல்",
+    gu: "ઇન્સ્યુલિન સ્ત્રાવ ઉત્તેજન",
+    kn: "ಇನ್ಸುಲಿನ್ ಸ್ರವಿಸುವಿಕೆಯನ್ನು ಉತ್ತೇಜಿಸುವುದು"
+  },
+  "Cholesterol Management": {
+    hi: "कोलेस्ट्रॉल प्रबंधन",
+    hinglish: "Cholesterol Control",
+    pa: "ਕੋਲੈਸਟ੍ਰੋਲ ਪ੍ਰਬੰਧਨ",
+    bn: "কোলেস্টেরল ব্যবস্থাপনা",
+    mr: "कोलेस्टेरॉल नियंत्रण",
+    te: "కొలెస్ట్రాల్ నిర్వహణ",
+    ta: "கொலஸ்ட்ரால் மேலாண்மை",
+    gu: "કોલેસ્ટ્રોલ નિયંત્રણ",
+    kn: "ಕೊಲೆಸ್ಟ್ರಾಲ್ ನಿರ್ವಹಣೆ"
+  },
+  "Next: Rosuvastatin (Night)": {
+    hi: "अगली: रोसुवास्टेटिन (रात)",
+    hinglish: "Next: Rosuvastatin (Night)",
+    pa: "ਅਗਲੀ: ਰੋਸੁਵਾਸਟੈਟਿਨ (ਰਾਤ)",
+    bn: "পরবর্তী: রোসুভাস্ট্যাটিন (রাত)",
+    mr: "पुढील: रोसुव्हास्टॅटिन (रात्र)",
+    te: "తదుపరి: రోసువాస్టాటిన్ (రాత్రి)",
+    ta: "அடுத்தது: ரோசுவாஸ்டேடின் (இரவு)",
+    gu: "આગામી: રોસુવાસ્ટેટિન (રાત)",
+    kn: "ಮುಂದಿನದು: ರೊಸುವಾಸ್ಟಾಟಿನ್ (ರಾತ್ರಿ)"
+  },
+  "Active Regimen Cross-Compatibility Scan": {
+    hi: "दवा सुरक्षा व अनुकूलता जांच",
+    hinglish: "Active Medicine Compatibility Scan",
+    pa: "ਦਵਾਈ ਸੁਰੱਖਿਆ ਤੇ ਅਨੁਕੂਲਤਾ ਜਾਂਚ",
+    bn: "ওষুধের নিরাপত্তা ও সামঞ্জস্য পরীক্ষা",
+    mr: "औषध सुरक्षितता व अनुकूलता तपासणी",
+    te: "మందుల భద్రత & అనుకూలత స్కాన్",
+    ta: "மருந்து பாதுகாப்பு மற்றும் இணக்கத்தன்மை சோதனை",
+    gu: "દવા સુરક્ષા તપાસ",
+    kn: "ಔಷಧ ಹೊಂದಾಣಿಕೆ ಪರಿಶೀಲನೆ"
+  },
+  "All 4 active prescriptions verified for cross-compatibility. Alert: Avoid over-the-counter Ibuprofen due to your Telmisartan prescription.": {
+    hi: "आपकी सभी 4 नियमित दवाइयां सुरक्षित हैं। चेतावनी: बीपी की दवा के कारण ब्रूफेन (Ibuprofen) जैसी दर्द निवारक दवाओं से बचें।",
+    hinglish: "Aapki 4 prescriptions safe hain. Alert: BP ki dawa ke sath Ibuprofen na lein.",
+    pa: "ਤੁਹਾਡੀਆਂ 4 ਦਵਾਈਆਂ ਸੁਰੱਖਿਅਤ ਹਨ। ਚੇਤਾਵਨੀ: ਬੀਪੀ ਦਵਾਈ ਦੇ ਨਾਲ ਆਈਬੂਪ੍ਰੋਫੇਨ ਤੋਂ ਬਚੋ।",
+    bn: "আপনার ৪টি নিয়মিত ওষুধ সম্পূর্ণ নিরাপদ। সতর্কতা: বিপি ওষুধের কারণে আইবুপ্রোফেন এড়িয়ে চলুন।",
+    mr: "आपली सर्व नियमित औषधे सुरक्षित आहेत. सतर्कता: बीपी औषधांसोबत इबुप्रोफेन घेऊ नका.",
+    te: "మీ 4 రెగ్యులర్ ప్రిస్క్రిప్షన్లు సురక్షితమైనవి. హెచ్చరిక: బీపీ మందులతో ఇబుప్రోఫెన్ వాడవద్దు.",
+    ta: "உங்கள் 4 வழக்கமான மருந்துகளும் பாதுகாப்பானவை. எச்சரிக்கை: இரத்த அழுத்த மருந்துகளுடன் இபுபுரூஃபனைத் தவிர்க்கவும்.",
+    gu: "તમારી બધી 4 દવાઓ સુરક્ષિત છે. ચેતવણી: બીપી દવા સાથે આઇબુપ્રોફેન ન લેશો.",
+    kn: "ನಿಮ್ಮ 4 ನಿಯಮಿತ ಔಷಧಿಗಳು ಸುರಕ್ಷಿತವಾಗಿವೆ. ಎಚ್ಚರಿಕೆ: ಬಿಪಿ ಔಷಧಿಯೊಂದಿಗೆ ಐಬುಪ್ರೊಫೇನ್ ತೆಗೆದುಕೊಳ್ಳಬೇಡಿ."
+  },
+
+  // ── Vitals & Trends ──
+  "Resting Pulse": {
+    hi: "नाड़ी की गति (हार्ट रेट)",
+    hinglish: "Resting Pulse Rate",
+    pa: "ਦਿਲ ਦੀ ਗਤੀ (Pulse Rate)",
+    bn: "নাড়ির গতি (Pulse Rate)",
+    mr: "हृदयाचे ठोके (Pulse Rate)",
+    te: "నాడి వేగం (Pulse Rate)",
+    ta: "நாடித் துடிப்பு (Pulse Rate)",
+    gu: "હૃદયના ધબકારા",
+    kn: "ನಾಡಿಮಿಡಿತ (Pulse Rate)"
+  },
+  "Oxygen:": {
+    hi: "ऑक्सीजन:",
+    hinglish: "Oxygen:",
+    pa: "ਆਕਸੀਜਨ:",
+    bn: "অক্সিজেন:",
+    mr: "ऑक्सिजन:",
+    te: "ఆక్సిజన్:",
+    ta: "ஆக்ஸிஜன்:",
+    gu: "ઓક્સિજન:",
+    kn: "ಆಮ್ಲಜನಕ:"
+  },
+  "Steady reduction (-0.6 kg)": {
+    hi: "वजन में सुधार (-0.6 kg)",
+    hinglish: "Steady weight reduction (-0.6 kg)",
+    pa: "ਭਾਰ ਵਿੱਚ ਕਮੀ (-0.6 ਕਿਲੋ)",
+    bn: "ওজন হ্রাস (-০.৬ কেজি)",
+    mr: "वजनात घट (-०.६ किलो)",
+    te: "బరువు తగ్గడం (-0.6 కేజీ)",
+    ta: "எடை குறைவு (-0.6 கிலோ)",
+    gu: "વજનમાં ઘટાડો (-0.6 કિલો)",
+    kn: "ತೂಕ ಇಳಿಕೆ (-0.6 ಕೆಜಿ)"
+  },
+  "Healthy": {
+    hi: "स्वस्थ",
+    hinglish: "Healthy",
+    pa: "ਤੰਦਰੁਸਤ",
+    bn: "সুস্থ",
+    mr: "निरोगी",
+    te: "ఆరోగ్యకరమైన",
+    ta: "ஆரோக்கியமான",
+    gu: "તંદુરસ્ત",
+    kn: "ಆರೋಗ್ಯಕರ"
+  },
+  "Optimal": {
+    hi: "सामान्य",
+    hinglish: "Normal",
+    pa: "ਸਧਾਰਨ",
+    bn: "স্বাভাবিক",
+    mr: "उत्कृष्ट",
+    te: "సాధారణం",
+    ta: "இயல்பானது",
+    gu: "સામાન્ય",
+    kn: "ಸಾಮಾನ್ಯ"
+  },
+  "In Target": {
+    hi: "लक्ष्य में",
+    hinglish: "Target me",
+    pa: "ਟੀਚੇ ਵਿੱਚ",
+    bn: "লক্ষ্যের মধ্যে",
+    mr: "लक्ष्यात",
+    te: "లక్ష్యంలో",
+    ta: "இலக்கில்",
+    gu: "ટાર્ગેટમાં",
+    kn: "ಗುರಿಯಲ್ಲಿ"
+  },
+  "Borderline": {
+    hi: "सीमांत",
+    hinglish: "Borderline",
+    pa: "ਸੀਮਾ 'ਤੇ",
+    bn: "প্রান্তিক",
+    mr: "सीमावर्ती",
+    te: "బోర్డర్‌లైన్",
+    ta: "எல்லைக்கோடு",
+    gu: "બોર્ડરલાઇન",
+    kn: "ಗಡಿಯಲ್ಲಿ"
+  },
+  "improved": {
+    hi: "सुधार हुआ",
+    hinglish: "behtar hua",
+    pa: "ਸੁਧਾਰ ਹੋਇਆ",
+    bn: "উন্নত",
+    mr: "सुधारले",
+    te: "మెరుగైంది",
+    ta: "மேம்பட்டது",
+    gu: "સુધારો થયો",
+    kn: "ಸುಧಾರಿಸಿದೆ"
+  },
+  "Post-meal:": {
+    hi: "खाने के बाद:",
+    hinglish: "Khane ke baad:",
+    pa: "ਖਾਣੇ ਤੋਂ ਬਾਅਦ:",
+    bn: "খাবারের পর:",
+    mr: "जेवणानंतर:",
+    te: "భోజనం తర్వాత:",
+    ta: "உணவுக்குப் பின்:",
+    gu: "જમ્યા પછી:",
+    kn: "ಊಟದ ನಂತರ:"
+  },
+
+  // ── Alerts & Tips ──
+  "Your HbA1c is 7.2%. AI has generated 3 doctor-targeted questions and plain-language breakdown.": {
+    hi: "आपका HbA1c 7.2% है। AI ने डॉक्टर से पूछने के लिए 3 महत्वपूर्ण प्रश्न और सरल सारांश तैयार किया है।",
+    hinglish: "Aapka HbA1c 7.2% hai. AI ne doctor consultation ke liye 3 targeted questions aur simple summary taiyar ki hai.",
+    pa: "ਤੁਹਾਡਾ HbA1c 7.2% ਹੈ। AI ਨੇ ਡਾਕਟਰ ਨਾਲ ਸਲਾਹ-ਮਸ਼ਵਰੇ ਲਈ 3 ਜ਼ਰੂਰੀ ਸਵਾਲ ਅਤੇ ਸਰਲ ਵੇਰਵਾ ਤਿਆਰ ਕੀਤਾ ਹੈ।",
+    bn: "আপনার HbA1c হলো ৭.২%। AI ডাক্তারের সাথে আলোচনার জন্য ৩টি লক্ষ্যযুক্ত প্রশ্ন এবং সহজ বিশ্লেষণ তৈরি করেছে।",
+    mr: "तुमचे HbA1c ७.२% आहे. AI ने डॉक्टरांशी चर्चेसाठी ३ महत्त्वाचे प्रश्न आणि सोपे विश्लेषण तयार केले आहे.",
+    te: "మీ HbA1c 7.2% గా ఉంది. డాక్టర్‌తో చర్చించడానికి AI 3 ముఖ్యమైన ప్రశ్నలను మరియు సులభమైన వివరణను సిద్ధం చేసింది.",
+    ta: "உங்கள் HbA1c 7.2% ஆகும். மருத்துவரிடம் ஆலோசனை பெற AI 3 முக்கிய கேள்விகளையும் எளிய விளக்கத்தையும் தயாரித்துள்ளது.",
+    gu: "તમારું HbA1c 7.2% છે. AI એ ડૉક્ટરની સલાહ માટે 3 લક્ષિત પ્રશ્નો અને સરળ વિશ્લેષણ તૈયાર કર્યું છે.",
+    kn: "ನಿಮ್ಮ HbA1c 7.2% ಆಗಿದೆ. ವೈದ್ಯರ ಸಮಾಲೋಚನೆಗಾಗಿ AI 3 ಪ್ರಮುಖ ಪ್ರಶ್ನೆಗಳನ್ನು ಮತ್ತು ಸರಳ ವಿವರಣೆಯನ್ನು ಸಿದ್ಧಪಡಿಸಿದೆ."
+  },
+  "Lab Report Ready: Thyrocare Metabolic Panel": {
+    hi: "लैब टेस्ट तैयार: थायरोकेयर मेटाबॉलिक पैनल",
+    hinglish: "Lab Report Ready: Thyrocare Metabolic Panel",
+    pa: "ਲੈਬ ਰਿਪੋਰਟ ਤਿਆਰ: ਥਾਇਰੋਕੇਅਰ ਮੈਟਾਬੋਲਿਕ ਪੈਨਲ",
+    bn: "ল্যাব রিপোর্ট প্রস্তুত: থাইরোকেয়ার মেটাবলিক প্যানেল",
+    mr: "लॅब रिपोर्ट तयार: थायरोकेअर मेटाबॉलिक पॅनेल",
+    te: "ల్యాబ్ రిపోర్ట్ సిద్ధంగా ఉంది: మెటబాలిక్ ప్యానెల్",
+    ta: "ஆய்வக அறிக்கை தயார்: தைரோகேர் மெட்டபாலிக் பேனல்",
+    gu: "લેબ રિપોર્ટ તૈયાર: મેટાબોલિક પેનલ",
+    kn: "ಲ್ಯಾಬ್ ವರದಿ ಸಿದ್ಧ: ಥೈರೋಕೇರ್ ಮೆಟಾಬಾಲಿಕ್ ಪ್ಯಾನಲ್"
+  },
+  "View Report Breakdown →": {
+    hi: "रिपोर्ट विवरण देखें →",
+    hinglish: "Report Details Dekhein →",
+    pa: "ਰਿਪੋਰਟ ਵੇਰਵੇ ਵੇਖੋ →",
+    bn: "রিপোর্টের বিবরণ দেখুন →",
+    mr: "रिपोर्ट तपशील पहा →",
+    te: "రిపోర్టు వివరాలు చూడండి →",
+    ta: "அறிக்கை விவரங்களைப் பார்க்கவும் →",
+    gu: "રિપોર્ટ વિગતો જુઓ →",
+    kn: "ವರದಿಯ ವಿವರಗಳನ್ನು ನೋಡಿ →"
+  },
+  "Offline Mode Active: Internet disconnected. Emergency Health ID & Medications remain fully accessible offline.": {
+    hi: "ऑफ़लाइन मोड सक्रिय: इंटरनेट डिस्कनेक्ट है। इमरजेंसी मेडिकल ID व दवाइयां बिना इंटरनेट सुरक्षित उपलब्ध हैं।",
+    hinglish: "Offline Mode Active: Internet band hai. Emergency ID aur Medicines offline available hain.",
+    pa: "ਔਫਲਾਈਨ ਮੋਡ ਸਰਗਰਮ: ਇੰਟਰਨੈਟ ਡਿਸਕਨੈਕਟ ਹੈ। ਐਮਰਜੈਂਸੀ ਹੈਲਥ ਆਈਡੀ ਅਤੇ ਦਵਾਈਆਂ ਪੂਰੀ ਤਰ੍ਹਾਂ ਉਪਲਬਧ ਹਨ।",
+    bn: "অফলাইন মোড সক্রিয়: ইন্টারনেট সংযোগ বিচ্ছিন্ন। জরুরি স্বাস্থ্য আইডি এবং ওষুধ অফলাইনে সম্পূর্ণ উপলব্ধ।",
+    mr: "ऑफलाइन मोड सक्रिय: इंटरनेट डिस्कनेक्ट झाले आहे. आपत्कालीन आरोग्य आयडी आणि औषधे सुरक्षित उपलब्ध आहेत.",
+    te: "ఆఫ్‌లైన్ మోడ్ సక్రియంగా ఉంది: ఇంటర్నెట్ డిస్‌కనెక్ట్ అయింది. అత్యవసర హెల్త్ ఐడీ & మందులు అందుబాటులో ఉన్నాయి.",
+    ta: "ஆஃப்லைன் பயன்முறை செயலில் உள்ளது: இணையம் துண்டிக்கப்பட்டுள்ளது. அவசர சுகாதார ஐடி & மருந்துகள் கிடைக்கும்.",
+    gu: "ઑફલાઇન મોડ સક્રિય: ઇન્ટરનેટ બંધ છે. ઇમરજન્સી હેલ્થ ID અને દવાઓ ઑફલાઇન ઉપલબ્ધ છે.",
+    kn: "ಆಫ್‌ಲೈನ್ ಮೋಡ್ ಸಕ್ರಿಯವಾಗಿದೆ: ಇಂಟರ್ನೆಟ್ ಸಂಪರ್ಕ ಕಡಿತಗೊಂಡಿದೆ. ತುರ್ತು ಹೆಲ್ತ್ ಐಡಿ ಮತ್ತು ಔಷಧಿಗಳು ಲಭ್ಯವಿದೆ."
+  },
+  "🚨 View Emergency ID": {
+    hi: "🚨 आपातकालीन आईडी देखें",
+    hinglish: "🚨 Emergency ID Dekhein",
+    pa: "🚨 ਐਮਰਜੈਂਸੀ ਆਈਡੀ ਵੇਖੋ",
+    bn: "🚨 জরুরি আইডি দেখুন",
+    mr: "🚨 आणीबाणी आयडी पहा",
+    te: "🚨 ఎమర్జెన్సీ ఐడీ చూడండి",
+    ta: "🚨 அவசர ஐடியைக் காண்க",
+    gu: "🚨 ઇમરજન્સી ID જુઓ",
+    kn: "🚨 ತುರ್ತು ಐಡಿ ವೀಕ್ಷಿಸಿ"
+  },
+  "View Emergency ID": {
+    hi: "आपातकालीन आईडी देखें",
+    hinglish: "Emergency ID Dekhein",
+    pa: "ਐਮਰਜੈਂਸੀ ਆਈਡੀ ਵੇਖੋ",
+    bn: "জরুরি আইডি দেখুন",
+    mr: "आणीबाणी आयडी पहा",
+    te: "ఎమర్జెన్సీ ఐడీ చూడండి",
+    ta: "அவசர ஐடியைக் காண்க",
+    gu: "ઇમરજન્સી ID જુઓ",
+    kn: "ತುರ್ತು ಐಡಿ ವೀಕ್ಷಿಸಿ"
+  },
+  "HOW DO YOU FEEL RIGHT NOW? (ONE-TOUCH TRIAGE)": {
+    hi: "अभी आप कैसा महसूस कर रहे हैं? (त्वरित जांच)",
+    hinglish: "Abhi aap kaisa feel kar rahe hain?",
+    pa: "ਹੁਣ ਤੁਸੀਂ ਕਿਵੇਂ ਮਹਿਸੂਸ ਕਰ ਰਹੇ ਹੋ? (ਤੁਰੰਤ ਜਾਂਚ)",
+    bn: "এখন আপনি কেমন অনুভব করছেন? (এক স্পর্শে মূল্যায়ন)",
+    mr: "आत्ता तुम्हाला कसे वाटत आहे? (त्वरित तपासणी)",
+    te: "ఇప్పుడు మీకు ఎలా అనిపిస్తోంది? (త్వరిత పరీక్ష)",
+    ta: "இப்போது எப்படி உணர்கிறீர்கள்? (விரைவு சோதனை)",
+    gu: "અત્યારે તમને કેવું લાગે છે? (ઝડપી તપાસ)",
+    kn: "ಈಗ ನಿಮಗೆ ಹೇಗನಿಸುತ್ತಿದೆ? (ತ್ವರಿತ ಪರೀಕ್ಷೆ)"
+  },
+  "Feeling dizzy / shaky": {
+    hi: "चक्कर आना / कमजोरी",
+    hinglish: "Chakkar aana / Kamzori",
+    pa: "ਚੱਕਰ ਆਉਣਾ / ਕੰਬਣੀ",
+    bn: "মাথা ঘোরা / দুর্বলতা",
+    mr: "चक्कर येणे / थरथरणे",
+    te: "తలతిరగడం / వణుకు",
+    ta: "தலைச்சுற்றல் / நடுக்கம்",
+    gu: "ચક્કર આવવા / કંપન",
+    kn: "ತಲೆತಿರುಗುವಿಕೆ / ನಡುಕ"
+  },
+  "Explain HbA1c 7.2%": {
+    hi: "HbA1c 7.2% का क्या मतलब है?",
+    hinglish: "HbA1c 7.2% ka matlab samjhao",
+    pa: "HbA1c 7.2% ਦਾ ਕੀ ਅਰਥ ਹੈ?",
+    bn: "HbA1c ৭.২% এর অর্থ কী?",
+    mr: "HbA1c ७.२% चा अर्थ काय?",
+    te: "HbA1c 7.2% అర్థం ఏమిటి?",
+    ta: "HbA1c 7.2% என்றால் என்ன?",
+    gu: "HbA1c 7.2% નો અર્થ શું છે?",
+    kn: "HbA1c 7.2% ನ ಅರ್ಥವೇನು?"
+  },
+  "When to take Statin?": {
+    hi: "स्टेटिन कब लेनी चाहिए?",
+    hinglish: "Statin kab leni chahiye?",
+    pa: "ਸਟੈਟਿਨ ਕਦੋਂ ਲੈਣੀ ਚਾਹੀਦੀ ਹੈ?",
+    bn: "স্ট্যাটিন কখন গ্রহণ করতে হবে?",
+    mr: "स्टॅटिन कधी घ्यावी?",
+    te: "స్టాటిన్ ఎప్పుడు తీసుకోవాలి?",
+    ta: "ஸ்டேடின் எப்போது எடுக்க வேண்டும்?",
+    gu: "સ્ટેટિન ક્યારે લેવી?",
+    kn: "ಸ್ಟ್ಯಾಟಿನ್ ಯಾವಾಗ ತೆಗೆದುಕೊಳ್ಳಬೇಕು?"
+  },
+  "Find Specialist Doctor": {
+    hi: "विशेषज्ञ डॉक्टर खोजें",
+    hinglish: "Specialist Doctor Khojein",
+    pa: "ਮਾਹਿਰ ਡਾਕਟਰ ਲੱਭੋ",
+    bn: "বিশেষজ্ঞ ডাক্তার খুঁজুন",
+    mr: "तज्ज्ञ डॉक्टर शोधा",
+    te: "స్పెషలిస్ట్ వైద్యుడిని కనుగొనండి",
+    ta: "நிபுணர் மருத்துவரைத் தேடுங்கள்",
+    gu: "નિષ્ણાત ડૉક્ટર શોધો",
+    kn: "ತಜ್ಞ ವೈದ್ಯರನ್ನು ಹುಡುಕಿ"
+  },
+  "Start Symptom Check": {
+    hi: "लक्षण जांच शुरू करें",
+    hinglish: "Symptom check shuru karein",
+    pa: "ਲੱਛਣ ਜਾਂਚ ਸ਼ੁਰੂ ਕਰੋ",
+    bn: "লক্ষণ পরীক্ষা শুরু করুন",
+    mr: "लक्षण तपासणी सुरू करा",
+    te: "లక్షణాల పరీక్ష ప్రారంభించండి",
+    ta: "அறிகுறி பரிசோதனையைத் தொடங்குங்கள்",
+    gu: "લક્ષણ તપાસ શરૂ કરો",
+    kn: "ರೋಗಲಕ್ಷಣ ಪರೀಕ್ಷೆ ಪ್ರಾರಂಭಿಸಿ"
+  },
+
+  // ── Patient Lifestyle, Family & History ──
+  "Non-Smoker": {
+    hi: "धूम्रपान नहीं करते",
+    hinglish: "Non-Smoker",
+    pa: "ਸਿਗਰਟਨੋਸ਼ੀ ਨਹੀਂ ਕਰਦੇ",
+    bn: "ধূমপান করেন না",
+    mr: "धूम्रपान करत नाही",
+    te: "ధూమపానం చేయరు",
+    ta: "புகைபிடிப்பதில்லை",
+    gu: "ધૂમ્રપાન નથી કરતા",
+    kn: "ಧೂಮಪಾನ ಮಾಡುವುದಿಲ್ಲ"
+  },
+  "Occasional (Social)": {
+    hi: "कभी-कभार (सामाजिक)",
+    hinglish: "Occasional (Social)",
+    pa: "ਕਦੇ-ਕਦਾਈਂ (ਸਮਾਜਿਕ)",
+    bn: "কখনও কখনও (সামাজিক)",
+    mr: "कधीतरी (सामाजिक)",
+    te: "అప్పుడప్పుడు (సామాజిక)",
+    ta: "எப்போதாவது",
+    gu: "ક્યારેક ક્યારેક",
+    kn: "ಅಪರೂಪಕ್ಕೆ"
+  },
+  "Moderate (30 mins brisk walk, 5x/wk)": {
+    hi: "मध्यम (30 मिनट तेज सैर, हफ्ते में 5 दिन)",
+    hinglish: "Moderate (30 min walk, 5 din)",
+    pa: "ਦਰਮਿਆਨਾ (30 ਮਿੰਟ ਸੈਰ, ਹਫ਼ਤੇ 'ਚ 5 ਵਾਰ)",
+    bn: "মাঝারি (৩০ মিনিট দ্রুত হাঁটা, সপ্তাহে ৫ দিন)",
+    mr: "मध्यम (३० मिनिटे जलद चालणे, आठवड्यातून ५ वेळा)",
+    te: "మధ్యస్థం (30 నిమిషాల వేగవంతమైన నడక, వారానికి 5 సార్లు)",
+    ta: "மிதமான (30 நிமிட நடை, வாரத்தில் 5 நாட்கள்)",
+    gu: "મધ્યમ (30 મિનિટ ઝડપી ચાલવું, અઠવાડિયામાં 5 વાર)",
+    kn: "ಮಧ್ಯಮ (30 ನಿಮಿಷ ನಡಿಗೆ, ವಾರಕ್ಕೆ 5 ಬಾರಿ)"
+  },
+  "6.5 - 7 hours / night": {
+    hi: "6.5 - 7 घंटे प्रति रात",
+    hinglish: "6.5 - 7 ghante / raat",
+    pa: "6.5 - 7 ਘੰਟੇ / ਰਾਤ",
+    bn: "৬.৫ - ৭ ঘণ্টা / রাত",
+    mr: "६.৫ - ७ तास / रात्र",
+    te: "6.5 - 7 గంటలు / రాత్రి",
+    ta: "6.5 - 7 மணிநேரம் / இரவு",
+    gu: "6.5 - 7 કલાક / રાત",
+    kn: "6.5 - 7 ಗಂಟೆ / ರಾತ್ರಿ"
+  },
+  "Diabetic-conscious / Low Glycemic Index": {
+    hi: "डायबिटीज-अनुकूल / कम ग्लाइसेमिक आहार",
+    hinglish: "Diabetic-friendly / Low GI Diet",
+    pa: "ਸ਼ੂਗਰ-ਅਨੁਕੂਲ / ਘੱਟ ਗਲਾਈਸੈਮਿਕ ਖੁਰਾਕ",
+    bn: "ডায়াবেটিস-বান্ধব / কম গ্লাইসেমিক ডায়েট",
+    mr: "मधुमेह-अनुकूल आहार",
+    te: "డయాబెటిస్-అనుకూల ఆహారం",
+    ta: "நீரிழிவு நட்பு உணவு",
+    gu: "ડાયાબિટીસ-અનુકૂળ આહાર",
+    kn: "ಮಧುಮೇಹ ಸ್ನೇಹಿ ಆಹಾರ"
+  },
+  "Spouse": {
+    hi: "जीवनसाथी",
+    hinglish: "Spouse",
+    pa: "ਜੀਵਨ ਸਾਥੀ",
+    bn: "স্ত্রী / স্বামী",
+    mr: "जोडीदार",
+    te: "జీవిత భాగస్వామి",
+    ta: "துணைவர்",
+    gu: "જીવનસાથી",
+    kn: "ಪತ್ನಿ / ಪತಿ"
+  },
+  "Brother": {
+    hi: "भाई",
+    hinglish: "Bhai",
+    pa: "ਭਰਾ",
+    bn: "ভাই",
+    mr: "भाऊ",
+    te: "సోదరుడు",
+    ta: "சகோதரர்",
+    gu: "ભાઈ",
+    kn: "ಸಹೋದರ"
+  },
+  "Father": {
+    hi: "पिता",
+    hinglish: "Father",
+    pa: "ਪਿਤਾ",
+    bn: "পিতা",
+    mr: "वडील",
+    te: "తండ్రి",
+    ta: "தந்தை",
+    gu: "પિતા",
+    kn: "ತಂದೆ"
+  },
+  "Mother": {
+    hi: "माता",
+    hinglish: "Mother",
+    pa: "ਮਾਤਾ",
+    bn: "মাতা",
+    mr: "आई",
+    te: "తల్లి",
+    ta: "தாய்",
+    gu: "માતા",
+    kn: "ತಾಯಿ"
+  },
+  "Severe Urticaria / Hives": {
+    hi: "गंभीर पित्ती / चकत्ते (Urticaria)",
+    hinglish: "Severe Urticaria / Hives",
+    pa: "ਗੰਭੀਰ ਧੱਫੜ (Urticaria)",
+    bn: "তীব্র আমবাত / এলার্জি",
+    mr: "तीव्र पित्त / गांधी उठणे",
+    te: "తీవ్రమైన దద్దుర్లు",
+    ta: "கடுமையான தடிப்புகள்",
+    gu: "ગંભીર ચકામા",
+    kn: "ತೀವ್ರವಾದ ದದ್ದುಗಳು"
+  },
+  "Skin Rash & Erythema": {
+    hi: "त्वचा पर लाल चकत्ते व जलन",
+    hinglish: "Skin Rash & Erythema",
+    pa: "ਚਮੜੀ ਦੇ ਲਾਲ ਧੱਫੜ ਤੇ ਜਲਨ",
+    bn: "ত্বকে লাল ফুসকুড়ি",
+    mr: "त्वचेवर लाल पुरळ",
+    te: "చర్మంపై ఎర్రటి దద్దుర్లు",
+    ta: "தோல் சிவத்தல் மற்றும் அரிப்பு",
+    gu: "ત્વચા પર ફોલ્લીઓ",
+    kn: "ಚರ್ಮದ ದದ್ದು"
+  },
+  "Critical": {
+    hi: "गंभीर",
+    hinglish: "Critical",
+    pa: "ਗੰਭੀਰ",
+    bn: "সংকটজনক",
+    mr: "गंभीर",
+    te: "క్లిష్టమైన",
+    ta: "சிக்கலான",
+    gu: "ગંભીર",
+    kn: "ತೀವ್ರ"
+  },
+  "Moderate": {
+    hi: "मध्यम",
+    hinglish: "Moderate",
+    pa: "ਦਰਮਿਆਨਾ",
+    bn: "মাঝারি",
+    mr: "मध्यम",
+    te: "మధ్యస్థం",
+    ta: "மிதமான",
+    gu: "મધ્યમ",
+    kn: "ಮಧ್ಯಮ"
+  },
+  "Consultation": {
+    hi: "परामर्श",
+    hinglish: "Consultation",
+    pa: "ਸਲਾਹ-ਮਸ਼ਵਰਾ",
+    bn: "পরামর্শ",
+    mr: "सल्ला",
+    te: "సంప్రదింపు",
+    ta: "ஆலோசனை",
+    gu: "સલાહ",
+    kn: "ಸಮಾಲೋಚನೆ"
+  },
+  "Lab Test": {
+    hi: "लैब टेस्ट",
+    hinglish: "Lab Test",
+    pa: "ਲੈਬ ਟੈਸਟ",
+    bn: "ল্যাব টেস্ট",
+    mr: "लॅब चाचणी",
+    te: "ల్యాబ్ పరీక్ష",
+    ta: "ஆய்வக சோதனை",
+    gu: "લેબ ટેસ્ટ",
+    kn: "ಲ್ಯಾಬ್ ಪರೀಕ್ಷೆ"
+  },
+  "Diagnostic": {
+    hi: "जांच / इमेजिंग",
+    hinglish: "Diagnostic",
+    pa: "ਜਾਂਚ / ਇਮੇਜਿੰਗ",
+    bn: "ডায়াগনস্টিক",
+    mr: "निदान / तपासणी",
+    te: "రోగ నిర్ధారణ",
+    ta: "கண்டறிதல்",
+    gu: "તપાસ",
+    kn: "ರೋಗನಿರ್ಣಯ"
+  },
+  "Immunization": {
+    hi: "टीकाकरण",
+    hinglish: "Vaccination",
+    pa: "ਟੀਕਾਕਰਨ",
+    bn: "টিকাদান",
+    mr: "लसीकरण",
+    te: "టీకాలు",
+    ta: "தடுப்பூசி",
+    gu: "રસીકરણ",
+    kn: "ಲಸಿಕೆ"
+  },
+  "Attending Physician": {
+    hi: "परामर्श चिकित्सक",
+    hinglish: "Attending Doctor",
+    pa: "ਸਲਾਹਕਾਰ ਡਾਕਟਰ",
+    bn: "উপস্থিত চিকিৎসক",
+    mr: "उपस्थित डॉक्टर",
+    te: "హాజరైన వైద్యుడు",
+    ta: "மருத்துவர்",
+    gu: "ડૉક્ટર",
+    kn: "ಹಾಜರಾದ ವೈದ್ಯರು"
+  },
+  "Documented clinical review and observation notes.": {
+    hi: "चिकित्सीय समीक्षा एवं अवलोकन विवरण दर्ज किया गया।",
+    hinglish: "Clinical review aur observation notes save kiye gaye.",
+    pa: "ਡਾਕਟਰੀ ਸਮੀਖਿਆ ਅਤੇ ਨਿਰੀਖਣ ਨੋਟ ਦਰਜ ਕੀਤੇ ਗਏ।",
+    bn: "চিকিৎসা পর্যালোচনা এবং পর্যবেক্ষণ নোট নথিভুক্ত করা হয়েছে।",
+    mr: "वैद्यकीय पुनरावलोकन आणि निरीक्षण नोंदी जतन केल्या.",
+    te: "క్లినికల్ సమీక్ష మరియు పరిశీలన గమనికలు నమోదు చేయబడ్డాయి.",
+    ta: "மருத்துவ மதிப்பாய்வு மற்றும் கண்காணிப்பு குறிப்புகள் பதிவு செய்யப்பட்டன.",
+    gu: "તબીબી સમીક્ષા અને અવલોકન નોંધો નોંધવામાં આવી.",
+    kn: "ವೈದ್ಯಕೀಯ ವಿಮರ್ಶೆ ಮತ್ತು ಅವಲೋಕನ ಟಿಪ್ಪಣಿಗಳನ್ನು ದಾಖಲಿಸಲಾಗಿದೆ."
+  },
+  "Logged": {
+    hi: "दर्ज",
+    hinglish: "Logged",
+    pa: "ਦਰਜ",
+    bn: "নথিভুক্ত",
+    mr: "नोंदवले",
+    te: "నమోదైంది",
+    ta: "பதிவுசெய்யப்பட்டது",
+    gu: "નોંધાયેલ",
+    kn: "ದಾಖಲಿಸಲಾಗಿದೆ"
   }
 };
 
 /**
- * Translates any medical term, condition, allergy, or UI phrase.
- * If exact match is found, returns translation for targetLang.
- * If not found, falls back gracefully to the original term.
+ * Translates any medical term, condition, allergy, timing, or UI phrase.
+ * Supports exact match, case-insensitive match, reverse lookup, and compound phrases (e.g. " • ").
  */
 export function translateMedicalTerm(term, lang = "en") {
   if (!term || typeof term !== "string" || !lang || lang === "en") {
     return term;
   }
   const clean = term.trim();
+  if (!clean) return term;
+
+  // 1. Direct match in dictionary
   const entry = MEDICAL_DICTIONARY[clean];
   if (entry && entry[lang]) {
     return entry[lang];
   }
-  // Case-insensitive fallback
+
+  // 2. Case-insensitive lookup
   const lower = clean.toLowerCase();
   for (const [key, val] of Object.entries(MEDICAL_DICTIONARY)) {
     if (key.toLowerCase() === lower && val[lang]) {
       return val[lang];
     }
   }
+
+  // 3. Reverse lookup (if clean matches a Hindi translation in the dictionary)
+  for (const val of Object.values(MEDICAL_DICTIONARY)) {
+    if (val.hi === clean && val[lang]) {
+      return val[lang];
+    }
+  }
+
+  // 4. Compound phrase splitting: handles "Morning (After breakfast) • Blood Glucose Regulation"
+  if (clean.includes(" • ")) {
+    return clean
+      .split(" • ")
+      .map((part) => translateMedicalTerm(part, lang))
+      .join(" • ");
+  }
+  if (clean.includes(" / ")) {
+    return clean
+      .split(" / ")
+      .map((part) => translateMedicalTerm(part, lang))
+      .join(" / ");
+  }
+
+  // 5. Handling leading icons or bullet prefixes (e.g. "● Type 2 Diabetes", "⚠️ Penicillin")
+  const KNOWN_PREFIXES = ["● ", "●", "⚠️ ", "⚠️", "💡 ", "💡", "🚨 ", "🚨", "🟢 ", "🟢", "🩺 ", "🩺", "👨‍⚕️ ", "👨‍⚕️", "💊 ", "💊", "📅 ", "📅", "📈 ", "📈"];
+  for (const p of KNOWN_PREFIXES) {
+    if (clean.startsWith(p)) {
+      const rest = clean.slice(p.length).trim();
+      const translatedRest = translateMedicalTerm(rest, lang);
+      return p + translatedRest;
+    }
+  }
+
   return term;
 }
+
+let activeDomObserver = null;
+let currentActiveLang = "en";
 
 /**
  * Recursively scans visible text nodes across the entire page
  * and replaces recognized English phrases with the active language translation.
  * Non-destructive and lossless (stores original in memory).
+ * Uses a persistent MutationObserver to maintain translation on dynamic React updates.
  */
 export function applyDomTranslations(lang = "en") {
   if (typeof document === "undefined" || !document.body) return;
+  currentActiveLang = lang;
 
+  // Disconnect any existing observer
+  if (activeDomObserver) {
+    try {
+      activeDomObserver.disconnect();
+    } catch {
+      // Ignored
+    }
+    activeDomObserver = null;
+  }
+
+  const translateNode = (node) => {
+    try {
+      const parent = node.parentElement;
+      if (
+        !parent ||
+        parent.tagName === "SCRIPT" ||
+        parent.tagName === "STYLE" ||
+        parent.tagName === "FONT" ||
+        parent.tagName === "INPUT" ||
+        parent.tagName === "TEXTAREA" ||
+        parent.tagName === "SELECT" ||
+        parent.tagName === "OPTION" ||
+        parent.isContentEditable ||
+        parent.closest(".notranslate") ||
+        parent.closest("[translate='no']") ||
+        parent.closest("[lang='zxx']")
+      ) {
+        return;
+      }
+
+      const raw = node.nodeValue;
+      if (!raw) return;
+      const clean = raw.trim();
+      if (!clean) return;
+
+      // Cache original in memory once
+      if (!node.__pulseOriginal) {
+        node.__pulseOriginal = raw;
+      }
+
+      const orig = node.__pulseOriginal;
+      const cleanOrig = orig.trim();
+
+      if (lang === "en") {
+        if (node.nodeValue !== orig) {
+          node.nodeValue = orig;
+        }
+        return;
+      }
+
+      // 1. Direct translation
+      let translated = translateMedicalTerm(cleanOrig, lang);
+
+      // 2. Phrase matching fallback if direct translation didn't change anything
+      if (translated === cleanOrig) {
+        for (const [key, val] of Object.entries(MEDICAL_DICTIONARY)) {
+          if (val[lang] && val[lang] !== key && cleanOrig.includes(key)) {
+            translated = cleanOrig.replaceAll(key, val[lang]);
+            break;
+          }
+        }
+      }
+
+      if (translated && translated !== cleanOrig) {
+        const finalVal = orig.replace(cleanOrig, translated);
+        if (node.nodeValue !== finalVal) {
+          node.nodeValue = finalVal;
+        }
+      }
+    } catch {
+      // Individual node error safely caught
+    }
+  };
+
+  // Walk entire DOM
   try {
     const walker = document.createTreeWalker(
       document.body,
@@ -382,147 +1077,74 @@ export function applyDomTranslations(lang = "en") {
       null,
       false
     );
-
     let node;
     while ((node = walker.nextNode())) {
-      try {
-        const parent = node.parentElement;
-        if (
-          !parent ||
-          parent.tagName === "SCRIPT" ||
-          parent.tagName === "STYLE" ||
-          parent.tagName === "FONT" ||
-          parent.tagName === "SELECT" ||
-          parent.tagName === "OPTION" ||
-          parent.isContentEditable ||
-          parent.closest(".notranslate") ||
-          parent.closest("[translate='no']") ||
-          parent.closest("[lang='zxx']")
-        ) {
-          continue;
-        }
-
-        const currentText = node.nodeValue?.trim();
-        if (!currentText) continue;
-
-        // Retrieve or cache original text
-        if (!node.__pulseOriginal) {
-          node.__pulseOriginal = node.nodeValue;
-        }
-
-        const originalText = node.__pulseOriginal;
-        const cleanOrig = originalText.trim();
-
-        if (lang === "en") {
-          if (node.nodeValue !== originalText) {
-            node.nodeValue = originalText;
-          }
-          continue;
-        }
-
-        // Check if whole string matches
-        const translated = translateMedicalTerm(cleanOrig, lang);
-        if (translated && translated !== cleanOrig) {
-          node.nodeValue = originalText.replace(cleanOrig, translated);
-        }
-      } catch {
-        // Individual node error safely caught
-      }
+      translateNode(node);
     }
   } catch (err) {
-    console.warn("[PulseAI] DOM translation skipped:", err);
+    console.warn("[PulseAI] Walker skipped:", err);
+  }
+
+  // If not English, attach a MutationObserver to translate any newly added or mutated nodes
+  if (lang !== "en" && typeof MutationObserver !== "undefined") {
+    let debounceTimer = null;
+    activeDomObserver = new MutationObserver((mutations) => {
+      if (currentActiveLang === "en") return;
+      if (debounceTimer) clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(() => {
+        try {
+          if (activeDomObserver) activeDomObserver.disconnect();
+          mutations.forEach((mutation) => {
+            if (mutation.type === "characterData") {
+              translateNode(mutation.target);
+            } else if (mutation.addedNodes) {
+              mutation.addedNodes.forEach((added) => {
+                if (added.nodeType === 3) {
+                  translateNode(added);
+                } else if (added.nodeType === 1) {
+                  const subWalker = document.createTreeWalker(
+                    added,
+                    NodeFilter.SHOW_TEXT,
+                    null,
+                    false
+                  );
+                  let subNode;
+                  while ((subNode = subWalker.nextNode())) {
+                    translateNode(subNode);
+                  }
+                }
+              });
+            }
+          });
+        } finally {
+          if (activeDomObserver && document.body) {
+            activeDomObserver.observe(document.body, {
+              childList: true,
+              subtree: true,
+              characterData: true
+            });
+          }
+        }
+      }, 35);
+    });
+
+    try {
+      activeDomObserver.observe(document.body, {
+        childList: true,
+        subtree: true,
+        characterData: true
+      });
+    } catch (err) {
+      console.warn("[PulseAI] Observer init skipped:", err);
+    }
   }
 }
 
 /**
- * Automatically triggers Google Translate across the entire page for 100% deep translation
+ * Safe translation activator - calls applyDomTranslations directly
  */
 export function triggerGoogleTranslate(lang = "en") {
-  if (typeof window === "undefined" || typeof document === "undefined") return;
-
-  try {
-    const target = (lang === "hinglish" || !lang) ? "hi" : lang;
-
-    // Set Google Translate cookie safely
-    try {
-      if (target === "en") {
-        document.cookie = "googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
-        if (window.location.hostname) {
-          document.cookie = `googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; domain=${window.location.hostname}; path=/;`;
-        }
-      } else {
-        document.cookie = `googtrans=/en/${target}; path=/;`;
-        if (window.location.hostname) {
-          document.cookie = `googtrans=/en/${target}; domain=${window.location.hostname}; path=/;`;
-        }
-      }
-    } catch {
-      // Ignore cookie restrictions
-    }
-
-    // Clean any body shift or injected banner frames immediately
-    const cleanBannerShift = () => {
-      try {
-        if (document.body) {
-          if (document.body.style.top && document.body.style.top !== "0px") {
-            document.body.style.top = "0px";
-          }
-          if (document.body.style.position === "relative") {
-            document.body.style.position = "static";
-          }
-        }
-        if (document.documentElement && document.documentElement.style.top && document.documentElement.style.top !== "0px") {
-          document.documentElement.style.top = "0px";
-        }
-        const banners = document.querySelectorAll(
-          ".goog-te-banner-frame, iframe.goog-te-banner-frame, .VIpgJd-ZVi9od-ORHb-OEVmcd, iframe.VIpgJd-ZVi9od-ORHb-OEVmcd, body > .skiptranslate, body > iframe.skiptranslate, iframe.skiptranslate, iframe[src*='translate.google']"
-        );
-        banners.forEach((el) => {
-          el.style.setProperty("display", "none", "important");
-          el.style.setProperty("visibility", "hidden", "important");
-          el.style.setProperty("height", "0px", "important");
-          el.style.setProperty("width", "0px", "important");
-          el.style.setProperty("opacity", "0", "important");
-          el.style.setProperty("pointer-events", "none", "important");
-        });
-      } catch {
-        // Suppress banner cleanup errors
-      }
-    };
-
-    cleanBannerShift();
-
-    // Attempt to activate the hidden combo element
-    const activateCombo = () => {
-      cleanBannerShift();
-      try {
-        const combo = document.querySelector(".goog-te-combo");
-        if (combo) {
-          if (combo.value !== target) {
-            combo.value = target;
-            combo.dispatchEvent(new Event("change"));
-          }
-          cleanBannerShift();
-          return true;
-        }
-      } catch {
-        // Dispatch error caught
-      }
-      return false;
-    };
-
-    if (!activateCombo()) {
-      let count = 0;
-      const interval = setInterval(() => {
-        count++;
-        cleanBannerShift();
-        if (activateCombo() || count > 20) {
-          clearInterval(interval);
-        }
-      }, 150);
-    }
-  } catch (err) {
-    console.warn("[PulseAI] Trigger Google translate caught:", err);
-  }
+  applyDomTranslations(lang);
 }
+
 

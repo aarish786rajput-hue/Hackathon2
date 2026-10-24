@@ -1422,14 +1422,10 @@ export default function TopHeader({
                 letterSpacing: "0.06em",
                 padding: "4px 8px 6px 8px",
                 borderBottom: "1px solid var(--border-color)",
-                marginBottom: "2px",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between"
+                marginBottom: "2px"
               }} 
             >
               <span>Quick Menu</span>
-              <span style={{ fontSize: "0.68rem", fontWeight: 600, color: "var(--primary)" }}>त्वरित मेनू</span>
             </div>
 
             {/* 1. Health Passport */}

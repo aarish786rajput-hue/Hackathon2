@@ -34,6 +34,12 @@ export default function Dashboard({
 }) {
   const [isDragActive, setIsDragActive] = useState(false);
   const fileInputRef = useRef(null);
+  const [toastMessage, setToastMessage] = useState(null);
+
+  const showToast = (msg) => {
+    setToastMessage(msg);
+    setTimeout(() => setToastMessage(null), 3500);
+  };
 
   const t = translations[lang] || translations.en;
   const latestVital = patient.vitalsHistory[patient.vitalsHistory.length - 1] || {};
@@ -47,6 +53,7 @@ export default function Dashboard({
 
   const handleFileSelected = (file) => {
     if (!file) return;
+    showToast(lang === "hi" ? "रिपोर्ट प्रोसेस की जा रही है..." : "Processing lab report...");
     if (onUploadReport) {
       onUploadReport(file);
     } else {
@@ -590,7 +597,11 @@ export default function Dashboard({
                 key={med.id}
                 onClick={() => {
                   if (!med.stopped) {
-                    onToggleMedication(med.id);
+                    if (onToggleMedication) onToggleMedication(med.id);
+                    showToast(!med.taken 
+                      ? (lang === "hi" ? `${med.name} ली गई दर्ज` : `${med.name} marked taken`)
+                      : (lang === "hi" ? `${med.name} अनचेक की गई` : `${med.name} unchecked`)
+                    );
                   }
                 }}
                 style={{
@@ -667,6 +678,7 @@ export default function Dashboard({
                       onClick={(e) => {
                         e.stopPropagation();
                         if (onStopMedicationCourse) onStopMedicationCourse(med.id);
+                        showToast(lang === "hi" ? `${med.name} कोर्स फिर शुरू` : `${med.name} resumed`);
                       }}
                       style={{
                         display: "inline-flex",
@@ -693,6 +705,7 @@ export default function Dashboard({
                         onClick={(e) => {
                           e.stopPropagation();
                           if (onSnoozeMedication) onSnoozeMedication(med.id, 15);
+                          showToast(lang === "hi" ? `${med.name} 15 मिनट स्नूज़` : `${med.name} snoozed 15m`);
                         }}
                         title="Snooze reminder by 15 minutes"
                         style={{
@@ -720,6 +733,7 @@ export default function Dashboard({
                         onClick={(e) => {
                           e.stopPropagation();
                           if (onStopMedicationCourse) onStopMedicationCourse(med.id);
+                          showToast(lang === "hi" ? `${med.name} कोर्स रोका गया` : `${med.name} stopped`);
                         }}
                         title="Stop medication course"
                         style={{

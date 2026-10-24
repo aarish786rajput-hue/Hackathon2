@@ -49,6 +49,8 @@ const rawTranslations = {
     navTimelineDesc: "Longitudinal History",
     navDoctors: "Find Doctors",
     navDoctorsDesc: "Specialists & Appointments",
+    navWellness: "Wellness & Prevention",
+    navWellnessDesc: "Diet, Habits & Repeat Tests",
 
     // Common Actions
     doctorPrep: "Doctor Visit Prep",

@@ -19,6 +19,7 @@ import AuthModal from './components/AuthModal';
 import DoctorsDashboard from './components/DoctorsDashboard';
 import DeviceManager from './components/DeviceManager';
 import FloatingCopilot from './components/FloatingCopilot';
+import WellnessTracker from './components/WellnessTracker';
 import { mockPatients } from './data/mockPatientData';
 import { calculateAge } from './utils/dateUtils';
 import { translations } from './data/translations';
@@ -419,6 +420,14 @@ export default function App() {
                 patient={currentPatient}
                 lang={lang}
                 onAddVital={handleAddVital}
+              />
+            )}
+            {activeTab === 'wellness' && (
+              <WellnessTracker
+                patient={currentPatient}
+                lang={lang}
+                onNavigate={handleNavigate}
+                onOpenDoctorPrep={() => setIsDoctorPrepOpen(true)}
               />
             )}
             {activeTab === 'timeline' && (

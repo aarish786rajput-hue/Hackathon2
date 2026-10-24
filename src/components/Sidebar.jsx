@@ -16,7 +16,8 @@ import {
   LogOut,
   LogIn,
   User,
-  ShieldCheck
+  ShieldCheck,
+  Sparkles
 } from "lucide-react";
 import { translations } from "../data/translations";
 
@@ -128,6 +129,15 @@ export default function Sidebar({
           id: "vitals", 
           label: t.navVitals || "Vitals & Trends", 
           icon: TrendingUp,
+          color: "#10b981",
+          bg: "rgba(16, 185, 129, 0.16)",
+          activeGradient: "linear-gradient(135deg, rgba(16, 185, 129, 0.24), rgba(5, 150, 105, 0.32))",
+          borderColor: "rgba(16, 185, 129, 0.45)"
+        },
+        { 
+          id: "wellness", 
+          label: t.navWellness || "Wellness & Prevention", 
+          icon: Sparkles,
           color: "#10b981",
           bg: "rgba(16, 185, 129, 0.16)",
           activeGradient: "linear-gradient(135deg, rgba(16, 185, 129, 0.24), rgba(5, 150, 105, 0.32))",

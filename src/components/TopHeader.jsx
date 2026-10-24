@@ -106,6 +106,7 @@ const SEARCH_CATEGORIES = [
   { id: "medications", key: "navMedications", label: "Medications & Safety", labelHi: "दवाइयां और सुरक्षा", tab: "medications", icon: Pill, color: "#ec4899", bg: "rgba(236, 72, 153, 0.16)", keywords: ["medicine", "pill", "tablet", "statin", "telmisartan", "metformin", "dawa", "दवाई", "गोली"] },
   { id: "reports", key: "navReports", label: "Lab Test Reports", labelHi: "लैब टेस्ट रिपोर्ट", tab: "reports", icon: FileText, color: "#6366f1", bg: "rgba(99, 102, 241, 0.16)", keywords: ["report", "lab", "test", "hba1c", "blood", "sugar", "रिपोर्ट", "जांच"] },
   { id: "vitals", key: "navVitals", label: "Vitals & Physiological Trends", labelHi: "वाइटल्स व रुझान", tab: "vitals", icon: Activity, color: "#10b981", bg: "rgba(16, 185, 129, 0.16)", keywords: ["vitals", "bp", "blood pressure", "glucose", "pulse", "बीपी", "शुगर", "पल्स"] },
+  { id: "wellness", key: "navWellness", label: "Wellness & Prevention", labelHi: "वैलनेस और प्रिवेंशन", tab: "wellness", icon: Sparkles, color: "#10b981", bg: "rgba(16, 185, 129, 0.16)", keywords: ["wellness", "prevention", "diet", "habits", "tests", "walk", "lifestyle", "nutrition", "वैलनेस", "आहार", "व्यायाम"] },
   { id: "profile", key: "navProfile", label: "Health Profile & ABHA", labelHi: "स्वास्थ्य प्रोफ़ाइल व आभा", tab: "profile", icon: User, color: "#3b82f6", bg: "rgba(59, 130, 246, 0.16)", keywords: ["profile", "abha", "id", "allergy", "आभा", "प्रोफाइल"] }
 ];
 

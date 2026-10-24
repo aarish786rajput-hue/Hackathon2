@@ -17,12 +17,7 @@ import {
   Ban,
   RotateCcw,
   Timer,
-  Utensils,
-  Moon,
-  Droplets,
-  FlaskConical,
-  CalendarCheck,
-  ChevronRight
+  CalendarCheck
 } from "lucide-react";
 import { translations } from "../data/translations";
 import { translateMedicalTerm } from "../utils/translator";
@@ -59,7 +54,7 @@ export default function Dashboard({
   };
 
   const wellnessData = getPatientWellnessData(patient.id);
-  const { wellnessPillars = [], repeatTestsDue = [], upcomingAppointment } = wellnessData;
+  const { upcomingAppointment } = wellnessData;
 
   const t = translations[lang] || translations.en;
   const latestVital = patient.vitalsHistory[patient.vitalsHistory.length - 1] || {};
@@ -726,6 +721,44 @@ export default function Dashboard({
               </div>
             </div>
           </div>
+
+          {/* Wellness & Prevention Shortcut Card */}
+          <div
+            onClick={() => onNavigate("wellness")}
+            className="glass-panel interactive-card"
+            style={{ 
+              padding: "24px 22px", 
+              display: "flex", 
+              alignItems: "center", 
+              gap: "18px", 
+              borderRadius: "18px",
+              border: "1.5px solid rgba(16, 185, 129, 0.35)",
+              background: "linear-gradient(135deg, rgba(16, 185, 129, 0.08), var(--bg-card) 60%)",
+              minHeight: "108px"
+            }}
+          >
+            <div style={{
+              width: "54px",
+              height: "54px",
+              borderRadius: "15px",
+              background: "linear-gradient(135deg, #10b981, #059669)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              flexShrink: 0,
+              boxShadow: "0 4px 14px rgba(16, 185, 129, 0.35)"
+            }}>
+              <Sparkles size={26} color="#ffffff" strokeWidth={2.2} />
+            </div>
+            <div>
+              <div style={{ fontWeight: 800, fontSize: "1.12rem", color: "var(--text-highlight)", lineHeight: 1.25, marginBottom: "4px" }}>
+                {t.navWellness || "Wellness & Prevention"}
+              </div>
+              <div style={{ fontSize: "0.84rem", color: "var(--text-muted)", lineHeight: 1.35 }}>
+                {t.wellnessGuidanceSub || "Daily habits & repeat tests due"}
+              </div>
+            </div>
+          </div>
         </div>
     </div>
 
@@ -1175,243 +1208,6 @@ export default function Dashboard({
               </button>
             </div>
           </div>
-        </div>
-      </div>
-
-      {/* Personalized Wellness & Lifestyle Guidance (Section 3.3) */}
-      <div>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "14px", flexWrap: "wrap", gap: "10px" }}>
-          <div>
-            <h2 style={{ fontSize: "1.2rem", fontWeight: 800, display: "flex", alignItems: "center", gap: "8px", color: "var(--text-highlight)", margin: 0 }}>
-              <Sparkles size={20} color="var(--secondary)" />
-              {t.wellnessGuidanceTitle || "Personalized Wellness & Lifestyle Guidance"}
-            </h2>
-            <p style={{ fontSize: "0.82rem", color: "var(--text-muted)", margin: "4px 0 0 0" }}>
-              {t.wellnessGuidanceSub || "Clinically-tailored daily habits based on your conditions, lab values, and age."}
-            </p>
-          </div>
-          <button
-            type="button"
-            onClick={() => onNavigate("copilot", `Please generate a personalized 7-day holistic diet, exercise, and sleep routine based on my diagnosis (${patient.conditions.map(c => typeof c === 'string' ? c : c.name).join(', ')}).`)}
-            className="btn btn-secondary"
-            style={{ padding: "6px 14px", fontSize: "0.82rem", display: "inline-flex", alignItems: "center", gap: "6px" }}
-          >
-            <Sparkles size={14} color="var(--primary)" />
-            <span>{t.askCopilotCustomPlan || "Ask AI for Custom Plan"}</span>
-          </button>
-        </div>
-
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "16px" }}>
-          {wellnessPillars.map((pillar) => {
-            const getPillarIcon = (id) => {
-              switch (id) {
-                case "diet": return <Utensils size={20} color={pillar.color} />;
-                case "activity": return <Activity size={20} color={pillar.color} />;
-                case "sleep": return <Moon size={20} color={pillar.color} />;
-                case "hydration": return <Droplets size={20} color={pillar.color} />;
-                default: return <Sparkles size={20} color={pillar.color} />;
-              }
-            };
-
-            return (
-              <div
-                key={pillar.id}
-                className="glass-panel"
-                style={{
-                  padding: "20px",
-                  borderRadius: "16px",
-                  border: `1.5px solid ${pillar.color}35`,
-                  background: `linear-gradient(165deg, ${pillar.color}0a, var(--bg-card) 60%)`,
-                  display: "flex",
-                  flexDirection: "column",
-                  justifyContent: "space-between",
-                  gap: "12px"
-                }}
-              >
-                <div>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "10px", marginBottom: "8px" }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                      <div style={{
-                        width: "36px",
-                        height: "36px",
-                        borderRadius: "10px",
-                        background: `${pillar.color}18`,
-                        border: `1px solid ${pillar.color}40`,
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        flexShrink: 0
-                      }}>
-                        {getPillarIcon(pillar.id)}
-                      </div>
-                      <h3 style={{ fontSize: "0.98rem", fontWeight: 800, color: "var(--text-highlight)", margin: 0, lineHeight: 1.3 }}>
-                        {pillar.title}
-                      </h3>
-                    </div>
-                    <span style={{
-                      fontSize: "0.68rem",
-                      fontWeight: 800,
-                      padding: "3px 8px",
-                      borderRadius: "20px",
-                      background: `${pillar.color}18`,
-                      color: pillar.color,
-                      border: `1px solid ${pillar.color}40`,
-                      whiteSpace: "nowrap",
-                      flexShrink: 0
-                    }}>
-                      {pillar.badge}
-                    </span>
-                  </div>
-
-                  <p style={{ fontSize: "0.85rem", color: "var(--text-main)", lineHeight: 1.5, margin: "8px 0" }}>
-                    {pillar.recommendation}
-                  </p>
-
-                  {/* Clinical Why Suggested Box */}
-                  <div style={{
-                    background: "var(--bg-elevated)",
-                    borderLeft: `3px solid ${pillar.color}`,
-                    borderRadius: "8px",
-                    padding: "10px 12px",
-                    marginTop: "10px"
-                  }}>
-                    <div style={{ fontSize: "0.75rem", fontWeight: 800, color: pillar.color, display: "flex", alignItems: "center", gap: "4px", marginBottom: "3px" }}>
-                      <span>💡</span>
-                      <span>{t.whySuggested || "Why this is recommended for you:"}</span>
-                    </div>
-                    <p style={{ fontSize: "0.78rem", color: "var(--text-muted)", margin: 0, lineHeight: 1.4 }}>
-                      {pillar.whyRecommended}
-                    </p>
-                  </div>
-                </div>
-
-                <div style={{ display: "flex", justifyContent: "flex-end", paddingTop: "8px" }}>
-                  <button
-                    type="button"
-                    onClick={() => onNavigate("copilot", `Explain more about: ${pillar.title} and give me practical actionable tips for my condition.`)}
-                    style={{
-                      background: "none",
-                      border: "none",
-                      color: pillar.color,
-                      fontSize: "0.78rem",
-                      fontWeight: 700,
-                      cursor: "pointer",
-                      padding: 0,
-                      display: "inline-flex",
-                      alignItems: "center",
-                      gap: "4px"
-                    }}
-                  >
-                    <span>{t.askCopilot || "Ask Copilot"}</span>
-                    <ChevronRight size={13} />
-                  </button>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* Repeat Tests & Preventive Care Due Tracker (Section 3.4) */}
-      <div>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "14px", flexWrap: "wrap", gap: "10px" }}>
-          <div>
-            <h2 style={{ fontSize: "1.2rem", fontWeight: 800, display: "flex", alignItems: "center", gap: "8px", color: "var(--text-highlight)", margin: 0 }}>
-              <FlaskConical size={20} color="var(--primary)" />
-              {t.preventiveTrackerTitle || "Preventive Health & Repeat Tests Due"}
-            </h2>
-            <p style={{ fontSize: "0.82rem", color: "var(--text-muted)", margin: "4px 0 0 0" }}>
-              {t.preventiveTrackerSub || "Clinical guidelines for periodic laboratory screenings and disease surveillance."}
-            </p>
-          </div>
-          <span className="badge badge-primary" style={{ fontSize: "0.76rem" }}>
-            🛡️ {repeatTestsDue.length} {t.navReports || "Clinical Screenings Tracked"}
-          </span>
-        </div>
-
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: "16px" }}>
-          {repeatTestsDue.map((test) => {
-            const isUrgent = test.urgency === "due-soon";
-            const isGood = test.urgency === "good";
-
-            return (
-              <div
-                key={test.id}
-                className="glass-panel"
-                style={{
-                  padding: "20px",
-                  borderRadius: "16px",
-                  border: isUrgent
-                    ? "1.5px solid rgba(245, 158, 11, 0.5)"
-                    : isGood
-                      ? "1.5px solid rgba(16, 185, 129, 0.4)"
-                      : "1px solid var(--border-color)",
-                  background: isUrgent
-                    ? "linear-gradient(165deg, rgba(245, 158, 11, 0.08), var(--bg-card) 60%)"
-                    : "var(--bg-card)",
-                  display: "flex",
-                  flexDirection: "column",
-                  justifyContent: "space-between",
-                  gap: "12px"
-                }}
-              >
-                <div>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "10px", marginBottom: "8px" }}>
-                    <h3 style={{ fontSize: "0.98rem", fontWeight: 800, color: "var(--text-highlight)", margin: 0, lineHeight: 1.35 }}>
-                      {test.testName}
-                    </h3>
-                    <span className={`badge ${isUrgent ? "badge-borderline" : isGood ? "badge-good" : "badge-primary"}`} style={{ whiteSpace: "nowrap", flexShrink: 0, fontSize: "0.72rem" }}>
-                      {isUrgent ? "⏳ " : isGood ? "✅ " : "🗓️ "}{test.timeframe}
-                    </span>
-                  </div>
-
-                  <div style={{ fontSize: "0.76rem", color: "var(--text-muted)", marginBottom: "8px" }}>
-                    <span>Frequency: <strong>{test.frequency}</strong></span> • <span>Partner: <strong>{test.provider}</strong></span>
-                  </div>
-
-                  <div style={{
-                    background: "var(--bg-elevated)",
-                    borderRadius: "10px",
-                    padding: "10px 12px",
-                    border: "1px solid var(--border-color)",
-                    fontSize: "0.8rem",
-                    color: "var(--text-main)",
-                    lineHeight: 1.45
-                  }}>
-                    <strong style={{ color: "var(--primary)" }}>📋 Clinical Guideline:</strong> {test.guidelineReason}
-                  </div>
-                </div>
-
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "8px", paddingTop: "8px", borderTop: "1px solid var(--border-color)", flexWrap: "wrap" }}>
-                  <button
-                    type="button"
-                    onClick={() => showToast(t.testBookedToast || "Lab test booking initiated with partner diagnostics!")}
-                    className="btn btn-primary"
-                    style={{ padding: "6px 12px", fontSize: "0.78rem", borderRadius: "8px", display: "inline-flex", alignItems: "center", gap: "5px" }}
-                  >
-                    <FlaskConical size={13} />
-                    <span>{t.bookHomeCollection || "Book Test"}</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => onNavigate("copilot", `What are the preparation rules and fasting requirements for ${test.testName}?`)}
-                    style={{
-                      background: "none",
-                      border: "none",
-                      color: "var(--primary)",
-                      fontSize: "0.78rem",
-                      fontWeight: 700,
-                      cursor: "pointer",
-                      padding: 0
-                    }}
-                  >
-                    {t.askCopilot || "Ask Copilot"} →
-                  </button>
-                </div>
-              </div>
-            );
-          })}
         </div>
       </div>
 

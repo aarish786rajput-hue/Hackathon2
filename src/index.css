@@ -1166,4 +1166,31 @@ html, body {
   color: inherit;
 }
 
+/* ==========================================================================
+   NOTIFICATION BELL & BADGE ANIMATIONS
+   ========================================================================== */
+@keyframes bell-shake {
+  0% { transform: rotate(0); }
+  10% { transform: rotate(14deg); }
+  20% { transform: rotate(-14deg); }
+  30% { transform: rotate(10deg); }
+  40% { transform: rotate(-10deg); }
+  50% { transform: rotate(4deg); }
+  60% { transform: rotate(-4deg); }
+  70% { transform: rotate(0); }
+  100% { transform: rotate(0); }
+}
 
+.bell-shake {
+  animation: bell-shake 3s ease infinite;
+  transform-origin: top center;
+}
+
+@keyframes notif-pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.12); }
+}
+
+.notif-badge-pulse {
+  animation: notif-pulse 2s ease infinite;
+}

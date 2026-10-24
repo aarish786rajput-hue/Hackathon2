@@ -19,10 +19,22 @@ import {
   Menu,
   Key,
   ChevronDown,
-  ChevronRight
+  ChevronRight,
+  Bell,
+  BellRing,
+  Clock,
+  CheckCircle2
 } from "lucide-react";
 import { translations } from "../data/translations";
 import { triggerGoogleTranslate } from "../utils/translator";
+import { 
+  getOverdueAndDueMedications, 
+  getMedicationDueStatus, 
+  scheduleSnoozeNotification,
+  getNotificationPermission,
+  requestNotificationPermission,
+  sendDesktopNotification
+} from "../utils/reminderService";
 
 // Crisp vector SVG flags for UK and India to prevent Windows "GB" / "IN" font fallback
 const UKFlagIcon = () => (
@@ -125,19 +137,50 @@ export default function TopHeader({
   theme,
   setTheme,
   onNavigate,
-  onOpenApiKeyModal
+  onOpenApiKeyModal,
+  patient,
+  onToggleMedication,
+  onSnoozeMedication
 }) {
   const t = translations[lang] || translations.en;
   const [searchQuery, setSearchQuery] = useState("");
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isQuickMenuOpen, setIsQuickMenuOpen] = useState(false);
   const [isSubLangOpen, setIsSubLangOpen] = useState(false);
+  const [isNotifOpen, setIsNotifOpen] = useState(false);
+  const [notifPermission, setNotifPermission] = useState(() => getNotificationPermission());
 
   const searchContainerRef = useRef(null);
   const searchInputRef = useRef(null);
   const quickMenuRef = useRef(null);
+  const notifContainerRef = useRef(null);
 
-  // Close search & quick menu dropdown on click outside
+  const allMeds = patient?.todayMedications || [];
+  const overdueMeds = getOverdueAndDueMedications(allMeds);
+
+  const toggleNotifMenu = () => {
+    setIsNotifOpen(prev => {
+      const next = !prev;
+      if (next) {
+        setIsQuickMenuOpen(false);
+        setIsSearchOpen(false);
+      }
+      return next;
+    });
+  };
+
+  const toggleQuickMenu = () => {
+    setIsQuickMenuOpen(prev => {
+      const next = !prev;
+      if (next) {
+        setIsNotifOpen(false);
+        setIsSearchOpen(false);
+      }
+      return next;
+    });
+  };
+
+  // Close search, quick menu & notification dropdown on click outside
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (searchContainerRef.current && !searchContainerRef.current.contains(e.target)) {
@@ -146,6 +189,9 @@ export default function TopHeader({
       if (quickMenuRef.current && !quickMenuRef.current.contains(e.target)) {
         setIsQuickMenuOpen(false);
         setIsSubLangOpen(false);
+      }
+      if (notifContainerRef.current && !notifContainerRef.current.contains(e.target)) {
+        setIsNotifOpen(false);
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
@@ -468,25 +514,407 @@ export default function TopHeader({
         )}
       </div>
 
-      {/* ── ZONE 3 (RIGHT): Three Lines (≡) Quick Actions Menu (Passport + SOS + Theme + Key + Language) ── */}
-      <div ref={quickMenuRef} style={{ position: "relative", display: "flex", alignItems: "center", flexShrink: 0 }}>
-        {/* Three Lines Button */}
-        <button
-          type="button"
-          onClick={() => setIsQuickMenuOpen(prev => !prev)}
-          className={`header-icon-btn ${isQuickMenuOpen ? "is-active" : ""}`}
-          title="Menu (Health Passport, SOS, Theme, Key, Language)"
-          aria-label="Quick Actions Menu"
-          style={{
-            width: "40px",
-            height: "40px",
-            borderRadius: "11px",
-            color: isQuickMenuOpen ? "var(--primary)" : "var(--text-highlight)",
-            background: isQuickMenuOpen ? "var(--primary-soft)" : "var(--bg-elevated)",
-            borderColor: isQuickMenuOpen ? "var(--primary-border)" : "var(--border-color)",
-            boxShadow: isQuickMenuOpen ? "0 0 12px rgba(2, 132, 199, 0.3)" : "var(--shadow-sm)"
-          }}
-        >
+      {/* ── ZONE 3 (RIGHT): Notification Bell + Three Lines (≡) Quick Actions Menu ── */}
+      <div style={{ display: "flex", alignItems: "center", gap: "10px", flexShrink: 0 }}>
+        {/* ── 1. Notification Bell with Badge & Dropdown ── */}
+        <div ref={notifContainerRef} style={{ position: "relative", display: "flex", alignItems: "center" }}>
+          <button
+            type="button"
+            onClick={toggleNotifMenu}
+            className={`header-icon-btn ${isNotifOpen ? "is-active" : ""}`}
+            title={overdueMeds.length > 0 
+              ? `${overdueMeds.length} pending medication alerts` 
+              : "Medication Reminders"}
+            aria-label="Medication Reminders Notification"
+            style={{
+              width: "40px",
+              height: "40px",
+              borderRadius: "11px",
+              color: overdueMeds.length > 0 ? "#ea580c" : isNotifOpen ? "var(--primary)" : "var(--text-highlight)",
+              background: overdueMeds.length > 0 
+                ? "rgba(249, 115, 22, 0.12)" 
+                : isNotifOpen 
+                  ? "var(--primary-soft)" 
+                  : "var(--bg-elevated)",
+              borderColor: overdueMeds.length > 0 
+                ? "rgba(249, 115, 22, 0.45)" 
+                : isNotifOpen 
+                  ? "var(--primary-border)" 
+                  : "var(--border-color)",
+              boxShadow: overdueMeds.length > 0 
+                ? "0 0 10px rgba(249, 115, 22, 0.25)" 
+                : "var(--shadow-sm)"
+            }}
+          >
+            {overdueMeds.length > 0 ? (
+              <BellRing size={20} className="bell-shake" color="#ea580c" />
+            ) : (
+              <Bell size={19} />
+            )}
+
+            {/* Overdue Count Badge */}
+            {overdueMeds.length > 0 && (
+              <span
+                className="notif-badge-pulse"
+                style={{
+                  position: "absolute",
+                  top: "-4px",
+                  right: "-4px",
+                  minWidth: "18px",
+                  height: "18px",
+                  padding: "0 4px",
+                  borderRadius: "9px",
+                  background: "linear-gradient(135deg, #ef4444, #dc2626)",
+                  color: "#ffffff",
+                  fontSize: "0.68rem",
+                  fontWeight: 800,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  boxShadow: "0 2px 8px rgba(239, 68, 68, 0.5)",
+                  border: "1.5px solid var(--bg-card)"
+                }}
+              >
+                {overdueMeds.length}
+              </span>
+            )}
+          </button>
+
+          {/* Simple & Clear Notification Dropdown */}
+          {isNotifOpen && (
+            <div
+              className="glass-panel notranslate"
+              translate="no"
+              style={{
+                position: "absolute",
+                top: "calc(100% + 8px)",
+                right: 0,
+                width: "350px",
+                maxWidth: "calc(100vw - 28px)",
+                background: "var(--bg-card)",
+                backdropFilter: "blur(20px)",
+                WebkitBackdropFilter: "blur(20px)",
+                border: "1px solid var(--border-color)",
+                borderRadius: "16px",
+                boxShadow: "0 18px 45px -10px rgba(0, 0, 0, 0.35), 0 4px 16px rgba(0, 0, 0, 0.12)",
+                padding: "12px",
+                zIndex: 120,
+                display: "flex",
+                flexDirection: "column",
+                gap: "10px",
+                maxHeight: "460px",
+                overflowY: "auto",
+                animation: "fadeIn 0.15s ease"
+              }}
+            >
+              {/* Header */}
+              <div style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                paddingBottom: "8px",
+                borderBottom: "1px solid var(--border-color)"
+              }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                  <div style={{
+                    width: "30px",
+                    height: "30px",
+                    borderRadius: "8px",
+                    background: overdueMeds.length > 0 ? "rgba(249, 115, 22, 0.16)" : "rgba(16, 185, 129, 0.16)",
+                    color: overdueMeds.length > 0 ? "#ea580c" : "#10b981",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center"
+                  }}>
+                    {overdueMeds.length > 0 ? <BellRing size={16} /> : <CheckCircle2 size={16} />}
+                  </div>
+                  <div>
+                    <h4 style={{ margin: 0, fontSize: "0.92rem", fontWeight: 800, color: "var(--text-highlight)" }}>
+                      {lang === "hi" ? "दवा रिमाइंडर सूचनाएं" : lang === "hinglish" ? "Medicine Alerts" : "Medication Reminders"}
+                    </h4>
+                    <span style={{ fontSize: "0.72rem", color: "var(--text-muted)" }}>
+                      {overdueMeds.length > 0
+                        ? (lang === "hi" 
+                            ? `${overdueMeds.length} दवा समय पर नहीं ली गई` 
+                            : lang === "hinglish"
+                              ? `${overdueMeds.length} medicine pending`
+                              : `${overdueMeds.length} pending scheduled dose${overdueMeds.length > 1 ? "s" : ""}`)
+                        : (lang === "hi" ? "सभी दवाइयां समय पर ली गईं" : "All caught up on time")}
+                    </span>
+                  </div>
+                </div>
+
+                {overdueMeds.length > 0 ? (
+                  <span style={{
+                    fontSize: "0.7rem",
+                    fontWeight: 800,
+                    padding: "3px 8px",
+                    borderRadius: "6px",
+                    background: "rgba(239, 68, 68, 0.16)",
+                    color: "#dc2626",
+                    border: "1px solid rgba(239, 68, 68, 0.3)"
+                  }}>
+                    {overdueMeds.length} Overdue
+                  </span>
+                ) : (
+                  <span style={{
+                    fontSize: "0.7rem",
+                    fontWeight: 700,
+                    padding: "3px 8px",
+                    borderRadius: "6px",
+                    background: "rgba(16, 185, 129, 0.16)",
+                    color: "#10b981",
+                    border: "1px solid rgba(16, 185, 129, 0.3)"
+                  }}>
+                    ✓ Up to date
+                  </span>
+                )}
+              </div>
+
+              {/* Status Notice when overdue */}
+              {overdueMeds.length > 0 ? (
+                <>
+                  <div style={{
+                    background: "linear-gradient(135deg, rgba(245, 158, 11, 0.15), rgba(239, 68, 68, 0.1))",
+                    border: "1px solid rgba(245, 158, 11, 0.35)",
+                    borderRadius: "10px",
+                    padding: "8px 10px",
+                    fontSize: "0.76rem",
+                    color: "var(--text-highlight)",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "6px"
+                  }}>
+                    <span style={{ fontSize: "1rem" }}>⚠️</span>
+                    <span>
+                      {lang === "hi"
+                        ? "आपने समय पर दवा नहीं ली है! कृपया अभी लें या स्नूज़ करें:"
+                        : lang === "hinglish"
+                          ? "Aapne set time par medicine nahi li! Please Take Now ya Snooze karein:"
+                          : "Scheduled dose missed at set time! Please take now or snooze:"}
+                    </span>
+                  </div>
+
+                  {/* List of overdue/due meds */}
+                  <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                    {overdueMeds.map((med) => {
+                      const dueInfo = getMedicationDueStatus(med);
+                      return (
+                        <div
+                          key={med.id}
+                          style={{
+                            background: "var(--bg-elevated)",
+                            border: "1px solid var(--border-color)",
+                            borderRadius: "11px",
+                            padding: "10px 12px",
+                            display: "flex",
+                            flexDirection: "column",
+                            gap: "8px"
+                          }}
+                        >
+                          <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: "8px" }}>
+                            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                              <span style={{ fontSize: "1.2rem" }}>💊</span>
+                              <div>
+                                <div style={{ fontSize: "0.88rem", fontWeight: 800, color: "var(--text-highlight)" }}>
+                                  {med.name} <span style={{ color: "var(--primary)", fontSize: "0.78rem" }}>({med.dosage})</span>
+                                </div>
+                                <div style={{ fontSize: "0.72rem", color: "var(--text-muted)", marginTop: "1px" }}>
+                                  {med.withFood 
+                                    ? (lang === "hi" ? "भोजन के साथ लें" : "Take with meals") 
+                                    : (lang === "hi" ? "खाली पेट लें" : "Take on empty stomach")}
+                                </div>
+                              </div>
+                            </div>
+
+                            <span style={{
+                              fontSize: "0.68rem",
+                              fontWeight: 800,
+                              padding: "2px 6px",
+                              borderRadius: "4px",
+                              whiteSpace: "nowrap",
+                              background: med.snoozedMinutes ? "rgba(245, 158, 11, 0.2)" : "rgba(239, 68, 68, 0.16)",
+                              color: med.snoozedMinutes ? "#d97706" : "#dc2626"
+                            }}>
+                              {dueInfo.label}
+                            </span>
+                          </div>
+
+                          {/* Quick Actions: Take Now + Snooze (+15m) */}
+                          <div style={{ display: "flex", alignItems: "center", gap: "6px", marginTop: "2px" }}>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                if (onToggleMedication) onToggleMedication(med.id);
+                              }}
+                              className="btn btn-primary"
+                              style={{
+                                flex: 1,
+                                padding: "6px 8px",
+                                fontSize: "0.76rem",
+                                borderRadius: "7px",
+                                display: "inline-flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                gap: "4px",
+                                cursor: "pointer"
+                              }}
+                            >
+                              <CheckCircle2 size={13} />
+                              <span>{lang === "hi" ? "अभी लें (Take Now)" : "Take Now"}</span>
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={() => {
+                                if (onSnoozeMedication) {
+                                  onSnoozeMedication(med.id, 15);
+                                  scheduleSnoozeNotification(med, 15);
+                                }
+                              }}
+                              style={{
+                                flex: 1,
+                                padding: "6px 8px",
+                                fontSize: "0.76rem",
+                                fontWeight: 700,
+                                borderRadius: "7px",
+                                background: "rgba(245, 158, 11, 0.16)",
+                                color: "#d97706",
+                                border: "1px solid rgba(245, 158, 11, 0.4)",
+                                display: "inline-flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                gap: "4px",
+                                cursor: "pointer"
+                              }}
+                            >
+                              <Clock size={13} />
+                              <span>{lang === "hi" ? "+15 मिनट बाद" : "Snooze (+15m)"}</span>
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </>
+              ) : (
+                /* Empty state when all caught up */
+                <div style={{
+                  padding: "24px 16px",
+                  textAlign: "center",
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  gap: "8px"
+                }}>
+                  <div style={{
+                    width: "48px",
+                    height: "48px",
+                    borderRadius: "50%",
+                    background: "rgba(16, 185, 129, 0.16)",
+                    color: "#10b981",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    fontSize: "1.4rem"
+                  }}>
+                    ✓
+                  </div>
+                  <div style={{ fontSize: "0.92rem", fontWeight: 800, color: "var(--text-highlight)" }}>
+                    {lang === "hi" ? "सब ठीक है! कोई छूटी हुई दवा नहीं" : lang === "hinglish" ? "All Caught Up! Koi pending dawa nahi" : "All Caught Up!"}
+                  </div>
+                  <div style={{ fontSize: "0.76rem", color: "var(--text-muted)", maxWidth: "250px", lineHeight: 1.4 }}>
+                    {lang === "hi" 
+                      ? "आपने समय पर अपनी सभी निर्धारित दवाइयां ले ली हैं।" 
+                      : lang === "hinglish"
+                        ? "Aapne time par apni sabhi medicines le li hain."
+                        : "Great job! You have taken all your scheduled medications on time."}
+                  </div>
+                </div>
+              )}
+
+              {/* Footer: Full schedule link & push reminder */}
+              <div style={{
+                borderTop: "1px solid var(--border-color)",
+                paddingTop: "8px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                gap: "8px"
+              }}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsNotifOpen(false);
+                    if (onNavigate) onNavigate("medications");
+                  }}
+                  style={{
+                    background: "none",
+                    border: "none",
+                    color: "var(--primary)",
+                    fontSize: "0.76rem",
+                    fontWeight: 700,
+                    cursor: "pointer",
+                    padding: "2px 4px",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "4px"
+                  }}
+                >
+                  <Pill size={13} />
+                  <span>{lang === "hi" ? "पूरा शिड्यूल देखें →" : "View Medications →"}</span>
+                </button>
+
+                {notifPermission !== "granted" && (
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      const granted = await requestNotificationPermission();
+                      setNotifPermission(granted ? "granted" : "denied");
+                      if (granted) {
+                        sendDesktopNotification("PulseAI Reminders 🔔", {
+                          body: "Live browser medication alerts activated."
+                        });
+                      }
+                    }}
+                    style={{
+                      background: "rgba(14, 165, 233, 0.12)",
+                      border: "1px solid rgba(14, 165, 233, 0.3)",
+                      color: "var(--primary)",
+                      fontSize: "0.7rem",
+                      fontWeight: 700,
+                      borderRadius: "6px",
+                      padding: "4px 8px",
+                      cursor: "pointer"
+                    }}
+                  >
+                    🔔 {lang === "hi" ? "लाइव अलर्ट चालू करें" : "Enable Push"}
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* ── 2. Three Lines (≡) Quick Actions Menu ── */}
+        <div ref={quickMenuRef} style={{ position: "relative", display: "flex", alignItems: "center" }}>
+          {/* Three Lines Button */}
+          <button
+            type="button"
+            onClick={toggleQuickMenu}
+            className={`header-icon-btn ${isQuickMenuOpen ? "is-active" : ""}`}
+            title="Menu (Health Passport, SOS, Theme, Key, Language)"
+            aria-label="Quick Actions Menu"
+            style={{
+              width: "40px",
+              height: "40px",
+              borderRadius: "11px",
+              color: isQuickMenuOpen ? "var(--primary)" : "var(--text-highlight)",
+              background: isQuickMenuOpen ? "var(--primary-soft)" : "var(--bg-elevated)",
+              borderColor: isQuickMenuOpen ? "var(--primary-border)" : "var(--border-color)",
+              boxShadow: isQuickMenuOpen ? "0 0 12px rgba(2, 132, 199, 0.3)" : "var(--shadow-sm)"
+            }}
+          >
           {isQuickMenuOpen ? <X size={20} /> : <Menu size={20} strokeWidth={2.4} />}
         </button>
 
@@ -868,6 +1296,7 @@ export default function TopHeader({
           </div>
         )}
       </div>
-    </header>
-  );
+    </div>
+  </header>
+);
 }

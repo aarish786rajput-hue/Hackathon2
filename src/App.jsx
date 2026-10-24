@@ -279,6 +279,9 @@ export default function App() {
             theme={theme}
             setTheme={setTheme}
             onNavigate={handleNavigate}
+            patient={currentPatient}
+            onToggleMedication={handleToggleMedication}
+            onSnoozeMedication={handleSnoozeMedication}
           />
 
           {/* ── OFFLINE MODE ACTIVE WARNING BANNER ── */}

@@ -329,8 +329,6 @@ export default function App() {
             {activeTab === 'dashboard' && (
               <Dashboard
                 patient={currentPatient}
-                patients={patients}
-                onSelectPatient={(p) => setCurrentPatientId(p.id)}
                 onNavigate={handleNavigate}
                 onToggleMedication={handleToggleMedication}
                 onSnoozeMedication={handleSnoozeMedication}

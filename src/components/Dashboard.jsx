@@ -20,8 +20,6 @@ import {
   Utensils,
   Moon,
   Droplets,
-  Users,
-  Check,
   FlaskConical,
   CalendarCheck,
   ChevronRight
@@ -40,8 +38,6 @@ import { getPatientWellnessData } from "../data/wellnessData";
 
 export default function Dashboard({
   patient,
-  patients = [],
-  onSelectPatient,
   onNavigate,
   onToggleMedication,
   onSnoozeMedication,
@@ -121,58 +117,6 @@ export default function Dashboard({
 
         <div className="dashboard-banner-grid">
           <div style={{ minWidth: 0 }}>
-            {/* Family Profile Switcher Pill Bar (Section 4 Bonus) */}
-            {Array.isArray(patients) && patients.length > 1 && (
-              <div style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: "8px",
-                background: "rgba(15, 23, 42, 0.45)",
-                padding: "5px 12px",
-                borderRadius: "30px",
-                border: "1px solid var(--border-color)",
-                marginBottom: "14px",
-                backdropFilter: "blur(10px)"
-              }}>
-                <span style={{ fontSize: "0.76rem", fontWeight: 700, color: "var(--text-muted)", display: "flex", alignItems: "center", gap: "6px" }}>
-                  <Users size={14} color="var(--primary)" />
-                  {t.familyProfileSwitcher || "Family Profiles"}:
-                </span>
-                <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                  {patients.map((p) => {
-                    const isSelected = p.id === patient.id;
-                    const relationLabel = p.id === "pat_1" ? (t.selfProfile || "Self") : (t.familyMember || "Sister");
-                    return (
-                      <button
-                        key={p.id}
-                        type="button"
-                        onClick={() => onSelectPatient && onSelectPatient(p)}
-                        style={{
-                          display: "inline-flex",
-                          alignItems: "center",
-                          gap: "6px",
-                          padding: "4px 12px",
-                          borderRadius: "20px",
-                          fontSize: "0.78rem",
-                          fontWeight: 700,
-                          cursor: isSelected ? "default" : "pointer",
-                          background: isSelected ? "linear-gradient(135deg, var(--primary), var(--secondary))" : "rgba(255, 255, 255, 0.05)",
-                          color: isSelected ? "#ffffff" : "var(--text-main)",
-                          border: isSelected ? "1px solid rgba(255, 255, 255, 0.2)" : "1px solid var(--border-color)",
-                          boxShadow: isSelected ? "0 2px 8px rgba(14, 165, 233, 0.35)" : "none",
-                          transition: "all 0.2s ease"
-                        }}
-                      >
-                        <span style={{ fontSize: "0.85rem" }}>{p.id === "pat_1" ? "👨‍💼" : "👩‍💼"}</span>
-                        <span>{p.name.split(" ")[0]} ({relationLabel})</span>
-                        {isSelected && <Check size={12} strokeWidth={3} />}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
-
             <h1 style={{ fontSize: "1.85rem", fontWeight: 800, color: "var(--text-highlight)", marginBottom: "6px" }}>
               {t.welcomeBack}, {patient.name}
             </h1>

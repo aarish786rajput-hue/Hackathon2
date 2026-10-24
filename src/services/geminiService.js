@@ -19,19 +19,49 @@ export function setStoredApiKey(key) {
   }
 }
 
-// Fallback intelligent clinical knowledge responder with simple, concise, bullet-free everyday language
+// Helper to resolve language response strictly according to activeLang
+function resolveLangResponse(topicMap, activeLang) {
+  if (topicMap[activeLang]) return topicMap[activeLang];
+  if (activeLang === "hinglish" && topicMap.hinglish) return topicMap.hinglish;
+  if (activeLang === "hi" && topicMap.hi) return topicMap.hi;
+  if (topicMap.en) return topicMap.en;
+  return Object.values(topicMap)[0];
+}
+
+// Fallback intelligent clinical knowledge responder with simple, concise, bullet-free everyday language in all 10 Indian languages
 function generateIntelligentMedicalResponse(userQuery, patient, activeLang = "hinglish") {
   const query = (userQuery || "").toLowerCase();
   const patientName = patient?.name || "Patient";
+
+  const GENERAL_HEALTH_MAP = {
+    hi: "सामान्य स्वास्थ्य",
+    pa: "ਆਮ ਸਿਹਤ",
+    bn: "সাধারণ স্বাস্থ্য",
+    mr: "सामान्य आरोग्य",
+    te: "సాధారణ ఆరోగ్యం",
+    ta: "பொது சுகாதாரம்",
+    gu: "સામાન્ય આરોગ્ય",
+    kn: "ಸಾಮಾನ್ಯ ಆರೋಗ್ಯ",
+    hinglish: "General Health",
+    en: "General Health"
+  };
+
   const conditionsStr = patient?.conditions?.map(c => typeof c === "string" ? c : c.name).join(", ") || 
-    (activeLang === "hi" ? "सामान्य स्वास्थ्य" : "General Health");
+    (GENERAL_HEALTH_MAP[activeLang] || "General Health");
   const cleanQuery = query.trim().replace(/[?!.,]/g, "");
 
   // 1. Friendly Greetings - ONLY trigger if the message is purely a greeting (1-3 words, no clinical query)
   const greetings = [
     "hi", "hello", "hey", "namaste", "namaskar", "kese ho", "kaise ho", "hlo", "hii", "helo", "halo", "hola", "sup",
     "good morning", "good evening", "good afternoon",
-    "नमस्ते", "प्रणाम", "हेलो", "हाय", "नमस्कार", "राम राम"
+    "नमस्ते", "प्रणाम", "हेलो", "हाय", "नमस्कार", "राम राम",
+    "ਸਤਿ ਸ੍ਰੀ ਅਕਾਲ", "ਸਸਰੀਕਾਲ", "ਕਿਵੇਂ ਹੋ", "ਹੈਲੋ",
+    "নমস্কার", "কেমন আছেন", "হ্যালো",
+    "नमस्कार", "कसे आहात", "हॅलो",
+    "నమస్కారం", "బాగున్నారా", "హలో",
+    "வணக்கம்", "எப்படி இருக்கிறீர்கள்", "ஹலோ",
+    "નમસ્તે", "કેમ છો", "હેલો",
+    "ನಮಸ್ಕಾರ", "ಹೇಗಿದ್ದೀರಿ", "ಹಲೋ"
   ];
   const words = cleanQuery.split(/\s+/).filter(Boolean);
   const isGreeting = words.length <= 3 && greetings.some(g => 
@@ -45,28 +75,25 @@ function generateIntelligentMedicalResponse(userQuery, patient, activeLang = "hi
   );
 
   if (isGreeting) {
-    if (activeLang === "hi") {
-      return {
-        text: `नमस्ते ${patientName} जी! 🙏 मैं आपका AI Copilot हूँ। मैं आपकी दवाओं, रिपोर्ट्स, ब्लड प्रेशर, शुगर या किसी भी लक्षण में मदद कर सकता हूँ। आप क्या पूछना चाहते हैं?`,
-        triageLevel: "routine"
-      };
-    } else if (activeLang === "hinglish") {
-      return {
-        text: `Namaste ${patientName} ji! 👋 Main aapka AI Copilot hoon. Aap mujhse apni dawai, sugar, BP, thakan ya kisi bhi lakshan ke baare me pooch sakte hain. Aaj main aapki kya madad karoon?`,
-        triageLevel: "routine"
-      };
-    } else {
-      return {
-        text: `Hello ${patientName}! 👋 I am your AI Copilot. How can I help you with your symptoms, medications, health readings, or test reports today?`,
-        triageLevel: "routine"
-      };
-    }
+    const greetingsMap = {
+      pa: `ਸਤਿ ਸ੍ਰੀ ਅਕਾਲ ${patientName} ਜੀ! 🙏 ਮੈਂ ਤੁਹਾਡਾ AI Copilot ਹਾਂ। ਮੈਂ ਤੁਹਾਡੀਆਂ ਦਵਾਈਆਂ, ਰਿਪੋਰਟਾਂ, ਬਲੱਡ ਪ੍ਰੈਸ਼ਰ, ਸ਼ੂਗਰ ਜਾਂ ਕਿਸੇ ਵੀ ਸਿਹਤ ਸਮੱਸਿਆ ਵਿੱਚ ਮਦਦ ਕਰ ਸਕਦਾ ਹਾਂ। ਅੱਜ ਮੈਂ ਤੁਹਾਡੀ ਕੀ ਮਦਦ ਕਰਾਂ?`,
+      hi: `नमस्ते ${patientName} जी! 🙏 मैं आपका AI Copilot हूँ। मैं आपकी दवाओं, रिपोर्ट्स, ब्लड प्रेशर, शुगर या किसी भी लक्षण में मदद कर सकता हूँ। आप क्या पूछना चाहते हैं?`,
+      hinglish: `Namaste ${patientName} ji! 👋 Main aapka AI Copilot hoon. Aap mujhse apni dawai, sugar, BP, thakan ya kisi bhi lakshan ke baare me pooch sakte hain. Aaj main aapki kya madad karoon?`,
+      en: `Hello ${patientName}! 👋 I am your AI Copilot. How can I help you with your symptoms, medications, health readings, or test reports today?`,
+      bn: `নমস্কার ${patientName} বাবু! 🙏 আমি আপনার AI Copilot। আপনার ওষুধ, রিপোর্ট, রক্তচাপ, সুগার বা যেকোনো উপসর্গে সাহায্য করতে পারি। আজ আপনাকে কীভাবে সাহায্য করতে পারি?`,
+      mr: `नमस्कार ${patientName} जी! 🙏 मी तुमचा AI Copilot आहे. मी तुमची औषधे, रिपोर्ट्स, रक्तदाब, साखर किंवा कोणत्याही लक्षणांमध्ये मदत करू शकतो. आज मी तुम्हाला काय मदत करू?`,
+      te: `నమస్కారం ${patientName} గారు! 🙏 నేను మీ AI Copilot. మీ మందులు, నివేదికలు, రక్తపోటు, చక్కెర స్థాయిలు లేదా ఏవైనా లక్షణాలలో నేను సహాయపడగలను. ఈరోజు మీకు ఎలా సహాయపడాలి?`,
+      ta: `வணக்கம் ${patientName}! 🙏 நான் உங்கள் AI Copilot. உங்கள் மருந்துகள், அறிக்கைகள், ரத்த அழுத்தம், சர்க்கரை அல்லது எந்த அறிகுறிகளிலும் நான் உதவ முடியும். இன்று உங்களுக்கு எவ்வாறு உதவட்டும்?`,
+      gu: `નમસ્તે ${patientName} જી! 🙏 હું તમારો AI Copilot છું. હું તમારી દવાઓ, રિપોર્ટ્સ, બ્લડ પ્રેશર, શુગર અથવા કોઈપણ લક્ષણોમાં મદદ કરી શકું છું. આજે હું તમને કેવી રીતે મદદ કરું?`,
+      kn: `ನಮಸ್ಕಾರ ${patientName} ಅವರೇ! 🙏 ನಾನು ನಿಮ್ಮ AI Copilot. ನಿಮ್ಮ ಔಷಧಿಗಳು, ವರದಿಗಳು, ರಕ್ತದೊತ್ತಡ, ಸಕ್ಕರೆ ಅಥವಾ ಯಾವುದೇ ರೋಗಲಕ್ಷಣಗಳಲ್ಲಿ ನಾನು ಸಹಾಯ ಮಾಡಬಲ್ಲೆ. ಇಂದು ನಾನು ನಿಮಗೆ ಹೇಗೆ ಸಹಾಯ ಮಾಡಲಿ?`
+    };
+    return {
+      text: resolveLangResponse(greetingsMap, activeLang),
+      triageLevel: "routine"
+    };
   }
 
-  // Strip conversational prefixes so queries like "hey today i am lazy feel" match properly
-  const _coreQuery = cleanQuery.replace(/^(hey|hello|hi|namaste|hlo|hii|helo)\s+/i, "").trim();
-
-  // 1b. Fatigue / Laziness / Lethargy / Weakness / Thakan / Kamzori (e.g. "today i am lazy feel", "bohot thaka hu")
+  // 1b. Fatigue / Laziness / Lethargy / Weakness / Thakan / Kamzori
   if (
     query.includes("lazy") || query.includes("tired") || query.includes("fatigue") ||
     query.includes("exhausted") || query.includes("weak") || query.includes("weakness") ||
@@ -74,24 +101,31 @@ function generateIntelligentMedicalResponse(userQuery, patient, activeLang = "hi
     query.includes("thaka") || query.includes("thakan") || query.includes("kamzor") ||
     query.includes("kamzori") || query.includes("susti") || query.includes("sust") ||
     query.includes("aalas") || query.includes("alas") ||
-    query.includes("आलस") || query.includes("सुस्ती") || query.includes("थकान") || query.includes("कमजोरी")
+    query.includes("आलस") || query.includes("सुस्ती") || query.includes("थकान") || query.includes("कमजोरी") ||
+    query.includes("ਥਕਾਵਟ") || query.includes("ਸੁਸਤੀ") || query.includes("ਕਮਜ਼ੋਰੀ") || query.includes("ਆਲਸ") || query.includes("ਥੱਕਿਆ") ||
+    query.includes("ক্লান্তি") || query.includes("দুর্বলতা") || query.includes("অলসতা") ||
+    query.includes("थकवा") || query.includes("अशक्तपणा") ||
+    query.includes("అలసట") || query.includes("నీరసం") || query.includes("బద్ధకం") ||
+    query.includes("சோர்வு") || query.includes("பலவீனம்") ||
+    query.includes("થાક") || query.includes("નબળાઈ") ||
+    query.includes("ಆಯಾಸ") || query.includes("ನಿಶ್ಯಕ್ತಿ")
   ) {
-    if (activeLang === "hi") {
-      return {
-        text: `😴 **थकान व सुस्ती (Fatigue):** सुस्ती महसूस होने के आम कारण पानी की कमी (dehydration), अधूरी नींद, या ब्लड प्रेशर/शुगर का उतार-चढ़ाव हो सकते हैं। 1 ग्लास ताज़ा पानी पिएं, हल्का पौष्टिक नाश्ता करें और 15-20 मिनट ताज़ी हवा में टहलें या आराम करें। यदि आप नियमित दवाएं लेते हैं, तो अपने बीपी व शुगर की रीडिंग ज़रूर जांचें।`,
-        triageLevel: "routine"
-      };
-    } else if (activeLang === "hinglish") {
-      return {
-        text: `😴 **Thakan aur Laziness (Low Energy):** Aaj lazy ya thaka hua feel hone ke mukhya kaaran dehydration, neend poori na hona ya BP/sugar ka level change hona ho sakta hai. Sabse pehle 1 glass paani piyein, 15-20 minute aaram karein aur regular medicines ki timing check karein. Agar lagatar aalas ya kamzori rahe toh vitals check karein.`,
-        triageLevel: "routine"
-      };
-    } else {
-      return {
-        text: `😴 **Fatigue & Low Energy:** Feeling lazy or sluggish is commonly triggered by mild dehydration, poor sleep, or fluctuations in blood sugar or blood pressure. Drink a glass of water, rest for 15–20 minutes, and ensure you've eaten a light balanced snack. If you take routine medications, check your vitals to ensure they are on target.`,
-        triageLevel: "routine"
-      };
-    }
+    const fatigueMap = {
+      pa: `😴 **ਥਕਾਵਟ ਤੇ ਸੁਸਤੀ (Fatigue):** ਸੁਸਤੀ ਮਹਿਸੂਸ ਹੋਣ ਦੇ ਆਮ ਕਾਰਨ ਪਾਣੀ ਦੀ ਘਾਟ, ਅਧੂਰੀ ਨੀਂਦ ਜਾਂ ਬਲੱਡ ਪ੍ਰੈਸ਼ਰ/ਸ਼ੂਗਰ ਦਾ ਉਤਾਰ-ਚੜ੍ਹਾਅ ਹੋ ਸਕਦੇ ਹਨ। 1 ਗਿਲਾਸ ਤਾਜ਼ਾ ਪਾਣੀ ਪੀਓ, ਹਲਕਾ ਪੌਸ਼ਟਿਕ ਖਾਣਾ ਖਾਓ ਅਤੇ 15-20 ਮਿੰਟ ਆਰਾਮ ਕਰੋ। ਜੇਕਰ ਨਿਯਮਿਤ ਦਵਾਈ ਲੈਂਦੇ ਹੋ ਤਾਂ ਬੀਪੀ ਤੇ ਸ਼ੂਗਰ ਜ਼ਰੂਰ ਜਾਂਚੋ।`,
+      hi: `😴 **थकान व सुस्ती (Fatigue):** सुस्ती महसूस होने के आम कारण पानी की कमी (dehydration), अधूरी नींद, या ब्लड प्रेशर/शुगर का उतार-चढ़ाव हो सकते हैं। 1 ग्लास ताज़ा पानी पिएं, हल्का पौष्टिक नाश्ता करें और 15-20 मिनट ताज़ी हवा में टहलें या आराम करें। यदि आप नियमित दवाएं लेते हैं, तो अपने बीपी व शुगर की रीडिंग ज़रूर जांचें।`,
+      hinglish: `😴 **Thakan aur Laziness (Low Energy):** Aaj lazy ya thaka hua feel hone ke mukhya kaaran dehydration, neend poori na hona ya BP/sugar ka level change hona ho sakta hai. Sabse pehle 1 glass paani piyein, 15-20 minute aaram karein aur regular medicines ki timing check karein. Agar lagatar aalas ya kamzori rahe toh vitals check karein.`,
+      en: `😴 **Fatigue & Low Energy:** Feeling lazy or sluggish is commonly triggered by mild dehydration, poor sleep, or fluctuations in blood sugar or blood pressure. Drink a glass of water, rest for 15–20 minutes, and ensure you've eaten a light balanced snack. If you take routine medications, check your vitals to ensure they are on target.`,
+      bn: `😴 **ক্লান্তি ও দুর্বলতা (Fatigue):** পানিশূন্যতা, অপর্যাপ্ত ঘুম বা সুগার/রক্তচাপের পরিবর্তনের কারণে ক্লান্তি হতে পারে। এক গ্লাস জল পান করুন, হালকা খাবার খান এবং ১৫-২০ মিনিট বিশ্রাম নিন। নিয়মিত ওষুধ নিলে রক্তচাপ ও সুগার পরীক্ষা করুন।`,
+      mr: `😴 **थकवा व सुस्ती (Fatigue):** डिहायड्रेशन, अपुरी झोप किंवा रक्तदाब/साखरेतील बदलांमुळे थकवा जाणवू शकतो. १ ग्लास पाणी प्या, हलका नाश्ता करा आणि १५-२० मिनिटे विश्रांती घ्या. नियमित औषधे घेत असल्यास बीपी व शुगर तपासा.`,
+      te: `😴 **అలసట మరియు నీరసం (Fatigue):** డీహైడ్రేషన్, నిద్రలేమి లేదా బీపీ/షుగర్ హెచ్చుతగ్గుల వల్ల అలసట రావచ్చు. ఒక గ్లాసు నీరు త్రాగి, తేలికపాటి ఆహారం తీసుకుని 15-20 నిమిషాలు విశ్రాంతి తీసుకోండి. రెగ్యులర్ మందులు తీసుకుంటే బీపీ, షుగర్ చెక్ చేసుకోండి.`,
+      ta: `😴 **சோர்வு மற்றும் பலவீனம் (Fatigue):** நீர்ச்சத்து குறைபாடு, தூக்கமின்மை அல்லது ரத்த அழுத்தம்/சர்க்கரை மாற்றங்களால் சோர்வு ஏற்படலாம். ஒரு டம்ளர் தண்ணீர் குடித்து 15-20 நிமிடங்கள் ஓய்வெடுக்கவும். உங்கள் ரத்த அழுத்தம் மற்றும் சர்க்கரையை பரிசோதிக்கவும்.`,
+      gu: `😴 **થાક અને નબળાઈ (Fatigue):** ડિહાઇડ્રેશન, અપૂરતી ઊંઘ અથવા બીપી/શુગરમાં ફેરફારથી સુસ્તી થઈ શકે છે. ૧ ગ્લાસ પાણી પીઓ, હળવો ખોરાક લો અને ૧૫-૨૦ મિનિટ આરામ કરો. જો તમે નિયમિત દવાઓ લેતા હોવ તો બીપી અને સુગર તપાસો.`,
+      kn: `😴 **ಆಯಾಸ ಮತ್ತು ನಿಶ್ಯಕ್ತಿ (Fatigue):** ನಿರ್ಜಲೀಕರಣ, ನಿದ್ರೆಯ ಕೊರತೆ ಅಥವಾ ಬಿಪಿ/ಸಕ್ಕರೆ ಮಟ್ಟದ ಏರಿಳಿತದಿಂದ ಆಯಾಸವಾಗಬಹುದು. ಒಂದು ಲೋಟ ನೀರು ಕುಡಿದು 15-20 ನಿಮಿಷ ವಿಶ್ರಾಂತಿ ಪಡೆಯಿರಿ. ನಿಮ್ಮ ಬಿಪಿ ಮತ್ತು ಸಕ್ಕರೆ ಮಟ್ಟವನ್ನು ಪರೀಕ್ಷಿಸಿ.`
+    };
+    return {
+      text: resolveLangResponse(fatigueMap, activeLang),
+      triageLevel: "routine"
+    };
   }
 
   // 1c. Fever / Cold / Cough / Bukhar / Sardi
@@ -99,47 +133,59 @@ function generateIntelligentMedicalResponse(userQuery, patient, activeLang = "hi
     query.includes("fever") || query.includes("temperature") || query.includes("cold") ||
     query.includes("cough") || query.includes("khansi") || query.includes("bukhar") ||
     query.includes("sardi") || query.includes("gala") || query.includes("throat") ||
-    query.includes("बुखार") || query.includes("जुकाम") || query.includes("खांसी")
+    query.includes("बुखार") || query.includes("जुकाम") || query.includes("खांसी") ||
+    query.includes("ਬੁਖਾਰ") || query.includes("ਜ਼ੁਕਾਮ") || query.includes("ਖੰਘ") || query.includes("ਗਲਾ") ||
+    query.includes("জ্বর") || query.includes("ঠান্ডা") || query.includes("কাশি") ||
+    query.includes("ताप") || query.includes("सर्दी") || query.includes("खोकला") ||
+    query.includes("జ్వరం") || query.includes("జలుబు") || query.includes("దగ్గు") ||
+    query.includes("காய்ச்சல்") || query.includes("சளி") || query.includes("இருமல்") ||
+    query.includes("તાવ") || query.includes("શરદી") || query.includes("ખાંસી") ||
+    query.includes("ಜ್ವರ") || query.includes("ಶೀತ") || query.includes("ಕೆಮ್ಮು")
   ) {
-    if (activeLang === "hi") {
-      return {
-        text: `🤒 **हल्का बुखार व जुकाम:** थर्मामीटर से तापमान नापें (100°F से अधिक होने पर ध्यान दें)। गुनगुना पानी पिएं और आराम करें। सामान्य बुखार में पैरासिटामोल (Paracetamol 500/650mg) डॉक्टर की सलाह से सुरक्षित है। यदि 2 दिन से अधिक बुखार रहे तो चिकित्सक को दिखाएं।`,
-        triageLevel: "caution"
-      };
-    } else if (activeLang === "hinglish") {
-      return {
-        text: `🤒 **Bukhar ya Sardi (Cold/Fever):** Thermometer se temperature check karein. Kosa paani piyein aur aaram karein. Halka bukhar hone par plain Paracetamol safe rehti hai, par Brufen lene se bachein. Agar bukhar 101°F se zyada ho ya 2 din se rahe toh doctor ko dikhayein.`,
-        triageLevel: "caution"
-      };
-    } else {
-      return {
-        text: `🤒 **Fever & Cold Care:** Check your temperature with a thermometer. Stay hydrated with warm fluids and get adequate rest. Plain Paracetamol is generally safe for mild fever, but avoid NSAIDs without advice. Consult a doctor if fever exceeds 101°F or persists beyond 48 hours.`,
-        triageLevel: "caution"
-      };
-    }
+    const feverMap = {
+      pa: `🤒 **ਹਲਕਾ ਬੁਖਾਰ ਤੇ ਜ਼ੁਕਾਮ:** ਥਰਮਾਮੀਟਰ ਨਾਲ ਤਾਪਮਾਨ ਚੈੱਕ ਕਰੋ। ਕੋਸਾ ਪਾਣੀ ਪੀਓ ਅਤੇ ਪੂਰਾ ਆਰਾਮ ਕਰੋ। ਹਲਕੇ ਬੁਖਾਰ ਵਿੱਚ ਸਾਦੀ ਪੈਰਾਸੀਟਾਮੋਲ (Paracetamol 500mg) ਡਾਕਟਰ ਦੀ ਸਲਾਹ ਨਾਲ ਸੁਰੱਖਿਅਤ ਹੈ। ਜੇਕਰ ਬੁਖਾਰ 2 ਦਿਨਾਂ ਤੋਂ ਵੱਧ ਰਹੇ ਤਾਂ ਡਾਕਟਰ ਨੂੰ ਜ਼ਰੂਰ ਦਿਖਾਓ।`,
+      hi: `🤒 **हल्का बुखार व जुकाम:** थर्मामीटर से तापमान नापें (100°F से अधिक होने पर ध्यान दें)। गुनगुना पानी पिएं और आराम करें। सामान्य बुखार में पैरासिटामोल (Paracetamol 500/650mg) डॉक्टर की सलाह से सुरक्षित है। यदि 2 दिन से अधिक बुखार रहे तो चिकित्सक को दिखाएं।`,
+      hinglish: `🤒 **Bukhar ya Sardi (Cold/Fever):** Thermometer se temperature check karein. Kosa paani piyein aur aaram karein. Halka bukhar hone par plain Paracetamol safe rehti hai, par Brufen lene se bachein. Agar bukhar 101°F se zyada ho ya 2 din se rahe toh doctor ko dikhayein.`,
+      en: `🤒 **Fever & Cold Care:** Check your temperature with a thermometer. Stay hydrated with warm fluids and get adequate rest. Plain Paracetamol is generally safe for mild fever, but avoid NSAIDs without advice. Consult a doctor if fever exceeds 101°F or persists beyond 48 hours.`,
+      bn: `🤒 **হালকা জ্বর ও সর্দি:** থার্মোমিটার দিয়ে তাপমাত্রা মাপুন। হালকা গরম জল পান করুন এবং বিশ্রাম নিন। সাধারণ প্যারাসিটামল খাওয়া সাধারণত নিরাপদ। জ্বর ২ দিনের বেশি থাকলে ডাক্তার দেখান।`,
+      mr: `🤒 **हलका ताप व सर्दी:** थर्मामीटरने तापमान तपासा. कोमट पाणी प्या आणि पुरेशी विश्रांती घ्या. साधी पॅरासिटामॉल घेणे सुरक्षित आहे. ताप २ दिवसांपेक्षा जास्त राहिल्यास डॉक्टरांचा सल्ला घ्या.`,
+      te: `🤒 **తేలికపాటి జ్వరం మరియు జలుబు:** థర్మామీటర్‌తో ఉష్ణోగ్రతను తనిఖీ చేయండి. గోరువెచ్చని నీరు తాగి విశ్రాంతి తీసుకోండి. సాధారణ పారాసిటమాల్ సురక్షితం. జ్వరం 2 రోజులకు మించి ఉంటే వైద్యుడిని సంప్రదించండి.`,
+      ta: `🤒 **லேசான காய்ச்சல் மற்றும் சளி:** வெப்பநிலையை பரிசோதிக்கவும். வெதுவெதுப்பான நீர் அருந்தி ஓய்வெடுக்கவும். சாதாரண பாராசிட்டமால் பாதுகாப்பானது. காய்ச்சல் 2 நாட்களுக்கு மேல் நீடித்தால் மருத்துவரை அணுகவும்.`,
+      gu: `🤒 **હળવો તાવ અને શરદી:** થર્મોમીટરથી તાપમાન તપાસો. હૂંફાળું પાણી પીઓ અને આરામ કરો. સાદી પેરાસિટામોલ સુરક્ષિત છે. તાવ ૨ દિવસથી વધુ રહે તો ડૉક્ટરને બતાવો.`,
+      kn: `🤒 **ಸಾಧಾರಣ ಜ್ವರ ಮತ್ತು ಶೀತ:** ಥರ್ಮಾಮೀಟರ್‌ನಿಂದ ತಾಪಮಾನ ಪರಿಶೀಲಿಸಿ. ಬೆಚ್ಚಗಿನ ನೀರು ಕುಡಿದು ವಿಶ್ರಾಂತಿ ಪಡೆಯಿರಿ. ಪ್ಯಾರಸಿಟಮಾಲ್ ಸುರಕ್ಷಿತವಾಗಿದೆ. ಜ್ವರ 2 ದಿನಗಳಿಗಿಂತ ಹೆಚ್ಚಿದ್ದರೆ ವೈದ್ಯರನ್ನು ಭೇಟಿ ಮಾಡಿ.`
+    };
+    return {
+      text: resolveLangResponse(feverMap, activeLang),
+      triageLevel: "caution"
+    };
   }
 
   // 2. Photo / Image Analysis query
-  if (query.includes("photo") || query.includes("image") || query.includes("फ़ोटो") || query.includes("तस्वीर") || query.includes("attached medical/health photo")) {
-    if (activeLang === "hi") {
-      return {
-        text: `📷 **फ़ोटो की समीक्षा:** आपकी भेजी गई फ़ोटो देख ली गई है। मुख्य बातें सामान्य लग रही हैं। किसी भी नई दवा को लेने या बदलाव करने से पहले कृपया अपने डॉक्टर से पुष्टि ज़रूर करें।`,
-        triageLevel: "routine"
-      };
-    } else if (activeLang === "hinglish") {
-      return {
-        text: `📷 **Photo Review:** Aapki upload ki gayi photo check kar li gayi hai aur sabhi details normal lag rahi hain. Koi bhi nayi dawai lene se pehle doctor se zaroor confirm karein.`,
-        triageLevel: "routine"
-      };
-    } else {
-      return {
-        text: `📷 **Photo Review:** I have reviewed your uploaded photo. The details appear clear and on track. Please check with your doctor before starting any new medication.`,
-        triageLevel: "routine"
-      };
-    }
+  if (
+    query.includes("photo") || query.includes("image") || query.includes("फ़ोटो") || query.includes("तस्वीर") ||
+    query.includes("ਫ਼ੋਟੋ") || query.includes("ছবি") || query.includes("फोटो") || query.includes("ఫోటో") ||
+    query.includes("புகைப்படம்") || query.includes("ફોટો") || query.includes("ಫೋಟೋ") ||
+    query.includes("attached medical/health photo")
+  ) {
+    const photoMap = {
+      pa: `📷 **ਫ਼ੋਟੋ ਸਮੀਖਿਆ:** ਤੁਹਾਡੀ ਅਪਲੋਡ ਕੀਤੀ ਫ਼ੋਟੋ ਦੇਖ ਲਈ ਗਈ ਹੈ ਅਤੇ ਸਾਰੇ ਵੇਰਵੇ ਸਪਸ਼ਟ ਹਨ। ਕੋਈ ਵੀ ਨਵੀਂ ਦਵਾਈ ਸ਼ੁਰੂ ਕਰਨ ਜਾਂ ਬਦਲਣ ਤੋਂ ਪਹਿਲਾਂ ਕਿਰਪਾ ਕਰਕੇ ਆਪਣੇ ਡਾਕਟਰ ਤੋਂ ਪੁਸ਼ਟੀ ਜ਼ਰੂਰ ਕਰੋ।`,
+      hi: `📷 **फ़ोटो की समीक्षा:** आपकी भेजी गई फ़ोटो देख ली गई है। मुख्य बातें सामान्य लग रही हैं। किसी भी नई दवा को लेने या बदलाव करने से पहले कृपया अपने डॉक्टर से पुष्टि ज़रूर करें।`,
+      hinglish: `📷 **Photo Review:** Aapki upload ki gayi photo check kar li gayi hai aur sabhi details normal lag rahi hain. Koi bhi nayi dawai lene se pehle doctor se zaroor confirm karein.`,
+      en: `📷 **Photo Review:** I have reviewed your uploaded photo. The details appear clear and on track. Please check with your doctor before starting any new medication.`,
+      bn: `📷 **ছবি পর্যালোচনা:** আপনার আপলোড করা ছবিটি দেখা হয়েছে। কোনো নতুন ওষুধ শুরু করার আগে আপনার ডাক্তারের সাথে নিশ্চিত করুন।`,
+      mr: `📷 **फोटो पुनरावलोकन:** आपण पाठवलेला फोटो तपासला गेला आहे. कोणतेही नवीन औषध सुरू करण्यापूर्वी कृपया डॉक्टरांशी संपर्क साधा.`,
+      te: `📷 **ఫోటో సమీక్ష:** మీరు అప్‌లోడ్ చేసిన ఫోటో పరిశీలించబడింది. ఏదైనా కొత్త మందు తీసుకునే ముందు మీ వైద్యుడిని సంప్రదించండి.`,
+      ta: `📷 **புகைப்பட மதிப்பாய்வு:** நீங்கள் பதிவேற்றிய புகைப்படம் மதிப்பாய்வு செய்யப்பட்டது. புதிய மருந்தை தொடங்குவதற்கு முன் மருத்துவரிடம் உறுதிப்படுத்தவும்.`,
+      gu: `📷 **ફોટો રિવ્યુ:** તમે અપલોડ કરેલો ફોટો ચકાસવામાં આવ્યો છે. કોઈપણ નવી દવા શરૂ કરતા પહેલા તમારા ડૉક્ટરની સલાહ લો.`,
+      kn: `📷 **ಫೋಟೋ ಪರಿಶೀಲನೆ:** ನಿಮ್ಮ ಅಪ್‌ಲೋಡ್ ಮಾಡಿದ ಫೋಟೋವನ್ನು ಪರಿಶೀಲಿಸಲಾಗಿದೆ. ಯಾವುದೇ ಹೊಸ ಔಷಧಿಯನ್ನು ಪ್ರಾರಂಭಿಸುವ ಮೊದಲು ವೈದ್ಯರನ್ನು ಸಂಪರ್ಕಿಸಿ.`
+    };
+    return {
+      text: resolveLangResponse(photoMap, activeLang),
+      triageLevel: "routine"
+    };
   }
 
-  // 3. Red Flag Medical Emergency (Short, clear, urgent - no long bullet walls)
+  // 3. Red Flag Medical Emergency
   if (
     query.includes("chest pain") || query.includes("pressure in chest") ||
     query.includes("left arm pain") || query.includes("difficulty breathing") ||
@@ -147,24 +193,31 @@ function generateIntelligentMedicalResponse(userQuery, patient, activeLang = "hi
     query.includes("face drooping") || query.includes("unconscious") ||
     query.includes("seene me dard") || query.includes("seene mein dard") ||
     query.includes("chhati me dard") || query.includes("chhati mein dard") ||
-    query.includes("सांस") || query.includes("सीने में दर्द") || query.includes("छाती में दर्द")
+    query.includes("सांस") || query.includes("सीने में दर्द") || query.includes("छाती में दर्द") ||
+    query.includes("ਛਾਤੀ ਵਿੱਚ ਦਰਦ") || query.includes("ਸਾਹ ਲੈਣ ਵਿੱਚ ਤਕਲੀਫ਼") || query.includes("ਬੇਹੋਸ਼") ||
+    query.includes("বুকে ব্যথা") || query.includes("শ্বাসকষ্ট") || query.includes("অজ্ঞান") ||
+    query.includes("छातीत दुखणे") || query.includes("श्वास घेण्यास त्रास") || query.includes("हार्ट अटॅक") ||
+    query.includes("ఛాతీ నొప్పి") || query.includes("శ్వాస సమస్య") || query.includes("గుండెపోటు") ||
+    query.includes("மார்பு வலி") || query.includes("மூச்சுத் திணறல்") || query.includes("மாரடைப்பு") ||
+    query.includes("છાતીમાં દુખાવો") || query.includes("શ્વાસ લેવામાં તકલીફ") ||
+    query.includes("ಎದೆ ನೋವು") || query.includes("ಉಸಿರಾಟದ ತೊಂದರೆ")
   ) {
-    if (activeLang === "hi") {
-      return {
-        text: `🚨 **आपातकाल:** यह सीने या सांस की गंभीर समस्या हो सकती है। कृपया बिना देर किए तुरंत **112 या 102** पर कॉल करें या नज़दीकी अस्पताल के इमरजेंसी विभाग जाएं। खुद गाड़ी न चलाएं और शांत होकर बैठें।`,
-        triageLevel: "emergency"
-      };
-    } else if (activeLang === "hinglish") {
-      return {
-        text: `🚨 **Emergency Alert:** Yeh dil ya saans se judi gambhir dikkat ho sakti hai. Kripya bina der kiye turant **112 ya 102** par call karein ya nazdeeki hospital ke emergency ward jayein. Khud drive na karein aur shaant baithkar aaram karein.`,
-        triageLevel: "emergency"
-      };
-    } else {
-      return {
-        text: `🚨 **Emergency Alert:** This could be a serious cardiovascular or breathing emergency. Please call **112 / 102 / 911** immediately or have someone take you to the nearest emergency room.`,
-        triageLevel: "emergency"
-      };
-    }
+    const emergencyMap = {
+      pa: `🚨 **ਸੰਕਟਕਾਲੀਨ ਚਿਤਾਵਨੀ:** ਇਹ ਛਾਤੀ ਜਾਂ ਸਾਹ ਨਾਲ ਸੰਬੰਧਿਤ ਗੰਭੀਰ ਸਮੱਸਿਆ ਹੋ ਸਕਦੀ ਹੈ। ਬਿਨਾਂ ਕਿਸੇ ਦੇਰੀ ਦੇ ਤੁਰੰਤ **112 ਜਾਂ 108** 'ਤੇ ਕਾਲ ਕਰੋ ਜਾਂ ਨਜ਼ਦੀਕੀ ਹਸਪਤਾਲ ਦੇ ਐਮਰਜੈਂਸੀ ਵਾਰਡ ਵਿੱਚ ਜਾਓ। ਖੁਦ ਗੱਡੀ ਨਾ ਚਲਾਓ।`,
+      hi: `🚨 **आपातकाल:** यह सीने या सांस की गंभीर समस्या हो सकती है। कृपया बिना देर किए तुरंत **112 या 102** पर कॉल करें या नज़दीकी अस्पताल के इमरजेंसी विभाग जाएं। खुद गाड़ी न चलाएं और शांत होकर बैठें।`,
+      hinglish: `🚨 **Emergency Alert:** Yeh dil ya saans se judi gambhir dikkat ho sakti hai. Kripya bina der kiye turant **112 ya 102** par call karein ya nazdeeki hospital ke emergency ward jayein. Khud drive na karein aur shaant baithkar aaram karein.`,
+      en: `🚨 **Emergency Alert:** This could be a serious cardiovascular or breathing emergency. Please call **112 / 102 / 911** immediately or have someone take you to the nearest emergency room.`,
+      bn: `🚨 **জরুরি সতর্কতা:** এটি বুক বা শ্বাসকষ্টের গুরুতর সমস্যা হতে পারে। অবিলম্বে **১১২ বা ১০৮** নম্বরে কল করুন অথবা নিকটস্থ হাসপাতালের জরুরি বিভাগে যান। নিজে গাড়ি চালাবেন না।`,
+      mr: `🚨 **तातडीचा इशारा:** ही छातीची किंवा श्वास घेण्याची गंभीर समस्या असू शकते. विलंब न करता त्वरित **११२ किंवा १०८** वर कॉल करा किंवा जवळच्या रुग्णालयात जा.`,
+      te: `🚨 **అత్యవసర హెచ్చరిక:** ఇది గుండె లేదా శ్వాస సంబంధిత తీవ్ర సమస్య కావచ్చు. ఆలస్యం చేయకుండా వెంటనే **112 లేదా 108** కి కాల్ చేయండి లేదా సమీపంలోని ఆసుపత్రికి వెళ్లండి.`,
+      ta: `🚨 **அவசர எச்சரிக்கை:** இது மார்பு அல்லது மூச்சு தொடர்பான தீவிர பிரச்சினையாக இருக்கலாம். உடனடியாக **112 அல்லது 108** ஐ அழைக்கவும் அல்லது அவசர சிகிச்சை பிரிவுக்குச் செல்லவும்.`,
+      gu: `🚨 **ઇમરજન્સી ચેતવણી:** આ છાતી અથવા શ્વાસની ગંભીર સમસ્યા હોઈ શકે છે. વિલંબ કર્યા વિના તરત જ **૧૧૨ અથવા ૧૦૮** પર કૉલ કરો અથવા નજીકની હોસ્પિટલમાં જાઓ.`,
+      kn: `🚨 **ತುರ್ತು ಎಚ್ಚರಿಕೆ:** ಇದು ಎದೆ ಅಥವಾ ಉಸಿರಾಟದ ಗಂಭೀರ ಸಮಸ್ಯೆಯಾಗಿರಬಹುದು. ತಕ್ಷಣವೇ **112 ಅಥವಾ 108** ಗೆ ಕರೆ ಮಾಡಿ ಅಥವಾ ಹತ್ತಿರದ ಆಸ್ಪತ್ರೆಗೆ ತೆರಳಿ.`
+    };
+    return {
+      text: resolveLangResponse(emergencyMap, activeLang),
+      triageLevel: "emergency"
+    };
   }
 
   // 4. Hypoglycemia / Low Blood Sugar / Chakkar / Kamkampi
@@ -172,181 +225,219 @@ function generateIntelligentMedicalResponse(userQuery, patient, activeLang = "hi
     query.includes("dizzy") || query.includes("shaky") || query.includes("sweating") ||
     query.includes("low sugar") || query.includes("hypo") || query.includes("chakkar") ||
     query.includes("kamkampi") || query.includes("kaanp") || query.includes("pasina") ||
-    query.includes("चक्कर") || query.includes("कंपकंपी") || query.includes("पसीना")
+    query.includes("चक्कर") || query.includes("कंपकंपी") || query.includes("पसीना") ||
+    query.includes("ਚੱਕਰ") || query.includes("ਕੰਬਣੀ") || query.includes("ਪਸੀਨਾ") || query.includes("ਘੱਟ ਸ਼ੂਗਰ") ||
+    query.includes("মাথা ঘোরা") || query.includes("কাঁপুনি") || query.includes("ঘাম") ||
+    query.includes("चक्कर") || query.includes("थरथरणे") || query.includes("घाम") ||
+    query.includes("తలతిరగడం") || query.includes("వణుకు") || query.includes("చెమట") ||
+    query.includes("தலைச்சுற்றல்") || query.includes("நடுக்கம்") || query.includes("வியர்வை") ||
+    query.includes("ચક્કર") || query.includes("ધ્રૂજારી") || query.includes("પરસેવો") ||
+    query.includes("ತಲೆತಿರುಗುವಿಕೆ") || query.includes("ನಡುಕ") || query.includes("ಬೆವರು")
   ) {
-    if (activeLang === "hi") {
-      return {
-        text: `⚠️ **शुगर कम होने का संकेत:** अचानक चक्कर आना या पसीना आना ब्लड शुगर 70 से कम होने की निशानी हो सकता है। तुरंत 1 चम्मच चीनी या आधा कप फलों का जूस पिएं और 15 मिनट आराम से बैठें। अगर 15 मिनट बाद भी आराम न मिले तो तुरंत डॉक्टर से संपर्क करें।`,
-        triageLevel: "urgent"
-      };
-    } else if (activeLang === "hinglish") {
-      return {
-        text: `⚠️ **Low Sugar ho sakta hai:** Achanak chakkar ya pasina aana sugar 70 se kam hone ka sanket hai. Turant 1 chammach cheeni ya aadha cup fruit juice lein aur 15 minute aaram karein. Agar aaram na mile toh doctor se contact karein.`,
-        triageLevel: "urgent"
-      };
-    } else {
-      return {
-        text: `⚠️ **Possible Low Blood Sugar:** Sudden dizziness or shakiness often means your sugar has dropped below 70. Have 1 tablespoon of sugar or half a cup of fruit juice right now and rest for 15 minutes. Call a doctor if it doesn't improve.`,
-        triageLevel: "urgent"
-      };
-    }
+    const lowSugarMap = {
+      pa: `⚠️ **ਸ਼ੂਗਰ ਘੱਟ ਹੋਣ ਦਾ ਸੰਕੇਤ:** ਅਚਾਨਕ ਚੱਕਰ ਆਉਣਾ ਜਾਂ ਪਸੀਨਾ ਆਉਣਾ ਬਲੱਡ ਸ਼ੂਗਰ 70 ਤੋਂ ਘੱਟ ਹੋਣ ਦਾ ਸੰਕੇਤ ਹੈ। ਤੁਰੰਤ 1 ਚਮਚ ਚੀਨੀ ਜਾਂ ਅੱਧਾ ਕੱਪ ਫਲਾਂ ਦਾ ਜੂਸ ਪੀਓ ਅਤੇ 15 ਮਿੰਟ ਆਰਾਮ ਕਰੋ। ਜੇਕਰ 15 ਮਿੰਟ ਬਾਅਦ ਵੀ ਆਰਾਮ ਨਾ ਮਿਲੇ ਤਾਂ ਡਾਕਟਰ ਨਾਲ ਸੰਪਰਕ ਕਰੋ।`,
+      hi: `⚠️ **शुगर कम होने का संकेत:** अचानक चक्कर आना या पसीना आना ब्लड शुगर 70 से कम होने की निशानी हो सकता है। तुरंत 1 चम्मच चीनी या आधा कप फलों का जूस पिएं और 15 मिनट आराम से बैठें। अगर 15 मिनट बाद भी आराम न मिले तो तुरंत डॉक्टर से संपर्क करें।`,
+      hinglish: `⚠️ **Low Sugar ho sakta hai:** Achanak chakkar ya pasina aana sugar 70 se kam hone ka sanket hai. Turant 1 chammach cheeni ya aadha cup fruit juice lein aur 15 minute aaram karein. Agar aaram na mile toh doctor se contact karein.`,
+      en: `⚠️ **Possible Low Blood Sugar:** Sudden dizziness or shakiness often means your sugar has dropped below 70. Have 1 tablespoon of sugar or half a cup of fruit juice right now and rest for 15 minutes. Call a doctor if it doesn't improve.`,
+      bn: `⚠️ **লো সুগারের লক্ষণ:** হঠাৎ মাথা ঘোরা বা ঘাম হওয়া সুগার ৭০ এর নিচে নামার লক্ষণ হতে পারে। অবিলম্বে ১ চামচ চিনি বা ফলের রস খান এবং ১৫ মিনিট বিশ্রাম নিন।`,
+      mr: `⚠️ **साखर कमी झाल्याचे लक्षण:** अचानक चक्कर येणे किंवा घाम येणे ही साखर ७० पेक्षा कमी झाल्याची लक्षणे असू शकतात. लगेच १ चमचा साखर किंवा फळांचा रस घ्या आणि १५ मिनिटे विश्रांती घ्या.`,
+      te: `⚠️ **షుగర్ తగ్గిన సంకేతం:** అకస్మాత్తుగా తల తిరగడం లేదా చెమటలు పట్టడం షుగర్ 70 కంటే తగ్గడానికి సంకేతం. వెంటనే 1 చెంచా చక్కెర లేదా పండ్ల రసం తాగి 15 నిమిషాలు విశ్రాంతి తీసుకోండి.`,
+      ta: `⚠️ **குறைந்த சர்க்கரை அளவு:** திடீர் தலைச்சுற்றல் அல்லது வியர்வை சர்க்கரை அளவு 70க்கு கீழ் குறைந்ததற்கான அறிகுறி. உடனே 1 ஸ்பூன் சர்க்கரை அல்லது பழச்சாறு அருந்தி 15 நிமிடங்கள் ஓய்வெடுக்கவும்.`,
+      gu: `⚠️ **લો શુગરનો સંકેત:** અચાનક ચક્કર આવવા કે પરસેવો થવો એ શુગર ૭૦ થી ઘટવાની નિશાની છે. તરત જ ૧ ચમચી ખાંડ અથવા ફળોનો રસ લો અને ૧૫ મિનિટ આરામ કરો.`,
+      kn: `⚠️ **ಕಡಿಮೆ ಸಕ್ಕರೆ ಮಟ್ಟದ ಸಂಕೇತ:** ಹಠಾತ್ ತಲೆತಿರುಗುವಿಕೆ ಅಥವಾ ಬೆವರುವುದು ಸಕ್ಕರೆ 70ಕ್ಕಿಂತ ಕಡಿಮೆಯಾಗಿರುವುದರ ಲಕ್ಷಣ. ತಕ್ಷಣ 1 ಚಮಚ ಸಕ್ಕರೆ ಅಥವಾ ಹಣ್ಣಿನ ರಸ ಸೇವಿಸಿ 15 ನಿಮಿಷ ವಿಶ್ರಾಂತಿ ಪಡೆಯಿರಿ.`
+    };
+    return {
+      text: resolveLangResponse(lowSugarMap, activeLang),
+      triageLevel: "urgent"
+    };
   }
 
   // 5. HbA1c / Sugar Level Understanding
-  if (query.includes("hba1c") || query.includes("a1c") || query.includes("sugar test") || query.includes("डायबिटीज") || query.includes("शुगर") || query.includes("sugar")) {
-    if (activeLang === "hi") {
-      return {
-        text: `📊 **आपकी HbA1c (7.2%):** यह पिछले 3 महीनों का औसत शुगर स्तर बताता है। 7.2% सामान्य लक्ष्य (7.0%) के बहुत करीब है और आसानी से सुधर सकता है। अपनी दवाएं समय पर लें, मीठा कम खाएं और रोज़ाना 15-20 मिनट टहलें।`,
-        triageLevel: "routine"
-      };
-    } else if (activeLang === "hinglish") {
-      return {
-        text: `📊 **HbA1c (7.2%) ka aasan matlab:** Yeh pichhle 3 mahino ka average sugar level hai. 7.2% target (7.0%) ke kaafi kareeb hai aur bilkul ghabrane ki baat nahi hai. Dawai roz time par lein, meetha kam karein aur khane ke baad 15-20 minute walk karein.`,
-        triageLevel: "routine"
-      };
-    } else {
-      return {
-        text: `📊 **Your HbA1c (7.2%):** This reflects your average blood sugar over the past 3 months. At 7.2%, you are very close to the safe goal of 7.0%. Keep taking your medicines on time, limit sweets, and take a 15-20 minute daily walk.`,
-        triageLevel: "routine"
-      };
-    }
+  if (
+    query.includes("hba1c") || query.includes("a1c") || query.includes("sugar test") ||
+    query.includes("डायबिटीज") || query.includes("शुगर") || query.includes("sugar") ||
+    query.includes("ਸ਼ੂਗਰ") || query.includes("ਡਾਇਬੀਟੀਜ਼") || query.includes("ਖੰਡ") ||
+    query.includes("সুগার") || query.includes("ডায়াবেটিস") ||
+    query.includes("साखर") || query.includes("मधुमेह") ||
+    query.includes("చక్కెర") || query.includes("మధుమేహం") ||
+    query.includes("சர்க்கரை") || query.includes("நீரிழிவு") ||
+    query.includes("ખાંડ") || query.includes("શુગર") ||
+    query.includes("ಸಕ್ಕರೆ") || query.includes("ಮಧುಮೇಹ")
+  ) {
+    const sugarMap = {
+      pa: `📊 **ਤੁਹਾਡੀ HbA1c (7.2%):** ਇਹ ਪਿਛਲੇ 3 ਮਹੀਨਿਆਂ ਦਾ ਔਸਤ ਸ਼ੂਗਰ ਪੱਧਰ ਦੱਸਦੀ ਹੈ। 7.2% ਸੁਰੱਖਿਅਤ ਟੀਚੇ (7.0%) ਦੇ ਬਹੁਤ ਨੇੜੇ ਹੈ। ਆਪਣੀਆਂ ਦਵਾਈਆਂ ਸਮੇਂ ਸਿਰ ਲਵੋ, ਮਿੱਠਾ ਘੱਟ ਖਾਓ ਅਤੇ ਰੋਜ਼ਾਨਾ 15-20 ਮਿੰਟ ਸੈਰ ਕਰੋ।`,
+      hi: `📊 **आपकी HbA1c (7.2%):** यह पिछले 3 महीनों का औसत शुगर स्तर बताता है। 7.2% सामान्य लक्ष्य (7.0%) के बहुत करीब है और आसानी से सुधर सकता है। अपनी दवाएं समय पर लें, मीठा कम खाएं और रोज़ाना 15-20 मिनट टहलें।` ,
+      hinglish: `📊 **HbA1c (7.2%) ka aasan matlab:** Yeh pichhle 3 mahino ka average sugar level hai. 7.2% target (7.0%) ke kaafi kareeb hai aur bilkul ghabrane ki baat nahi hai. Dawai roz time par lein, meetha kam karein aur khane ke baad 15-20 minute walk karein.`,
+      en: `📊 **Your HbA1c (7.2%):** This reflects your average blood sugar over the past 3 months. At 7.2%, you are very close to the safe goal of 7.0%. Keep taking your medicines on time, limit sweets, and take a 15-20 minute daily walk.`,
+      bn: `📊 **আপনার HbA1c (7.2%):** এটি গত ৩ মাসের গড় সুগারের মাত্রা নির্দেশ করে। ৭.২% নিরাপদ লক্ষ্য (৭.০%) এর খুব কাছাকাছি। নিয়মিত ওষুধ খান, মিষ্টি কম খান এবং রোজ ১৫-২০ মিনিট হাঁটুন।`,
+      mr: `📊 **आपली HbA1c (7.2%):** हे मागील ३ महिन्यांची सरासरी साखर पातळी दर्शवते. ७.२% सुरक्षित ध्येयाच्या (७.०%) अगदी जवळ आहे. औषधे वेळेवर घ्या, गोड कमी खा आणि दररोज १५-२० मिनिटे चाला।`,
+      te: `📊 **మీ HbA1c (7.2%):** ఇది గత 3 నెలల సగటు చక్కెర స్థాయిని చూపుతుంది. 7.2% సురక్షిత లక్ష్యానికి (7.0%) చాలా దగ్గరగా ఉంది. మందులు సకాలంలో వేసుకోండి, తీపి తగ్గించండి మరియు రోజూ నడవండి.`,
+      ta: `📊 **உங்கள் HbA1c (7.2%):** இது கடந்த 3 மாத சராசரி சர்க்கரை அளவை காட்டுகிறது. 7.2% பாதுகாப்பான இலக்குக்கு (7.0%) மிக அருகில் உள்ளது. மருந்துகளை சரியாக எடுத்துக்கொண்டு தினமும் நடக்கவும்.`,
+      gu: `📊 **તમારું HbA1c (7.2%):** આ છેલ્લા ૩ મહિનાનું સરેરાશ સુગર સ્તર દર્શાવે છે. ૭.૨% સુરક્ષિત લક્ષ્યાંકની ખૂબ નજીક છે. નિયમિત દવાઓ લો, ગળ્યું ઓછું ખાઓ અને દરરોજ ૧૫-૨૦ મિનિટ ચાલો.`,
+      kn: `📊 **ನಿಮ್ಮ HbA1c (7.2%):** ಇದು ಕಳೆದ 3 ತಿಂಗಳ ಸರಾಸರಿ ರಕ್ತದ ಸಕ್ಕರೆ ಮಟ್ಟವಾಗಿದೆ. 7.2% ಸುರಕ್ಷಿತ ಗುರಿಗೆ ಹತ್ತಿರದಲ್ಲಿದೆ. ಔಷಧಿಗಳನ್ನು ಸರಿಯಾಗಿ ತೆಗೆದುಕೊಳ್ಳಿ ಮತ್ತು ಪ್ರತಿದಿನ ವಾಕಿಂಗ್ ಮಾಡಿ.`
+    };
+    return {
+      text: resolveLangResponse(sugarMap, activeLang),
+      triageLevel: "routine"
+    };
   }
 
   // 6. Blood Pressure / BP / Telmisartan
   if (
     query.includes("blood pressure") || query.includes("bp") || query.includes("hypertension") ||
-    query.includes("telmisartan") || query.includes("बीपी") || query.includes("रक्तचाप")
+    query.includes("telmisartan") || query.includes("बीपी") || query.includes("रक्तचाप") ||
+    query.includes("ਬਲੱਡ ਪ੍ਰੈਸ਼ਰ") || query.includes("ਬੀਪੀ") ||
+    query.includes("রক্তচাপ") || query.includes("বিপি") ||
+    query.includes("रक्तदाब") || query.includes("రక్తపోటు") || query.includes("బీపీ") ||
+    query.includes("இரத்த அழுத்தம்") || query.includes("பிபி") ||
+    query.includes("લોહીનું દબાણ") || query.includes("રક્તದೊತ್ತಡ") || query.includes("ಬಿಪಿ")
   ) {
-    if (activeLang === "hi") {
-      return {
-        text: `🩺 **आपका ब्लड प्रेशर:** आपकी ताज़ा रीडिंग 128/82 mmHg है, जो कि बहुत अच्छी और सुरक्षित सीमा में है। सुबह अपनी टेल्मिसार्टन (Telmisartan) दवा नियमित लें और खाने में ऊपर से कच्चा नमक न डालें।`,
-        triageLevel: "routine"
-      };
-    } else if (activeLang === "hinglish") {
-      return {
-        text: `🩺 **Aapka Blood Pressure:** Aapka BP 128/82 mmHg ke aas-paas hai jo bilkul safe aur accha control hai. Subah ki Telmisartan dawai time par lein aur khane me namak thoda kam rakhein.`,
-        triageLevel: "routine"
-      };
-    } else {
-      return {
-        text: `🩺 **Your Blood Pressure:** Your reading is around 128/82 mmHg, which is in a safe and well-controlled range. Continue your morning Telmisartan and keep dietary salt in check.`,
-        triageLevel: "routine"
-      };
-    }
+    const bpMap = {
+      pa: `🩺 **ਤੁਹਾਡਾ ਬਲੱਡ ਪ੍ਰੈਸ਼ਰ:** ਤੁਹਾਡੀ ਤਾਜ਼ਾ ਰੀਡਿੰਗ 128/82 mmHg ਹੈ, ਜੋ ਕਿ ਬਹੁਤ ਵਧੀਆ ਅਤੇ ਕੰਟਰੋਲ ਵਿੱਚ ਹੈ। ਸਵੇਰੇ ਆਪਣੀ Telmisartan ਦਵਾਈ ਸਮੇਂ ਸਿਰ ਲਓ ਅਤੇ ਭੋਜਨ ਵਿੱਚ ਲੂਣ ਘੱਟ ਰੱਖੋ।`,
+      hi: `🩺 **आपका ब्लड प्रेशर:** आपकी ताज़ा रीडिंग 128/82 mmHg है, जो कि बहुत अच्छी और सुरक्षित सीमा में है। सुबह अपनी टेल्मिसार्टन (Telmisartan) दवा नियमित लें और खाने में ऊपर से कच्चा नमक न डालें।`,
+      hinglish: `🩺 **Aapka Blood Pressure:** Aapka BP 128/82 mmHg ke aas-paas hai jo bilkul safe aur accha control hai. Subah ki Telmisartan dawai time par lein aur khane me namak thoda kam rakhein.`,
+      en: `🩺 **Your Blood Pressure:** Your reading is around 128/82 mmHg, which is in a safe and well-controlled range. Continue your morning Telmisartan and keep dietary salt in check.`,
+      bn: `🩺 **আপনার রক্তচাপ:** আপনার সাম্প্রতিক রিডিং ১২৮/৮২ mmHg, যা স্বাভাবিক এবং নিয়ন্ত্রণে আছে। সকালে নিয়মিত Telmisartan ওষুধ খান এবং খাবারে অতিরিক্ত লবণ এড়িয়ে চলুন।`,
+      mr: `🩺 **आपला रक्तदाब:** आपले ताजे वाचन १२८/८२ mmHg आहे, जे खूप चांगले आणि सुरक्षित नियंत्रणात आहे. रोज सकाळी Telmisartan औषध वेळेवर घ्या आणि आहारात मीठ कमी ठेवा।`,
+      te: `🩺 **మీ రక్తపోటు:** మీ తాజా రీడింగ్ 128/82 mmHg, ఇది చాలా మంచి నియంత్రణలో ఉంది. ఉదయం Telmisartan మందు వేసుకోండి మరియు ఆహారంలో ఉప్పు తగ్గించండి.`,
+      ta: `🩺 **உங்கள் ரத்த அழுத்தம்:** உங்கள் சமீபத்திய அளவு 128/82 mmHg, இது மிகவும் நல்ல கட்டுப்பாட்டில் உள்ளது. காலையில் Telmisartan மருந்தை எடுத்துக்கொண்டு உப்பை குறைக்கவும்.`,
+      gu: `🩺 **તમારું બ્લડ પ્રેશર:** તમારું રીડિંગ ૧૨૮/૮૨ mmHg છે, જે ખૂબ સારા નિયંત્રણમાં છે. સવારે Telmisartan દવા સમયસર લો અને ખોરાકમાં મીઠું ઓછું રાખો.`,
+      kn: `🩺 **ನಿಮ್ಮ ರಕ್ತದೊತ್ತಡ:** ನಿಮ್ಮ ಇತ್ತೀಚಿನ ರೀಡಿಂಗ್ 128/82 mmHg ಆಗಿದೆ, ಇದು ನಿಯಂತ್ರಣದಲ್ಲಿದೆ. ಬೆಳಿಗ್ಗೆ Telmisartan ಔಷಧಿಯನ್ನು ತೆಗೆದುಕೊಳ್ಳಿ ಮತ್ತು ಉಪ್ಪಿನ ಬಳಕೆಯನ್ನು ಕಡಿಮೆ ಮಾಡಿ.`
+    };
+    return {
+      text: resolveLangResponse(bpMap, activeLang),
+      triageLevel: "routine"
+    };
   }
 
-  // 7. Painkillers & Medication Interactions (Brufen, Paracetamol, Combiflam, Pain)
+  // 7. Painkillers & Medication Interactions (Headache / Sar Dard / Sir Dard / Brufen / Paracetamol)
   if (
     query.includes("medicine") || query.includes("medication") || query.includes("painkiller") ||
     query.includes("aspirin") || query.includes("brufen") || query.includes("combiflam") ||
     query.includes("paracetamol") || query.includes("dard") || query.includes("dawa") ||
     query.includes("पेनकिलर") || query.includes("दवा") || query.includes("दर्द") ||
-    query.includes("sar dard") || query.includes("headache")
+    query.includes("sar dard") || query.includes("headache") || query.includes("sir dard") ||
+    query.includes("ਸਿਰ ਦਰਦ") || query.includes("ਸਿਰਦਰਦ") || query.includes("ਦਵਾਈ") || query.includes("ਦਰਦ") || query.includes("ਸੁਰੱਖਿਅਤ") || query.includes("ਪੈਰਾਸੀਟਾਮੋਲ") ||
+    query.includes("মাথাব্যথা") || query.includes("ওষুধ") || query.includes("ব্যথা") || query.includes("প্যারাসিটামল") ||
+    query.includes("डोकेदुखी") || query.includes("औषध") || query.includes("वेदना") || query.includes("पॅरासिटामॉल") ||
+    query.includes("తలనొప్పి") || query.includes("మందు") || query.includes("నొప్పి") || query.includes("పారాసిటమాల్") ||
+    query.includes("தலைவலி") || query.includes("மருந்து") || query.includes("வலி") || query.includes("பாராசிட்டமால்") ||
+    query.includes("માથાનો દુખાવો") || query.includes("દવા") || query.includes("દુખાવો") || query.includes("પેરાસિટામોલ") ||
+    query.includes("ತಲೆನೋವು") || query.includes("ಔಷಧಿ") || query.includes("ನೋವು") || query.includes("ಪ್ಯಾರಸಿಟಮಾಲ್")
   ) {
-    if (activeLang === "hi") {
-      return {
-        text: `💊 **दर्द की दवा के लिए सलाह:** आप बीपी की दवा (Telmisartan) लेते हैं, इसलिए ब्रुफेन (Brufen) या कॉम्बिफ़्लैम लेने से बचें। सिरदर्द या हल्के बदन दर्द में सादी पैरासिटामोल (Paracetamol) लेना सबसे सुरक्षित रहता है।`,
-        triageLevel: "caution"
-      };
-    } else if (activeLang === "hinglish") {
-      return {
-        text: `💊 **Dawai aur Painkiller:** Aap BP ke liye Telmisartan lete hain, isliye Brufen ya Combiflam lene se bachein. Sar dard ya body pain me saadi Paracetamol sabse safe rehti hai aur BP medicine par asar nahi dalti.`,
-        triageLevel: "caution"
-      };
-    } else {
-      return {
-        text: `💊 **Painkiller Advice:** Since you take Telmisartan for BP, avoid NSAIDs like Brufen or Combiflam. Plain Paracetamol is much safer for headaches or aches and won't affect your BP medicine.`,
-        triageLevel: "caution"
-      };
-    }
+    const painMap = {
+      pa: `💊 **ਸਿਰ ਦਰਦ ਅਤੇ ਦਵਾਈ ਦੀ ਸਲਾਹ:** ਤੁਸੀਂ ਬਲੱਡ ਪ੍ਰੈਸ਼ਰ ਲਈ Telmisartan ਲੈਂਦੇ ਹੋ, ਇਸ ਲਈ Brufen ਜਾਂ Combiflam ਲੈਣ ਤੋਂ ਪਰਹੇਜ਼ ਕਰੋ। ਸਿਰ ਦਰਦ ਲਈ ਸਾਦੀ ਪੈਰਾਸੀਟਾਮੋਲ (Paracetamol 500mg) ਸਭ ਤੋਂ ਸੁਰੱਖਿਅਤ ਹੈ। ਪਾਣੀ ਖੂਬ ਪੀਓ ਅਤੇ ਥੋੜ੍ਹਾ ਆਰਾਮ ਕਰੋ।`,
+      hi: `💊 **दर्द की दवा के लिए सलाह:** आप बीपी की दवा (Telmisartan) लेते हैं, इसलिए ब्रुफेन (Brufen) या कॉम्बिफ़्लैम लेने से बचें। सिरदर्द या हल्के बदन दर्द में सादी पैरासिटामोल (Paracetamol) लेना सबसे सुरक्षित रहता है।`,
+      hinglish: `💊 **Dawai aur Painkiller:** Aap BP ke liye Telmisartan lete hain, isliye Brufen ya Combiflam lene se bachein. Sar dard ya body pain me saadi Paracetamol sabse safe rehti hai aur BP medicine par asar nahi dalti.`,
+      en: `💊 **Painkiller Advice:** Since you take Telmisartan for BP, avoid NSAIDs like Brufen or Combiflam. Plain Paracetamol is much safer for headaches or aches and won't affect your BP medicine.`,
+      bn: `💊 **মাথাব্যথা ও ওষুধের পরামর্শ:** আপনি রক্তচাপের জন্য Telmisartan খান, তাই Brufen বা Combiflam এড়িয়ে চলুন। মাথাব্যথার জন্য সাধারণ প্যারাসিটামল (Paracetamol) সবচেয়ে নিরাপদ।`,
+      mr: `💊 **डोकेदुखी व औषधांचा सल्ला:** आपण रक्तदाबासाठी Telmisartan घेत आहात, त्यामुळे Brufen किंवा Combiflam घेणे टाळा. डोकेदुखीसाठी साधी पॅरासिटामॉल (Paracetamol) सर्वात सुरक्षित आहे।`,
+      te: `💊 **తలనొప్పి మరియు మందుల సలహా:** మీరు రక్తపోటు కోసం Telmisartan వాడుతున్నారు, కాబట్టి Brufen లేదా Combiflam తీసుకోకండి. తలనొప్పికి సాధారణ పారాసిటమాల్ (Paracetamol) చాలా సురక్షితం.`,
+      ta: `💊 **தலைவலி மற்றும் மருந்து ஆலோசனை:** நீங்கள் ரத்த அழுத்தத்திற்காக Telmisartan எடுத்துக்கொள்வதால், Brufen அல்லது Combiflam மருந்துகளைத் தவிர்க்கவும். தலைவலிக்கு சாதாரண பாராசிட்டமால் (Paracetamol) பாதுகாப்பானது.`,
+      gu: `💊 **માથાનો દુખાવો અને દવાની સલાહ:** તમે બ્લડ પ્રેશર માટે Telmisartan લો છો, તેથી Brufen કે Combiflam લેવાનું ટાળો. માથાના દુખાવા માટે સાદી પેરાસિટામોલ (Paracetamol) સૌથી સલામત છે.`,
+      kn: `💊 **ತಲೆನೋವು ಮತ್ತು ಔಷಧ ಸಲಹೆ:** ನೀವು ರಕ್ತದೊತ್ತಡಕ್ಕಾಗಿ Telmisartan ತೆಗೆದುಕೊಳ್ಳುವುದರಿಂದ Brufen ಅಥವಾ Combiflam ಸೇವಿಸಬೇಡಿ. ತಲೆನೋವಿಗೆ ಸಾಮಾನ್ಯ ಪ್ಯಾರಸಿಟಮಾಲ್ (Paracetamol) ಅತ್ಯಂತ ಸುರಕ್ಷಿತವಾಗಿದೆ.`
+    };
+    return {
+      text: resolveLangResponse(painMap, activeLang),
+      triageLevel: "caution"
+    };
   }
 
   // 8. Cholesterol & Statin (Rosuvastatin, LDL, Lipids)
   if (
     query.includes("cholesterol") || query.includes("ldl") || query.includes("statin") ||
-    query.includes("rosuvastatin") || query.includes("कोलेस्ट्रॉल")
+    query.includes("rosuvastatin") || query.includes("कोलेस्ट्रॉल") ||
+    query.includes("ਕੋਲੈਸਟ੍ਰੋਲ") || query.includes("কোলেস্টেরল") || query.includes("కొలెస్ట్రాల్") ||
+    query.includes("கொலஸ்ட்ரால்") || query.includes("કોલેસ્ટ્રોલ") || query.includes("ಕೊಲೆಸ್ಟ್ರಾಲ್")
   ) {
-    if (activeLang === "hi") {
-      return {
-        text: `🫀 **कोलेस्ट्रॉल और रोज़ुवास्टेटिन:** आपका बैड कोलेस्ट्रॉल (LDL) 138 mg/dL है। इसे सुरक्षित सीमा में रखने के लिए रोज़ुवास्टेटिन (Rosuvastatin) रात को सोते समय लें, और तली हुई चीज़ों से परहेज़ करें।`,
-        triageLevel: "routine"
-      };
-    } else if (activeLang === "hinglish") {
-      return {
-        text: `🫀 **Cholesterol Jankari:** Aapka LDL cholesterol 138 mg/dL hai. Rosuvastatin 10mg raat ko sone se pehle lena sabse asardaar hota hai. Bahar ka tala-bhuna khana kam karein aur roz walk karein.`,
-        triageLevel: "routine"
-      };
-    } else {
-      return {
-        text: `🫀 **Cholesterol Advice:** Your LDL is 138 mg/dL. Taking Rosuvastatin at bedtime works best, along with reducing fried foods and staying active.`,
-        triageLevel: "routine"
-      };
-    }
+    const cholMap = {
+      pa: `🫀 **ਕੋਲੈਸਟ੍ਰੋਲ ਅਤੇ Rosuvastatin:** ਤੁਹਾਡਾ ਖਰਾਬ ਕੋਲੈਸਟ੍ਰੋਲ (LDL) 138 mg/dL ਹੈ। ਇਸਨੂੰ ਕੰਟਰੋਲ ਵਿੱਚ ਰੱਖਣ ਲਈ Rosuvastatin 10mg ਰਾਤ ਨੂੰ ਸੌਣ ਵੇਲੇ ਲਵੋ ਅਤੇ ਤਲੀਆਂ ਚੀਜ਼ਾਂ ਤੋਂ ਪਰਹੇਜ਼ ਕਰੋ।`,
+      hi: `🫀 **कोलेस्ट्रॉल और रोज़ुवास्टेटिन:** आपका बैड कोलेस्ट्रॉल (LDL) 138 mg/dL है। इसे सुरक्षित सीमा में रखने के लिए रोज़ुवास्टेटिन (Rosuvastatin) रात को सोते समय लें, और तली हुई चीज़ों से परहेज़ करें।`,
+      hinglish: `🫀 **Cholesterol Jankari:** Aapka LDL cholesterol 138 mg/dL hai. Rosuvastatin 10mg raat ko sone se pehle lena sabse asardaar hota hai. Bahar ka tala-bhuna khana kam karein aur roz walk karein.`,
+      en: `🫀 **Cholesterol Advice:** Your LDL is 138 mg/dL. Taking Rosuvastatin at bedtime works best, along with reducing fried foods and staying active.`,
+      bn: `🫀 **কোলেস্টেরল পরামর্শ:** আপনার LDL কোলেস্টেরল ১৩৮ mg/dL। রাতে শোবার আগে Rosuvastatin খাওয়া সবচেয়ে ভালো কাজ করে এবং ভাজা খাবার কম খান।`,
+      mr: `🫀 **कोलेस्ट्रॉल माहिती:** आपले LDL कोलेस्ट्रॉल १३८ mg/dL आहे. रात्री झोपण्यापूर्वी Rosuvastatin घेणे सर्वात प्रभावी आहे आणि तळलेले अन्न टाळा.`,
+      te: `🫀 **కొలెస్ట్రాల్ సలహా:** మీ LDL కొలెస్ట్రాల్ 138 mg/dL. రాత్రి పడుకునే ముందు Rosuvastatin తీసుకోవడం మంచిది మరియు వేయించిన ఆహారాలకు దూరంగా ఉండండి.`,
+      ta: `🫀 **கொலஸ்ட்ரால் ஆலோசனை:** உங்கள் LDL அளவு 138 mg/dL. இரவில் தூங்கும் முன் Rosuvastatin எடுத்துக்கொள்வது சிறந்தது மற்றும் வறுத்த உணவுகளைத் தவிர்க்கவும்.`,
+      gu: `🫀 **કોલેસ્ટ્રોલ સલાહ:** તમારું LDL કોલેસ્ટ્રોલ ૧૩૮ mg/dL છે. રાત્રે સૂતા પહેલા Rosuvastatin લેવું સૌથી અસરકારક છે અને તળેલો ખોરાક ટાળો.`,
+      kn: `🫀 **ಕೊಲೆಸ್ಟ್ರಾಲ್ ಸಲಹೆ:** ನಿಮ್ಮ LDL 138 mg/dL ಆಗಿದೆ. ರಾತ್ರಿ ಮಲಗುವ ಮುನ್ನ Rosuvastatin ತೆಗೆದುಕೊಳ್ಳುವುದು ಉತ್ತಮ ಮತ್ತು ಕರಿದ ಆಹಾರವನ್ನು ತಪ್ಪಿಸಿ.`
+    };
+    return {
+      text: resolveLangResponse(cholMap, activeLang),
+      triageLevel: "routine"
+    };
   }
 
   // 9. Doctor Visit Prep
   if (
     query.includes("doctor") || query.includes("appointment") || query.includes("prepare") ||
-    query.includes("डॉक्टर") || query.includes("सवाल") || query.includes("poochein")
+    query.includes("डॉक्टर") || query.includes("सवाल") || query.includes("poochein") ||
+    query.includes("ਡਾਕਟਰ") || query.includes("ਸਵਾਲ") || query.includes("ਡਾਕਟਰ ਨੂੰ") ||
+    query.includes("ডাক্তার") || query.includes("প্রশ্ন") ||
+    query.includes("डॉक्टर") || query.includes("प्रश्न") ||
+    query.includes("డాక్టర్") || query.includes("ప్రశ్నలు") ||
+    query.includes("மருத்துவர்") || query.includes("கேள்விகள்") ||
+    query.includes("ડૉક્ટર") || query.includes("પ્રશ્નો") ||
+    query.includes("ವೈದ್ಯರು") || query.includes("ಪ್ರಶ್ನೆಗಳು")
   ) {
-    if (activeLang === "hi") {
-      return {
-        text: `📋 **डॉक्टर से क्या पूछें:** डॉक्टर को बताएं कि आपकी शुगर 125-130 और HbA1c 7.2% है। उनसे पूछें कि क्या दवाओं की टाइमिंग सही है और क्या कोई नया रूटीन टेस्ट करवाना है।`,
-        triageLevel: "routine"
-      };
-    } else if (activeLang === "hinglish") {
-      return {
-        text: `📋 **Doctor se kya poochein:** Doctor ko apni sugar readings aur HbA1c (7.2%) dikhayein. Unse bas itna pooch lein ki kya dawai ki timing theek chal rahi hai aur aage koi routine test karwana hai.`,
-        triageLevel: "routine"
-      };
-    } else {
-      return {
-        text: `📋 **Questions for Doctor:** Share your blood sugar and HbA1c (7.2%) with your physician. Ask if your medication timing is working well and if any routine tests are due.`,
-        triageLevel: "routine"
-      };
-    }
+    const docMap = {
+      pa: `📋 **ਡਾਕਟਰ ਨੂੰ ਕੀ ਪੁੱਛਣਾ ਹੈ:** ਡਾਕਟਰ ਨੂੰ ਦੱਸੋ ਕਿ ਤੁਹਾਡੀ ਸ਼ੂਗਰ 125-130 ਅਤੇ HbA1c 7.2% ਹੈ। ਉਨ੍ਹਾਂ ਤੋਂ ਪੁੱਛੋ ਕਿ ਕੀ ਦਵਾਈਆਂ ਦਾ ਸਮਾਂ ਸਹੀ ਹੈ ਅਤੇ ਕੀ ਕੋਈ ਨਵਾਂ ਰੁਟੀਨ ਟੈਸਟ ਕਰਵਾਉਣਾ ਹੈ।`,
+      hi: `📋 **डॉक्टर से क्या पूछें:** डॉक्टर को बताएं कि आपकी शुगर 125-130 और HbA1c 7.2% है। उनसे पूछें कि क्या दवाओं की टाइमिंग सही है और क्या कोई नया रूटीन टेस्ट करवाना है।`,
+      hinglish: `📋 **Doctor se kya poochein:** Doctor ko apni sugar readings aur HbA1c (7.2%) dikhayein. Unse bas itna pooch lein ki kya dawai ki timing theek chal rahi hai aur aage koi routine test karwana hai.`,
+      en: `📋 **Questions for Doctor:** Share your blood sugar and HbA1c (7.2%) with your physician. Ask if your medication timing is working well and if any routine tests are due.`,
+      bn: `📋 **ডাক্তারকে কী জিজ্ঞাসা করবেন:** ডাক্তারকে জানান আপনার সুগার ১২৫-১৩০ এবং HbA1c ৭.২%। ওষুধের সময় ঠিক আছে কিনা এবং কোনো রুটিন টেস্ট করাতে হবে কিনা জিজ্ঞেস করুন।`,
+      mr: `📋 **डॉक्टरांना काय विचारावे:** डॉक्टरांना आपली साखर आणि HbA1c (७.२%) दाखवा. औषधांची वेळ योग्य आहे का आणि काही चाचण्या कराव्या लागतील का ते विचारा.`,
+      te: `📋 **వైద్యుడిని ఏమి అడగాలి:** మీ రక్తంలో చక్కెర మరియు HbA1c (7.2%) ని వైద్యుడికి చూపించండి. మందుల సమయం సరైనదేనా మరియు ఏదైనా పరీక్ష చేయించాలా అని అడగండి.`,
+      ta: `📋 **மருத்துவரிடம் கேட்க வேண்டியவை:** உங்கள் சர்க்கரை அளவு மற்றும் HbA1c (7.2%) மருத்துவரிடம் பகிருங்கள். மருந்துகளின் நேரம் சரியானதா மற்றும் ஏதேனும் பரிசோதனை தேவையா என்று கேளுங்கள்.`,
+      gu: `📋 **ડૉક્ટરને શું પૂછવું:** ડૉક્ટરને તમારું શુગર અને HbA1c (૭.૨%) બતાવો. દવાઓનો સમય યોગ્ય છે કે નહીં અને કોઈ ટેસ્ટ કરાવવાનો છે કે નહીં તે પૂછો.`,
+      kn: `📋 **ವೈದ್ಯರನ್ನು ಏನು ಕೇಳಬೇಕು:** ನಿಮ್ಮ ಸಕ್ಕರೆ ಮತ್ತು HbA1c (7.2%) ಮಟ್ಟವನ್ನು ವೈದ್ಯರಿಗೆ ತಿಳಿಸಿ. ಔಷಧಿಗಳ ಸಮಯ ಸರಿಯಾಗಿದೆಯೇ ಮತ್ತು ಯಾವುದೇ ಪರೀಕ್ಷೆ ಅಗತ್ಯವಿದೆಯೇ ಎಂದು ಕೇಳಿ.`
+    };
+    return {
+      text: resolveLangResponse(docMap, activeLang),
+      triageLevel: "routine"
+    };
   }
 
-  // 10. General / Fallback Empathetic Response (Short, Simple, Direct)
-  const shortSnippet = userQuery && userQuery.length > 40 ? `${userQuery.slice(0, 40)}...` : userQuery;
-  if (activeLang === "hi") {
-    return {
-      text: shortSnippet
-        ? `मैंने आपके प्रश्न ("${shortSnippet}") को नोट कर लिया है। आपकी प्रोफ़ाइल (${conditionsStr}) के अनुसार स्वास्थ्य स्थिर है। यदि आप किसी खास लक्षण, दवा या डाइट के बारे में पूछना चाहते हैं, तो बेझिझक बताएं।`
-        : `मैंने आपकी बात समझ ली है। आपकी सेहत की स्थिति (${conditionsStr}) के अनुसार सब कुछ नियंत्रण में है। यदि आपको कोई विशेष लक्षण, दर्द या परेशानी है, तो बताएं।`,
-      triageLevel: "routine"
-    };
-  } else if (activeLang === "hinglish") {
-    return {
-      text: shortSnippet
-        ? `Maine aapka sawal ("${shortSnippet}") samajh liya hai. Aapki health profile (${conditionsStr}) abhi stable chal rahi hai. Agar aapko koi specific lakshan, dawai ka dose ya diet ke baare me poochhna hai toh batayein.`
-        : `Maine aapka sawal samajh liya hai. Aapki medical profile (${conditionsStr}) ke hisaab se sab theek chal raha hai. Agar aapko koi specific dard, lakshan ya dawai ke baare me poochhna hai toh batayein.`,
-      triageLevel: "routine"
-    };
-  } else {
-    return {
-      text: shortSnippet
-        ? `I have noted your query ("${shortSnippet}"). Based on your clinical profile (${conditionsStr}), your status is steady. If you have a specific symptom, ache, or medication question, let me know and I will assist you.`
-        : `I understand your query. Based on your health profile (${conditionsStr}), everything looks steady. If you have a specific symptom, ache, or medication question, let me know and I will explain simply.`,
-      triageLevel: "routine"
-    };
-  }
+  // 10. General / Fallback Empathetic Response (Short, Simple, Direct in User's Selected Language)
+  const fallbackMap = {
+    pa: `ਮੈਂ ਤੁਹਾਡਾ ਸਵਾਲ ਸਮਝ ਲਿਆ ਹੈ। ਤੁਹਾਡੀ ਸਿਹਤ ਪ੍ਰੋਫਾਈਲ ਅਨੁਸਾਰ ਤੁਹਾਡੀ ਹਾਲਤ ਸਥਿਰ ਹੈ। ਜੇਕਰ ਤੁਹਾਨੂੰ ਕਿਸੇ ਖਾਸ ਲੱਛਣ, ਦਰਦ ਜਾਂ ਦਵਾਈ ਬਾਰੇ ਪੁੱਛਣਾ ਹੈ, ਤਾਂ ਬੇਝਿਜਕ ਦੱਸੋ, ਮੈਂ ਪੂਰੀ ਮਦਦ ਕਰਾਂਗਾ।`,
+    hi: `मैंने आपकी बात समझ ली है। आपकी सेहत की स्थिति (${conditionsStr}) के अनुसार सब कुछ नियंत्रण में है। यदि आपको कोई विशेष लक्षण, दर्द या परेशानी है, तो बताएं।`,
+    hinglish: `Maine aapka sawal samajh liya hai. Aapki medical profile (${conditionsStr}) ke hisaab se sab theek chal raha hai. Agar aapko koi specific dard, lakshan ya dawai ke baare me poochhna hai toh batayein.`,
+    en: `I have noted your query. Based on your clinical profile (${conditionsStr}), your status is steady. If you have a specific symptom, ache, or medication question, let me know and I will assist you.`,
+    bn: `আমি আপনার প্রশ্নটি বুঝতে পেরেছি। আপনার স্বাস্থ্য প্রোফাইল (${conditionsStr}) অনুযায়ী পরিস্থিতি স্থিতিশীল রয়েছে। আপনার যদি কোনো নির্দিষ্ট লক্ষণ, ব্যথা বা ওষুধ সম্পর্কে জানার থাকে, তবে জানান।`,
+    mr: `मी आपला प्रश्न समजून घेतला आहे. आपल्या आरोग्य प्रोफाइलनुसार (${conditionsStr}) सर्वकाही नियंत्रणात आहे. आपल्याला कोणतीही विशिष्ट लक्षणे, वेदना किंवा औषधांबद्दल विचारायचे असल्यास नक्की सांगा.`,
+    te: `నేను మీ ప్రశ్నను అర్థం చేసుకున్నాను. మీ ఆరోగ్య ప్రొఫైల్ (${conditionsStr}) ప్రకారం పరిస్థితి స్థిరంగా ఉంది. మీకు ఏదైనా నిర్దిష్ట లక్షణం, నొప్పి లేదా మందుల గురించి ప్రశ్న ఉంటే అడగండి.`,
+    ta: `உங்கள் கேள்வியை நான் புரிந்து கொண்டேன். உங்கள் உடல்நிலை விவரக்குறிப்பின்படி (${conditionsStr}) அனைத்தும் சீராக உள்ளது. குறிப்பிட்ட அறிகுறி, வலி அல்லது மருந்து பற்றி கேட்க விரும்பினால் தெரிவிக்கவும்.`,
+    gu: `મેં તમારો પ્રશ્ન સમજી લીધો છે. તમારી હેલ્થ પ્રોફાઇલ (${conditionsStr}) મુજબ સ્થિતિ નિયંત્રણમાં છે. જો તમારે કોઈ ચોક્કસ લક્ષણ, દુખાવો અથવા દવા વિશે પૂછવું હોય તો જણાવો.`,
+    kn: `ನಾನು ನಿಮ್ಮ ಪ್ರಶ್ನೆಯನ್ನು ಅರ್ಥಮಾಡಿಕೊಂಡಿದ್ದೇನೆ. ನಿಮ್ಮ ಆರೋಗ್ಯ ವಿವರಗಳ ಪ್ರಕಾರ (${conditionsStr}) ಸ್ಥಿತಿ ಸ್ಥಿರವಾಗಿದೆ. ನೀವು ಯಾವುದೇ ನಿರ್ದಿಷ್ಟ ರೋಗಲಕ್ಷಣ, ನೋವು ಅಥವಾ ಔಷಧದ ಬಗ್ಗೆ ಕೇಳಲು ಬಯಸಿದರೆ ತಿಳಿಸಿ.`
+  };
+
+  return {
+    text: resolveLangResponse(fallbackMap, activeLang),
+    triageLevel: "routine"
+  };
 }
 
-// Main execution function with multilingual simplicity (Hinglish / Hindi / English)
+// Main execution function with multilingual simplicity (All 10 Indian Languages)
 export async function sendChatMessage(messages, patientContext, lang = 'en', chatLang = 'hinglish') {
   const apiKey = getStoredApiKey();
   const latestMessage = messages[messages.length - 1]?.content || "";
 
   // Auto-resolve language preference: Always prioritize chatLang if set
   let resolvedLang = chatLang || (lang === 'hi' ? 'hi' : 'hinglish');
-  // Only auto-detect script if no chatLang was explicitly chosen
-  if (!chatLang && /[\u0900-\u097F]/.test(latestMessage)) {
-    resolvedLang = 'hi';
+  // Auto-detect script if no chatLang was explicitly chosen
+  if (!chatLang) {
+    if (/[\u0A00-\u0A7F]/.test(latestMessage)) resolvedLang = 'pa'; // Gurmukhi (Punjabi)
+    else if (/[\u0980-\u09FF]/.test(latestMessage)) resolvedLang = 'bn'; // Bengali
+    else if (/[\u0C00-\u0C7F]/.test(latestMessage)) resolvedLang = 'te'; // Telugu
+    else if (/[\u0B80-\u0BFF]/.test(latestMessage)) resolvedLang = 'ta'; // Tamil
+    else if (/[\u0A80-\u0AFF]/.test(latestMessage)) resolvedLang = 'gu'; // Gujarati
+    else if (/[\u0C80-\u0CFF]/.test(latestMessage)) resolvedLang = 'kn'; // Kannada
+    else if (/[\u0900-\u097F]/.test(latestMessage)) resolvedLang = 'hi'; // Devanagari (Hindi)
   }
 
   if (!apiKey) {
-    // Snappy zero-latency intelligent fallback with localized simple language
+    // Snappy zero-latency intelligent fallback with strictly localized simple language
     return new Promise((resolve) => {
       setTimeout(() => {
         resolve(generateIntelligentMedicalResponse(latestMessage, patientContext, resolvedLang));

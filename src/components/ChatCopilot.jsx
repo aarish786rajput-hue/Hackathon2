@@ -223,12 +223,22 @@ export default function ChatCopilot({ patient, lang = 'en', initialQuery, onClea
       }
     } catch (err) {
       console.error(err);
+      const errorMsgMap = {
+        pa: "ਮਾਫ਼ ਕਰਨਾ, ਜਵਾਬ ਤਿਆਰ ਕਰਨ ਵਿੱਚ ਸਮੱਸਿਆ ਆਈ। ਕਿਰਪਾ ਕਰਕੇ ਦੁਬਾਰਾ ਕੋਸ਼ਿਸ਼ ਕਰੋ।",
+        hi: "अनुरोध प्रोसेस करने में समस्या आई। कृपया पुनः प्रयास करें।",
+        hinglish: "Thoda technical issue aaya. Kripya dobara poochiye.",
+        en: "I encountered a momentary issue. Please try again or rephrase.",
+        bn: "অনুরোধ প্রক্রিয়া করতে সমস্যা হয়েছে। অনুগ্রহ করে আবার চেষ্টা করুন।",
+        mr: "विनंती प्रक्रिया करण्यात अडचण आली. कृपया पुन्हा प्रयत्न करा.",
+        te: "అభ్యర్థనను ప్రాసెస్ చేయడంలో సమస్య ఎదురైంది. దయచేసి మళ్లీ ప్రయత్నించండి.",
+        ta: "கோரிக்கையை செயலாக்குவதில் சிக்கல் ஏற்பட்டது. மீண்டும் முயற்சிக்கவும்.",
+        gu: "વિનંતી પર પ્રક્રિયા કરવામાં સમસ્યા આવી. કૃપા કરીને ફરી પ્રયાસ કરો.",
+        kn: "ವಿನಂತಿಯನ್ನು ಪ್ರಕ್ರಿಯೆಗೊಳಿಸುವಲ್ಲಿ ಸಮಸ್ಯೆಯಾಗಿದೆ. ದಯವಿಟ್ಟು ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ."
+      };
       setMessages([...newHistory, {
         id: `b_err_${Date.now()}`,
         sender: "bot",
-        content: chatLang === "hi" 
-          ? "अनुरोध प्रोसेस करने में समस्या आई। कृपया पुनः प्रयास करें।"
-          : (chatLang === "hinglish" ? "Thoda technical issue aaya. Kripya dobara poochiye." : "I encountered a momentary issue. Please try again or rephrase."),
+        content: errorMsgMap[chatLang] || errorMsgMap.hinglish || errorMsgMap.en,
         triageLevel: "routine",
         timestamp: "Now"
       }]);

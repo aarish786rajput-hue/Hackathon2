@@ -380,12 +380,22 @@ export default function FloatingCopilot({
         speakTextRef.current(botResponse.text, true);
       }
     } catch {
+      const errorMsgMap = {
+        pa: "ਮਾਫ਼ ਕਰਨਾ, ਜਵਾਬ ਪ੍ਰਾਪਤ ਕਰਨ ਵਿੱਚ ਸਮੱਸਿਆ ਆਈ। ਕਿਰਪਾ ਕਰਕੇ ਦੁਬਾਰਾ ਕੋਸ਼ਿਸ਼ ਕਰੋ।",
+        hi: "क्षमा करें, उत्तर प्राप्त करने में समस्या हुई। कृपया पुनः प्रयास करें।",
+        hinglish: "Maaf kijiye, reply aane me thodi dikkat hui. Kripya dubara try karein.",
+        en: "Sorry, I had trouble generating a reply. Please try again.",
+        bn: "দুঃখিত, উত্তর তৈরি করতে সমস্যা হয়েছে। অনুগ্রহ করে আবার চেষ্টা করুন।",
+        mr: "क्षमस्व, उत्तर मिळवण्यात अडचण आली. कृपया पुन्हा प्रयत्न करा.",
+        te: "క్షమించండి, సమాధానం రూపొందించడంలో సమస్య ఎదురైంది. దయచేసి మళ్లీ ప్రయత్నించండి.",
+        ta: "மன்னிக்கவும், பதில் பெறுவதில் சிக்கல் ஏற்பட்டது. மீண்டும் முயற்சிக்கவும்.",
+        gu: "માફ કરશો, જવાબ આપવામાં સમસ્યા આવી. કૃપા કરીને ફરી પ્રયાસ કરો.",
+        kn: "ಕ್ಷಮಿಸಿ, ಪ್ರತಿಕ್ರಿಯೆ ಪಡೆಯುವಲ್ಲಿ ಸಮಸ್ಯೆಯಾಗಿದೆ. ದಯವಿಟ್ಟು ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ."
+      };
       const fallbackMsg = {
         id: `bot_err_${Date.now()}`,
         sender: "bot",
-        content: chatLang === "hi" 
-          ? "क्षमा करें, उत्तर प्राप्त करने में समस्या हुई। कृपया पुनः प्रयास करें।" 
-          : "Sorry, I had trouble generating a reply. Please try again.",
+        content: errorMsgMap[chatLang] || errorMsgMap.hinglish || errorMsgMap.en,
         triageLevel: "caution",
         timestamp: "Now"
       };

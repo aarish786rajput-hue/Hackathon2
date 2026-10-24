@@ -16,8 +16,7 @@ import {
   Activity,
   Ban,
   RotateCcw,
-  Timer,
-  CalendarCheck
+  Timer
 } from "lucide-react";
 import { translations } from "../data/translations";
 import { translateMedicalTerm } from "../utils/translator";
@@ -29,7 +28,6 @@ import {
   sendDesktopNotification,
   scheduleSnoozeNotification 
 } from "../utils/reminderService";
-import { getPatientWellnessData } from "../data/wellnessData";
 
 export default function Dashboard({
   patient,
@@ -46,15 +44,11 @@ export default function Dashboard({
   const fileInputRef = useRef(null);
   const [notifPermission, setNotifPermission] = useState(() => getNotificationPermission());
   const [toastMessage, setToastMessage] = useState(null);
-  const [appointmentAlertActive, setAppointmentAlertActive] = useState(false);
 
   const showToast = (msg) => {
     setToastMessage(msg);
     setTimeout(() => setToastMessage(null), 3500);
   };
-
-  const wellnessData = getPatientWellnessData(patient.id);
-  const { upcomingAppointment } = wellnessData;
 
   const t = translations[lang] || translations.en;
   const latestVital = patient.vitalsHistory[patient.vitalsHistory.length - 1] || {};
@@ -72,6 +66,7 @@ export default function Dashboard({
     const granted = await requestNotificationPermission();
     setNotifPermission(granted ? "granted" : "denied");
     if (granted) {
+      showToast(t.remindersActive || "Live medication reminders enabled!");
       sendDesktopNotification("PulseAI Health Reminders 🔔", {
         body: "Live reminders activated! You will receive timely alerts for your scheduled medications."
       });
@@ -441,118 +436,6 @@ export default function Dashboard({
                 </div>
               );
             })}
-          </div>
-        </div>
-      )}
-
-      {/* Upcoming Doctor Follow-Up Appointment Banner (Section 3.2) */}
-      {upcomingAppointment && (
-        <div
-          className="glass-panel"
-          style={{
-            padding: "20px 24px",
-            borderRadius: "18px",
-            background: "linear-gradient(135deg, rgba(59, 130, 246, 0.12), rgba(139, 92, 246, 0.08), var(--bg-card) 60%)",
-            border: "1.5px solid rgba(59, 130, 246, 0.35)",
-            boxShadow: "0 6px 20px rgba(59, 130, 246, 0.1)",
-            display: "flex",
-            flexDirection: "column",
-            gap: "14px"
-          }}
-        >
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "12px" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
-              <div style={{
-                width: "46px",
-                height: "46px",
-                borderRadius: "14px",
-                background: "linear-gradient(135deg, #3b82f6, #2563eb)",
-                color: "#ffffff",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                boxShadow: "0 4px 14px rgba(59, 130, 246, 0.35)",
-                flexShrink: 0
-              }}>
-                <CalendarCheck size={24} />
-              </div>
-              <div>
-                <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
-                  <h3 style={{ fontSize: "1.12rem", fontWeight: 800, color: "var(--text-highlight)", margin: 0 }}>
-                    {t.upcomingFollowUp || "Upcoming Doctor Follow-Up"}
-                  </h3>
-                  <span className="badge badge-primary" style={{ fontSize: "0.76rem", fontWeight: 800 }}>
-                    🗓️ In {upcomingAppointment.daysLeft} {t.daysRemaining || "days"} ({upcomingAppointment.date})
-                  </span>
-                </div>
-                <p style={{ fontSize: "0.88rem", color: "var(--text-muted)", margin: "4px 0 0 0" }}>
-                  <strong>{upcomingAppointment.doctorName}</strong> ({upcomingAppointment.specialty}) • {upcomingAppointment.clinic}
-                </p>
-              </div>
-            </div>
-
-            <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
-              <button
-                type="button"
-                onClick={() => onOpenDoctorPrep && onOpenDoctorPrep()}
-                className="btn btn-primary"
-                style={{ padding: "8px 14px", fontSize: "0.82rem", borderRadius: "8px", display: "inline-flex", alignItems: "center", gap: "6px" }}
-              >
-                <Calendar size={14} />
-                <span>{t.prepareVisit5Q || "Prepare for Visit (Top 5 Qs)"}</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => {
-                  setAppointmentAlertActive(true);
-                  showToast(t.appointmentReminderSet || "Appointment reminder notification scheduled!");
-                  if (notifPermission === "granted") {
-                    sendDesktopNotification("PulseAI Appointment Reminder 🗓️", {
-                      body: `Follow-up with ${upcomingAppointment.doctorName} on ${upcomingAppointment.date} at ${upcomingAppointment.time}.`
-                    });
-                  }
-                }}
-                className="btn btn-secondary"
-                style={{
-                  padding: "8px 14px",
-                  fontSize: "0.82rem",
-                  borderRadius: "8px",
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: "6px",
-                  background: appointmentAlertActive ? "rgba(16, 185, 129, 0.18)" : undefined,
-                  color: appointmentAlertActive ? "var(--secondary)" : undefined,
-                  borderColor: appointmentAlertActive ? "rgba(16, 185, 129, 0.45)" : undefined
-                }}
-              >
-                <BellRing size={14} />
-                <span>{appointmentAlertActive ? ("✓ " + (t.appointmentReminderSet ? "Reminder Active" : "Alert Set")) : (t.setAppointmentReminder || "Set Alert Reminder")}</span>
-              </button>
-            </div>
-          </div>
-
-          <div style={{
-            background: "var(--bg-card)",
-            border: "1px solid var(--border-color)",
-            borderRadius: "12px",
-            padding: "12px 16px",
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            flexWrap: "wrap",
-            gap: "10px",
-            fontSize: "0.84rem"
-          }}>
-            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-              <span style={{ fontSize: "1rem" }}>🎯</span>
-              <span style={{ color: "var(--text-main)" }}>
-                <strong>Purpose:</strong> {upcomingAppointment.purpose}
-              </span>
-            </div>
-            <div style={{ color: "var(--text-muted)", fontSize: "0.8rem", fontStyle: "italic" }}>
-              📌 {upcomingAppointment.notes}
-            </div>
           </div>
         </div>
       )}

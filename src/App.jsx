@@ -367,6 +367,7 @@ export default function App() {
                 onSelectPatient={(p) => setCurrentPatientId(p.id)}
                 onUpdatePatient={updateCurrentPatient}
                 onOpenHealthPassport={() => setIsHealthPassportOpen(true)}
+                onOpenDoctorPrep={() => setIsDoctorPrepOpen(true)}
                 lang={lang}
               />
             )}

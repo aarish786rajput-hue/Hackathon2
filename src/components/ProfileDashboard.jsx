@@ -20,10 +20,15 @@ import {
   CreditCard,
   Flame,
   MapPin,
-  Navigation
+  Navigation,
+  CalendarCheck,
+  BellRing
 } from "lucide-react";
 import { calculateAge } from "../utils/dateUtils";
 import { getLiveGpsAddress } from "../utils/geolocation";
+import { translations } from "../data/translations";
+import { getPatientWellnessData } from "../data/wellnessData";
+import { getNotificationPermission, sendDesktopNotification } from "../utils/reminderService";
 
 export default function ProfileDashboard({ 
   patient, 
@@ -31,6 +36,7 @@ export default function ProfileDashboard({
   onSelectPatient,
   onUpdatePatient, 
   onOpenHealthPassport,
+  onOpenDoctorPrep,
   lang = "en" 
 }) {
   const [isEditing, setIsEditing] = useState(false);
@@ -38,6 +44,17 @@ export default function ProfileDashboard({
   const [showPhotoOptions, setShowPhotoOptions] = useState(false);
   const [isCameraActive, setIsCameraActive] = useState(false);
   const [capturedPhoto, setCapturedPhoto] = useState(null);
+  const [appointmentAlertActive, setAppointmentAlertActive] = useState(false);
+  const [toastMessage, setToastMessage] = useState(null);
+
+  const showToast = (msg) => {
+    setToastMessage(msg);
+    setTimeout(() => setToastMessage(null), 3500);
+  };
+
+  const wellnessData = getPatientWellnessData(patient.id);
+  const upcomingAppointment = wellnessData?.upcomingAppointment;
+  const t = translations[lang] || translations.en;
 
   const fileInputRef = useRef(null);
   const videoRef = useRef(null);
@@ -567,6 +584,119 @@ export default function ProfileDashboard({
           </div>
         </div>
       </div>
+
+      {/* Upcoming Doctor Follow-Up Consultation */}
+      {upcomingAppointment && (
+        <div
+          className="glass-panel"
+          style={{
+            padding: "20px 24px",
+            borderRadius: "18px",
+            background: "linear-gradient(135deg, rgba(59, 130, 246, 0.12), rgba(139, 92, 246, 0.08), var(--bg-card) 60%)",
+            border: "1.5px solid rgba(59, 130, 246, 0.35)",
+            boxShadow: "0 6px 20px rgba(59, 130, 246, 0.1)",
+            display: "flex",
+            flexDirection: "column",
+            gap: "14px"
+          }}
+        >
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "12px" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
+              <div style={{
+                width: "46px",
+                height: "46px",
+                borderRadius: "14px",
+                background: "linear-gradient(135deg, #3b82f6, #2563eb)",
+                color: "#ffffff",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                boxShadow: "0 4px 14px rgba(59, 130, 246, 0.35)",
+                flexShrink: 0
+              }}>
+                <CalendarCheck size={24} />
+              </div>
+              <div>
+                <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
+                  <h3 style={{ fontSize: "1.12rem", fontWeight: 800, color: "var(--text-highlight)", margin: 0 }}>
+                    {t.upcomingFollowUp || "Upcoming Doctor Follow-Up"}
+                  </h3>
+                  <span className="badge badge-primary" style={{ fontSize: "0.76rem", fontWeight: 800 }}>
+                    🗓️ In {upcomingAppointment.daysLeft} {t.daysRemaining || "days"} ({upcomingAppointment.date})
+                  </span>
+                </div>
+                <p style={{ fontSize: "0.88rem", color: "var(--text-muted)", margin: "4px 0 0 0" }}>
+                  <strong>{upcomingAppointment.doctorName}</strong> ({upcomingAppointment.specialty}) • {upcomingAppointment.clinic}
+                </p>
+              </div>
+            </div>
+
+            <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
+              <button
+                type="button"
+                onClick={() => onOpenDoctorPrep && onOpenDoctorPrep()}
+                className="btn btn-primary"
+                style={{ padding: "8px 14px", fontSize: "0.82rem", borderRadius: "8px", display: "inline-flex", alignItems: "center", gap: "6px" }}
+              >
+                <Calendar size={14} />
+                <span>{t.prepareVisit5Q || "Prepare for Visit (Top 5 Qs)"}</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setAppointmentAlertActive(true);
+                  showToast(t.appointmentReminderSet || "Appointment reminder notification scheduled!");
+                  const permission = getNotificationPermission();
+                  if (permission === "granted") {
+                    sendDesktopNotification("PulseAI Appointment Reminder 🗓️", {
+                      body: `Follow-up with ${upcomingAppointment.doctorName} on ${upcomingAppointment.date} at ${upcomingAppointment.time}.`
+                    });
+                  }
+                }}
+                className="btn btn-secondary"
+                style={{
+                  padding: "8px 14px",
+                  fontSize: "0.82rem",
+                  borderRadius: "8px",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "6px",
+                  background: appointmentAlertActive ? "rgba(16, 185, 129, 0.18)" : undefined,
+                  color: appointmentAlertActive ? "var(--secondary)" : undefined,
+                  borderColor: appointmentAlertActive ? "rgba(16, 185, 129, 0.45)" : undefined
+                }}
+              >
+                <BellRing size={14} />
+                <span>{appointmentAlertActive ? ("✓ " + (t.appointmentReminderSet ? (lang === "hi" ? "रिमाइंडर सक्रिय" : "Reminder Active") : "Alert Set")) : (t.setAppointmentReminder || "Set Alert Reminder")}</span>
+              </button>
+            </div>
+          </div>
+
+          <div style={{
+            background: "var(--bg-card)",
+            border: "1px solid var(--border-color)",
+            borderRadius: "12px",
+            padding: "12px 16px",
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            flexWrap: "wrap",
+            gap: "10px",
+            fontSize: "0.84rem"
+          }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+              <span style={{ fontSize: "1rem" }}>🎯</span>
+              <span style={{ color: "var(--text-main)" }}>
+                <strong>{lang === "hi" ? "उद्देश्य:" : "Purpose:"}</strong> {upcomingAppointment.purpose}
+              </span>
+            </div>
+            <div style={{ color: "var(--text-muted)", fontSize: "0.8rem", fontStyle: "italic" }}>
+              📌 {upcomingAppointment.notes}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Live Camera Viewfinder Modal */}
       {isCameraActive && (
@@ -1154,6 +1284,30 @@ export default function ProfileDashboard({
               </div>
             </form>
           </div>
+        </div>
+      )}
+
+      {/* Toast Notification Container */}
+      {toastMessage && (
+        <div style={{
+          position: "fixed",
+          bottom: "24px",
+          right: "24px",
+          background: "linear-gradient(135deg, #0ea5e9, #10b981)",
+          color: "#ffffff",
+          padding: "12px 20px",
+          borderRadius: "12px",
+          boxShadow: "0 10px 30px rgba(0, 0, 0, 0.35)",
+          fontSize: "0.88rem",
+          fontWeight: 700,
+          zIndex: 9999,
+          display: "flex",
+          alignItems: "center",
+          gap: "10px",
+          animation: "fadeIn 0.25s ease"
+        }}>
+          <span>✨</span>
+          <span>{toastMessage}</span>
         </div>
       )}
     </div>

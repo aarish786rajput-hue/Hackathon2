@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Key, X, CheckCircle2, Eye, EyeOff, ShieldCheck, RefreshCw, AlertCircle } from "lucide-react";
 import { getStoredApiKey, setStoredApiKey } from "../services/geminiService";
 
@@ -8,16 +8,18 @@ export default function ApiKeyModal({ isOpen, onClose, lang = "en" }) {
   const [statusMsg, setStatusMsg] = useState("");
   const [testingStatus, setTestingStatus] = useState(null); // 'testing' | 'success' | 'error' | null
   const [testResult, setTestResult] = useState("");
+  const [prevIsOpen, setPrevIsOpen] = useState(isOpen);
 
-  // Whenever modal opens, ensure we re-read the latest stored key from localStorage or .env
-  useEffect(() => {
+  // Whenever modal transitions to open, synchronize with latest stored key & reset test status
+  if (isOpen !== prevIsOpen) {
+    setPrevIsOpen(isOpen);
     if (isOpen) {
       setApiKey(getStoredApiKey());
       setStatusMsg("");
       setTestingStatus(null);
       setTestResult("");
     }
-  }, [isOpen]);
+  }
 
   if (!isOpen) return null;
 

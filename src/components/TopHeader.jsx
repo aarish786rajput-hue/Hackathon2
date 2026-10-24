@@ -36,7 +36,6 @@ import {
   getNotificationPermission,
   requestNotificationPermission,
   sendDesktopNotification,
-  getAppointmentReminderStatus,
   getActiveAppointmentNotifications
 } from "../utils/reminderService";
 import { getPatientWellnessData } from "../data/wellnessData";
@@ -1396,6 +1395,7 @@ export default function TopHeader({
               top: "calc(100% + 8px)",
               right: 0,
               width: "290px",
+              maxWidth: "calc(100vw - 24px)",
               background: "var(--bg-card)",
               backdropFilter: "blur(20px)",
               WebkitBackdropFilter: "blur(20px)",

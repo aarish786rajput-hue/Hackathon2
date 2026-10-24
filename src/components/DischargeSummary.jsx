@@ -665,7 +665,7 @@ export default function DischargeSummary({ patient, lang = "en", onAskCopilot })
           </div>
 
           {/* Section 3: At-Home Care Guidelines (Diet, Activity, Hydration) */}
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: "18px" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 280px), 1fr))", gap: "18px" }}>
             {/* Diet Box */}
             <div
               className="glass-panel"

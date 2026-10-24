@@ -8,7 +8,6 @@ import {
   X, 
   FileCheck2, 
   Camera, 
-  HelpCircle, 
   Trash2, 
   Sparkles,
   Building2,
@@ -21,9 +20,7 @@ import {
   Stethoscope,
   PlusCircle,
   Key,
-  TrendingUp,
-  TrendingDown,
-  ShieldCheck
+  TrendingUp
 } from "lucide-react";
 import { generatePatientReports, sampleReports } from "../data/sampleReports";
 import { analyzeReportFile } from "../services/geminiService";
@@ -1705,7 +1702,7 @@ export default function ReportExplainer({
           </div>
 
           {/* Comparison Cards Grid */}
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))", gap: "12px" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(min(100%, 280px), 1fr))", gap: "12px" }}>
             {filteredComparisons.map((item, idx) => (
               <div
                 key={idx}

@@ -342,7 +342,7 @@ export default function WellnessTracker({
           </div>
 
           {/* Simple Habit Cards Grid */}
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: "18px" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 280px), 1fr))", gap: "18px" }}>
             {filteredHabits.map((pillar) => {
               const isDone = !!completedHabits[pillar.id];
               const getIcon = (id) => {
@@ -540,7 +540,7 @@ export default function WellnessTracker({
           </div>
 
           {/* Simple Test Cards */}
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(340px, 1fr))", gap: "18px" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 280px), 1fr))", gap: "18px" }}>
             {filteredTests.map((test) => {
               const isUrgent = test.urgency === "due-soon";
               const isGood = test.urgency === "good";

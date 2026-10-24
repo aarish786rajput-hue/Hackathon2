@@ -34,12 +34,6 @@ export default function Dashboard({
 }) {
   const [isDragActive, setIsDragActive] = useState(false);
   const fileInputRef = useRef(null);
-  const [toastMessage, setToastMessage] = useState(null);
-
-  const showToast = (msg) => {
-    setToastMessage(msg);
-    setTimeout(() => setToastMessage(null), 3500);
-  };
 
   const t = translations[lang] || translations.en;
   const latestVital = patient.vitalsHistory[patient.vitalsHistory.length - 1] || {};

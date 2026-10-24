@@ -499,12 +499,11 @@ select option {
 /* Doctors Directory Responsive Grid */
 .doctors-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr));
   gap: 22px;
   width: 100%;
   box-sizing: border-box;
 }
-
 
 @media (max-width: 1100px) {
   .grid-4 { grid-template-columns: repeat(2, 1fr); }
@@ -518,6 +517,9 @@ select option {
 }
 
 @media (max-width: 768px) {
+  .doctors-grid {
+    grid-template-columns: 1fr !important;
+  }
   .app-sidebar {
     position: fixed !important;
     left: 0;

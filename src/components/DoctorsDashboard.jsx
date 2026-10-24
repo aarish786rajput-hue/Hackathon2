@@ -1103,7 +1103,7 @@ export default function DoctorsDashboard({
                 </button>
               </div>
 
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(340px, 1fr))", gap: "16px" }}>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(min(100%, 300px), 1fr))", gap: "16px" }}>
                 {bookedAppointments.map((apt) => (
                   <div
                     key={apt.id}

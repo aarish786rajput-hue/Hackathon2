@@ -15,7 +15,8 @@ import {
   Ban,
   Timer,
   Pill,
-  Activity
+  Activity,
+  BellRing
 } from "lucide-react";
 import { translations } from "../data/translations";
 import { translateMedicalTerm } from "../utils/translator";

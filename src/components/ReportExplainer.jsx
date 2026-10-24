@@ -43,9 +43,11 @@ function computeReportTrends(activeReport, allReports = [], patient = {}, lang =
     hba1c: { prevVal: 7.9, unit: "%", prevDate: "12 Aug 2026", lowerIsBetter: true },
     fasting: { prevVal: 142, unit: "mg/dL", prevDate: "12 Aug 2026", lowerIsBetter: true },
     glucose: { prevVal: 142, unit: "mg/dL", prevDate: "12 Aug 2026", lowerIsBetter: true },
+    sugar: { prevVal: 142, unit: "mg/dL", prevDate: "12 Aug 2026", lowerIsBetter: true },
     fbs: { prevVal: 142, unit: "mg/dL", prevDate: "12 Aug 2026", lowerIsBetter: true },
     ldl: { prevVal: 168, unit: "mg/dL", prevDate: "12 Aug 2026", lowerIsBetter: true },
     cholesterol: { prevVal: 240, unit: "mg/dL", prevDate: "12 Aug 2026", lowerIsBetter: true },
+    triglyceride: { prevVal: 195, unit: "mg/dL", prevDate: "12 Aug 2026", lowerIsBetter: true },
     hemoglobin: { prevVal: 14.1, unit: "g/dL", prevDate: "12 Aug 2026", higherIsBetter: true },
     hb: { prevVal: 14.1, unit: "g/dL", prevDate: "12 Aug 2026", higherIsBetter: true },
     wbc: { prevVal: 8200, unit: "/cu.mm", prevDate: "12 Aug 2026", lowerIsBetter: false },
@@ -54,6 +56,15 @@ function computeReportTrends(activeReport, allReports = [], patient = {}, lang =
     creatinine: { prevVal: 0.98, unit: "mg/dL", prevDate: "12 Aug 2026", lowerIsBetter: true },
     egfr: { prevVal: 88, unit: "mL/min/1.73m²", prevDate: "12 Aug 2026", higherIsBetter: true },
     spo2: { prevVal: 96, unit: "%", prevDate: "12 Aug 2026", higherIsBetter: true },
+    tsh: { prevVal: 5.8, unit: "μIU/mL", prevDate: "12 Aug 2026", lowerIsBetter: true },
+    thyroid: { prevVal: 5.8, unit: "μIU/mL", prevDate: "12 Aug 2026", lowerIsBetter: true },
+    uric: { prevVal: 7.4, unit: "mg/dL", prevDate: "12 Aug 2026", lowerIsBetter: true },
+    sgpt: { prevVal: 48, unit: "U/L", prevDate: "12 Aug 2026", lowerIsBetter: true },
+    alt: { prevVal: 48, unit: "U/L", prevDate: "12 Aug 2026", lowerIsBetter: true },
+    sgot: { prevVal: 42, unit: "U/L", prevDate: "12 Aug 2026", lowerIsBetter: true },
+    ast: { prevVal: 42, unit: "U/L", prevDate: "12 Aug 2026", lowerIsBetter: true },
+    bilirubin: { prevVal: 1.1, unit: "mg/dL", prevDate: "12 Aug 2026", lowerIsBetter: true },
+    vitamin: { prevVal: 18, unit: "ng/mL", prevDate: "12 Aug 2026", higherIsBetter: true },
     pressure: { prevVal: "145/92", unit: "mmHg", prevDate: "12 Aug 2026", lowerIsBetter: true },
     bp: { prevVal: "145/92", unit: "mmHg", prevDate: "12 Aug 2026", lowerIsBetter: true },
     ecg: { prevVal: "Sinus Tachycardia (88 BPM)", unit: "Rhythm", prevDate: "12 Aug 2026", lowerIsBetter: false },
@@ -80,13 +91,26 @@ function computeReportTrends(activeReport, allReports = [], patient = {}, lang =
                  (pName.includes("hba1c") && prName.includes("hba1c")) ||
                  (pName.includes("ldl") && prName.includes("ldl")) ||
                  (pName.includes("glucose") && prName.includes("glucose")) ||
+                 (pName.includes("sugar") && prName.includes("sugar")) ||
                  (pName.includes("creatinine") && prName.includes("creatinine")) ||
                  (pName.includes("cholesterol") && prName.includes("cholesterol")) ||
-                 (pName.includes("hemoglobin") && prName.includes("hemoglobin"));
+                 (pName.includes("triglyceride") && prName.includes("triglyceride")) ||
+                 (pName.includes("hemoglobin") && prName.includes("hemoglobin")) ||
+                 (pName.includes("platelet") && prName.includes("platelet")) ||
+                 (pName.includes("tsh") && prName.includes("tsh")) ||
+                 (pName.includes("thyroid") && prName.includes("thyroid")) ||
+                 (pName.includes("uric") && prName.includes("uric")) ||
+                 (pName.includes("sgpt") && prName.includes("sgpt")) ||
+                 (pName.includes("alt") && prName.includes("alt")) ||
+                 (pName.includes("sgot") && prName.includes("sgot")) ||
+                 (pName.includes("ast") && prName.includes("ast")) ||
+                 (pName.includes("bilirubin") && prName.includes("bilirubin")) ||
+                 (pName.includes("pressure") && prName.includes("pressure")) ||
+                 (pName.includes("bp") && prName.includes("bp"));
         });
         if (match) {
           prevVal = match.value;
-          prevDate = pr.date || "Previous Report";
+          prevDate = pr.date || (pr.title ? pr.title.slice(0, 25) : "Previous Report");
           prevUnit = match.unit || param.unit;
           break;
         }

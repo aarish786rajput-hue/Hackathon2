@@ -20,6 +20,14 @@ import {
 } from "lucide-react";
 import { translations } from "../data/translations";
 import { translateMedicalTerm } from "../utils/translator";
+import { 
+  getMedicationDueStatus, 
+  getOverdueAndDueMedications, 
+  getNotificationPermission, 
+  requestNotificationPermission, 
+  sendDesktopNotification,
+  scheduleSnoozeNotification 
+} from "../utils/reminderService";
 
 export default function Dashboard({
   patient,
@@ -34,6 +42,7 @@ export default function Dashboard({
 }) {
   const [isDragActive, setIsDragActive] = useState(false);
   const fileInputRef = useRef(null);
+  const [notifPermission, setNotifPermission] = useState(() => getNotificationPermission());
 
   const t = translations[lang] || translations.en;
   const latestVital = patient.vitalsHistory[patient.vitalsHistory.length - 1] || {};
@@ -44,6 +53,18 @@ export default function Dashboard({
   const totalMeds = activeMeds.length;
   const medsTakenCount = activeMeds.filter(m => m.taken).length;
   const adherencePercent = totalMeds > 0 ? Math.round((medsTakenCount / totalMeds) * 100) : 100;
+
+  const overdueMeds = getOverdueAndDueMedications(allMeds);
+
+  const handleToggleNotifications = async () => {
+    const granted = await requestNotificationPermission();
+    setNotifPermission(granted ? "granted" : "denied");
+    if (granted) {
+      sendDesktopNotification("PulseAI Health Reminders 🔔", {
+        body: "Live reminders activated! You will receive timely alerts for your scheduled medications."
+      });
+    }
+  };
 
   const handleFileSelected = (file) => {
     if (!file) return;
@@ -236,6 +257,181 @@ export default function Dashboard({
           </div>
         </div>
       </div>
+
+      {/* Overdue Medication Reminder Alert Banner */}
+      {overdueMeds.length > 0 && (
+        <div
+          className="glass-panel"
+          style={{
+            padding: "18px 22px",
+            borderRadius: "16px",
+            background: "linear-gradient(135deg, rgba(245, 158, 11, 0.16), rgba(239, 68, 68, 0.12))",
+            border: "1.5px solid rgba(245, 158, 11, 0.55)",
+            boxShadow: "0 6px 24px rgba(245, 158, 11, 0.18)",
+            display: "flex",
+            flexDirection: "column",
+            gap: "12px"
+          }}
+        >
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "10px" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+              <div style={{
+                width: "36px",
+                height: "36px",
+                borderRadius: "10px",
+                background: "linear-gradient(135deg, #f59e0b, #d97706)",
+                color: "#ffffff",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                boxShadow: "0 2px 10px rgba(245, 158, 11, 0.4)",
+                flexShrink: 0
+              }}>
+                <BellRing size={20} />
+              </div>
+              <div>
+                <h3 style={{ fontSize: "1.05rem", fontWeight: 800, color: "var(--text-highlight)", margin: 0 }}>
+                  {t.overdueAlertTitle || "Overdue Medication Reminder"} ({overdueMeds.length})
+                </h3>
+                <p style={{ fontSize: "0.82rem", color: "var(--text-muted)", margin: 0, marginTop: "2px" }}>
+                  {t.overdueAlertSub || "Scheduled dose pending. Please take with food or snooze."}
+                </p>
+              </div>
+            </div>
+
+            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+              <button
+                type="button"
+                onClick={handleToggleNotifications}
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "5px",
+                  padding: "6px 12px",
+                  borderRadius: "8px",
+                  fontSize: "0.78rem",
+                  fontWeight: 700,
+                  background: notifPermission === "granted" ? "rgba(16, 185, 129, 0.16)" : "var(--bg-elevated)",
+                  color: notifPermission === "granted" ? "var(--secondary)" : "var(--text-main)",
+                  border: notifPermission === "granted" ? "1px solid var(--secondary-border)" : "1px solid var(--border-color)",
+                  cursor: "pointer"
+                }}
+              >
+                <BellRing size={13} />
+                <span>{notifPermission === "granted" ? (t.liveRemindersActive || "Live Reminders Active") : (t.enableLiveReminders || "Enable Reminders")}</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Overdue Items List */}
+          <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+            {overdueMeds.map((med) => {
+              const dueInfo = getMedicationDueStatus(med);
+              return (
+                <div
+                  key={med.id}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    padding: "10px 14px",
+                    borderRadius: "10px",
+                    background: "var(--bg-card)",
+                    border: "1px solid rgba(245, 158, 11, 0.35)",
+                    gap: "12px",
+                    flexWrap: "wrap"
+                  }}
+                >
+                  <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                    <span style={{ fontSize: "1.1rem" }}>💊</span>
+                    <div>
+                      <div style={{ fontWeight: 800, fontSize: "0.92rem", color: "var(--text-highlight)" }}>
+                        {med.name} <span style={{ color: "var(--primary)", fontSize: "0.82rem" }}>({med.dosage})</span>
+                        <span style={{
+                          marginLeft: "8px",
+                          fontSize: "0.72rem",
+                          fontWeight: 800,
+                          padding: "2px 6px",
+                          borderRadius: "4px",
+                          background: med.snoozedMinutes ? "rgba(245, 158, 11, 0.2)" : "rgba(239, 68, 68, 0.18)",
+                          color: med.snoozedMinutes ? "#d97706" : "#dc2626"
+                        }}>
+                          {dueInfo.label}
+                        </span>
+                      </div>
+                      <div style={{ fontSize: "0.76rem", color: "var(--text-muted)" }}>
+                        {translateMedicalTerm(med.purpose, lang)} • {med.withFood ? (t.takeWithFood || "Take with meals") : (t.emptyStomach || "Take on empty stomach")}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
+                    {/* Take Now */}
+                    <button
+                      type="button"
+                      onClick={() => onToggleMedication(med.id)}
+                      className="btn btn-primary"
+                      style={{ padding: "6px 12px", fontSize: "0.8rem", borderRadius: "6px", display: "inline-flex", alignItems: "center", gap: "4px" }}
+                    >
+                      <CheckCircle2 size={13} />
+                      <span>{t.takeNow || "Take Now"}</span>
+                    </button>
+
+                    {/* Snooze 15m */}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (onSnoozeMedication) {
+                          onSnoozeMedication(med.id, 15);
+                          scheduleSnoozeNotification(med, 15);
+                        }
+                      }}
+                      style={{
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: "4px",
+                        padding: "6px 11px",
+                        borderRadius: "6px",
+                        fontSize: "0.8rem",
+                        fontWeight: 800,
+                        background: "linear-gradient(135deg, rgba(245, 158, 11, 0.22), rgba(217, 119, 6, 0.16))",
+                        color: "#d97706",
+                        border: "1px solid rgba(245, 158, 11, 0.55)",
+                        cursor: "pointer"
+                      }}
+                    >
+                      <Clock size={13} />
+                      <span>{t.snooze15m || "Snooze (+15m)"}</span>
+                    </button>
+
+                    {/* Stop Course */}
+                    <button
+                      type="button"
+                      onClick={() => onStopMedicationCourse && onStopMedicationCourse(med.id)}
+                      style={{
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: "4px",
+                        padding: "6px 11px",
+                        borderRadius: "6px",
+                        fontSize: "0.8rem",
+                        fontWeight: 800,
+                        background: "linear-gradient(135deg, rgba(239, 68, 68, 0.18), rgba(220, 38, 38, 0.12))",
+                        color: "#dc2626",
+                        border: "1px solid rgba(239, 68, 68, 0.45)",
+                        cursor: "pointer"
+                      }}
+                    >
+                      <Ban size={13} />
+                      <span>{t.stopCourse || "Stop"}</span>
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       {/* Section: Quick Care Action Center */}
       <div>

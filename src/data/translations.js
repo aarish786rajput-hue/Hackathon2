@@ -119,6 +119,13 @@ const rawTranslations = {
     activeCourses: "Active Doses",
     stoppedCourses: "Stopped Courses",
     allCourses: "All Medications",
+    overdueAlertTitle: "Overdue Medication Reminder",
+    overdueAlertSub: "Scheduled dose pending. Please take with food or snooze.",
+    enableLiveReminders: "Enable Live Reminders",
+    liveRemindersActive: "Live Reminders Active (Browser & Desktop)",
+    doseOverdue: "Overdue",
+    testReminder: "Test Reminder",
+    reminderSent: "Reminder notification sent!",
 
     // AI Health Guardian
     aiGuardianTitle: "AI Health Guardian & Safety Alerts",
@@ -294,6 +301,13 @@ const rawTranslations = {
     activeCourses: "सक्रिय खुराकें",
     stoppedCourses: "बंद किए गए कोर्स",
     allCourses: "सभी दवाइयां",
+    overdueAlertTitle: "दवा लेने का समय निकल चुका है (Overdue Alert)",
+    overdueAlertSub: "आपकी निर्धारित खुराक बाकी है। कृपया भोजन के बाद लें या स्नूज़ करें।",
+    enableLiveReminders: "डेस्कटॉप व फ़ोन रिमाइंडर चालू करें",
+    liveRemindersActive: "लाइव रिमाइंडर सक्रिय हैं (Browser & Desktop)",
+    doseOverdue: "समय बीता",
+    testReminder: "टेस्ट रिमाइंडर",
+    reminderSent: "रिमाइंडर सूचना भेज दी गई है!",
 
     // AI Health Guardian
     aiGuardianTitle: "एआई हेल्थ गार्डियन व सुरक्षा अलर्ट",
@@ -469,6 +483,13 @@ const rawTranslations = {
     activeCourses: "Active Doses",
     stoppedCourses: "Stopped Courses",
     allCourses: "Sabhi Medications",
+    overdueAlertTitle: "Overdue Medicine Reminder",
+    overdueAlertSub: "Aapki scheduled dose pending hai. Please khane ke baad lein ya snooze karein.",
+    enableLiveReminders: "Desktop & Phone Reminders On karein",
+    liveRemindersActive: "Live Reminders Active hai (Browser & Desktop)",
+    doseOverdue: "Overdue",
+    testReminder: "Test Reminder",
+    reminderSent: "Reminder notification bhej diya gaya!",
 
     // AI Health Guardian
     aiGuardianTitle: "AI Health Guardian & Safety Alerts",
@@ -644,6 +665,13 @@ const rawTranslations = {
     activeCourses: "সক্রিয় ডোজ",
     stoppedCourses: "বন্ধ কোর্সসমূহ",
     allCourses: "সমস্ত ওষুধ",
+    overdueAlertTitle: "ওষুধ খাওয়ার সময় অতিক্রান্ত (Overdue Alert)",
+    overdueAlertSub: "আপনার নির্ধারিত ডোজ বাকি রয়েছে। অনুগ্রহ করে গ্রহণ করুন বা স্নুজ করুন।",
+    enableLiveReminders: "লাইভ রিমাইন্ডার চালু করুন",
+    liveRemindersActive: "লাইভ রিমাইন্ডার সক্রিয় আছে",
+    doseOverdue: "সময় উত্তীর্ণ",
+    testReminder: "টেস্ট রিমাইন্ডার",
+    reminderSent: "রিমাইন্ডার পাঠানো হয়েছে!",
 
     // AI Health Guardian
     aiGuardianTitle: "এআই স্বাস্থ্য অভিভাবক ও নিরাপত্তা সতর্কতা",
@@ -819,6 +847,13 @@ const rawTranslations = {
     activeCourses: "सक्रिय डोस",
     stoppedCourses: "थांबवलेले कोर्स",
     allCourses: "सर्व औषधे",
+    overdueAlertTitle: "औषध वेळेचा अलर्ट (Overdue Reminder)",
+    overdueAlertSub: "तुमचा डोस शिल्लक आहे. कृपया जेवणानंतर घ्या किंवा स्नूझ करा.",
+    enableLiveReminders: "लाईव्ह रिमाइंडर सुरू करा",
+    liveRemindersActive: "लाईव्ह रिमाइंडर सक्रिय आहे",
+    doseOverdue: "वेळ टळली",
+    testReminder: "टेस्ट रिमाइंडर",
+    reminderSent: "रिमाइंडर पाठवले गेले!",
 
     // AI Health Guardian
     aiGuardianTitle: "AI हेल्थ गार्डियन व सुरक्षा अलर्ट",
@@ -994,6 +1029,13 @@ const rawTranslations = {
     activeCourses: "యాక్టివ్ మోతాదులు",
     stoppedCourses: "నిలిపివేసిన కోర్సులు",
     allCourses: "అన్ని మందులు",
+    overdueAlertTitle: "మందుల సమయం మించిపోయింది (Overdue Alert)",
+    overdueAlertSub: "షెడ్యూల్ చేసిన మోతాదు పెండింగ్‌లో ఉంది. దయచేసి తీసుకోండి లేదా స్నూజ్ చేయండి.",
+    enableLiveReminders: "లైవ్ రిమైండర్‌లను ప్రారంభించండి",
+    liveRemindersActive: "లైవ్ రిమైండర్‌లు యాక్టివ్‌గా ఉన్నాయి",
+    doseOverdue: "సమయం మించిపోయింది",
+    testReminder: "టెస్ట్ రిమైండర్",
+    reminderSent: "రిమైండర్ పంపబడింది!",
 
     // AI Health Guardian
     aiGuardianTitle: "AI హెల్త్ గార్డియన్ & భద్రతా హెచ్చరికలు",
@@ -1169,6 +1211,13 @@ const rawTranslations = {
     activeCourses: "செயலில் உள்ள மருந்துகள்",
     stoppedCourses: "நிறுத்தப்பட்ட மருந்துகள்",
     allCourses: "அனைத்து மருந்துகள்",
+    overdueAlertTitle: "மருந்து தாமத எச்சரிக்கை (Overdue Alert)",
+    overdueAlertSub: "திட்டமிடப்பட்ட மருந்து நிலுவையில் உள்ளது. தயவுசெய்து உட்கொள்ளவும் அல்லது தள்ளிவைக்கவும்.",
+    enableLiveReminders: "நினைவூட்டலை இயக்கு",
+    liveRemindersActive: "நினைவூட்டல் செயலில் உள்ளது",
+    doseOverdue: "தாமதமானது",
+    testReminder: "சோதனை நினைவூட்டல்",
+    reminderSent: "நினைவூட்டல் அனுப்பப்பட்டது!",
 
     // AI Health Guardian
     aiGuardianTitle: "AI சுகாதார காவலர் & பாதுகாப்பு எச்சரிக்கைகள்",
@@ -1344,6 +1393,13 @@ const rawTranslations = {
     activeCourses: "સક્રિય ડોઝ",
     stoppedCourses: "બંધ કરેલા કોર્સ",
     allCourses: "બધી દવાઓ",
+    overdueAlertTitle: "દવા લેવાનો સમય વીતી ગયો (Overdue Alert)",
+    overdueAlertSub: "તમારી નિર્ધારિત માત્રા બાકી છે. કૃપા કરીને લો અથવા સ્નૂઝ કરો.",
+    enableLiveReminders: "લાઈવ રિમાઇન્ડર શરૂ કરો",
+    liveRemindersActive: "લાઈવ રિમાઇન્ડર સક્રિય છે",
+    doseOverdue: "સમય વીતી ગયો",
+    testReminder: "ટેસ્ટ રિમાઇન્ડર",
+    reminderSent: "રિમાઇન્ડર મોકલી દેવાયું!",
 
     // AI Health Guardian
     aiGuardianTitle: "AI હેલ્થ ગાર્ડિયન અને સુરક્ષા ચેતવણીઓ",
@@ -1519,6 +1575,13 @@ const rawTranslations = {
     activeCourses: "ਸਰਗਰਮ ਖੁਰਾਕਾਂ",
     stoppedCourses: "ਬੰਦ ਕੀਤੇ ਕੋਰਸ",
     allCourses: "ਸਾਰੀਆਂ ਦਵਾਈਆਂ",
+    overdueAlertTitle: "ਦਵਾਈ ਦਾ ਸਮਾਂ ਲੰਘ ਚੁੱਕਾ ਹੈ (Overdue Alert)",
+    overdueAlertSub: "ਤੁਹਾਡੀ ਨਿਰਧਾਰਤ ਖੁਰਾਕ ਬਾਕੀ ਹੈ। ਕਿਰਪਾ ਕਰਕੇ ਲਓ ਜਾਂ ਸਨੂਜ਼ ਕਰੋ।",
+    enableLiveReminders: "ਲਾਈਵ ਰੀਮਾਈਂਡਰ ਚਾਲੂ ਕਰੋ",
+    liveRemindersActive: "ਲਾਈਵ ਰੀਮਾਈਂਡਰ ਸਰਗਰਮ ਹੈ",
+    doseOverdue: "ਸਮਾਂ ਲੰਘਿਆ",
+    testReminder: "ਟੈਸਟ ਰੀਮਾਈਂਡਰ",
+    reminderSent: "ਰੀਮਾਈਂਡਰ ਭੇਜ ਦਿੱਤਾ ਗਿਆ!",
 
     // AI Health Guardian
     aiGuardianTitle: "AI ਸਿਹਤ ਗਾਰਡੀਅਨ ਤੇ ਸੁਰੱਖਿਆ ਚੇਤਾਵਨੀਆਂ",
@@ -1694,6 +1757,13 @@ const rawTranslations = {
     activeCourses: "ಸಕ್ರಿಯ ಡೋಸ್‌ಗಳು",
     stoppedCourses: "ನಿಲ್ಲಿಸಿದ ಕೋರ್ಸ್‌ಗಳು",
     allCourses: "ಎಲ್ಲಾ ಔಷಧಗಳು",
+    overdueAlertTitle: "ಔಷಧಿಯ ಸಮಯ ಮೀರಿದೆ (Overdue Alert)",
+    overdueAlertSub: "ನಿಮ್ಮ ನಿಗದಿತ ಡೋಸ್ ಬಾಕಿ ಇದೆ. ದಯವಿಟ್ಟು ತೆಗೆದುಕೊಳ್ಳಿ ಅಥವಾ ಸ್ನೂಜ್ ಮಾಡಿ.",
+    enableLiveReminders: "ಲೈವ್ ಜ್ಞಾಪನೆಗಳನ್ನು ಸಕ್ರಿಯಗೊಳಿಸಿ",
+    liveRemindersActive: "ಲೈವ್ ಜ್ಞಾಪನೆಗಳು ಸಕ್ರಿಯವಾಗಿವೆ",
+    doseOverdue: "ಸಮಯ ಮೀರಿದೆ",
+    testReminder: "ಪರೀಕ್ಷಾ ಜ್ಞಾಪನೆ",
+    reminderSent: "ಜ್ಞಾಪನೆ ಕಳುಹಿಸಲಾಗಿದೆ!",
 
     // AI Health Guardian
     aiGuardianTitle: "AI ಆರೋಗ್ಯ ರಕ್ಷಕ ಮತ್ತು ಸುರಕ್ಷತಾ ಎಚ್ಚರಿಕೆಗಳು",

@@ -18,6 +18,14 @@ import {
 import { analyzeMedicationList, checkPairInteraction } from "../data/drugInteractions";
 import { translations } from "../data/translations";
 import { translateMedicalTerm } from "../utils/translator";
+import { 
+  getMedicationDueStatus, 
+  getOverdueAndDueMedications, 
+  getNotificationPermission, 
+  requestNotificationPermission, 
+  sendDesktopNotification,
+  scheduleSnoozeNotification 
+} from "../utils/reminderService";
 
 export default function MedicineTracker({ 
   patient, 
@@ -33,6 +41,7 @@ export default function MedicineTracker({
   const [testMedName, setTestMedName] = useState("");
   const [testResult, setTestResult] = useState(null);
   const [showAddForm, setShowAddForm] = useState(false);
+  const [notifPermission, setNotifPermission] = useState(() => getNotificationPermission());
 
   // New med form state
   const [newMedName, setNewMedName] = useState("");
@@ -42,6 +51,17 @@ export default function MedicineTracker({
 
   const medsList = patient?.todayMedications || [];
   const activeAlerts = analyzeMedicationList(medsList, lang);
+  const overdueMeds = getOverdueAndDueMedications(medsList);
+
+  const handleToggleNotifications = async () => {
+    const granted = await requestNotificationPermission();
+    setNotifPermission(granted ? "granted" : "denied");
+    if (granted) {
+      sendDesktopNotification("PulseAI Health Reminders 🔔", {
+        body: "Live reminders activated! You will receive timely alerts for your scheduled medications."
+      });
+    }
+  };
 
   const handleTestInteraction = (e) => {
     e.preventDefault();
@@ -106,13 +126,33 @@ export default function MedicineTracker({
             </p>
           </div>
 
-          <button
-            onClick={() => setShowAddForm(!showAddForm)}
-            className="btn btn-primary"
-          >
-            <Plus size={16} />
-            <span>{showAddForm ? translateMedicalTerm("Close Form", lang) : translateMedicalTerm("Add Medication", lang)}</span>
-          </button>
+          <div style={{ display: "flex", gap: "10px", alignItems: "center", flexWrap: "wrap" }}>
+            <button
+              type="button"
+              onClick={handleToggleNotifications}
+              className="btn btn-secondary"
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "6px",
+                background: notifPermission === "granted" ? "rgba(16, 185, 129, 0.16)" : "var(--bg-elevated)",
+                color: notifPermission === "granted" ? "var(--secondary)" : "var(--text-main)",
+                border: notifPermission === "granted" ? "1px solid var(--secondary-border)" : "1px solid var(--border-color)",
+                fontWeight: 700
+              }}
+            >
+              <BellRing size={15} />
+              <span>{notifPermission === "granted" ? (t.liveRemindersActive || "Live Reminders Active") : (t.enableLiveReminders || "Enable Reminders")}</span>
+            </button>
+
+            <button
+              onClick={() => setShowAddForm(!showAddForm)}
+              className="btn btn-primary"
+            >
+              <Plus size={16} />
+              <span>{showAddForm ? translateMedicalTerm("Close Form", lang) : translateMedicalTerm("Add Medication", lang)}</span>
+            </button>
+          </div>
         </div>
       </div>
 
@@ -265,6 +305,68 @@ export default function MedicineTracker({
               {t.tapCheckboxTaken || "Tap checkbox to record when taken"}
             </div>
           </div>
+
+          {/* Overdue Medication Reminder Alert */}
+          {overdueMeds.length > 0 && (
+            <div style={{
+              background: "linear-gradient(135deg, rgba(245, 158, 11, 0.16), rgba(239, 68, 68, 0.12))",
+              border: "1.5px solid rgba(245, 158, 11, 0.55)",
+              borderRadius: "14px",
+              padding: "16px 20px",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              gap: "14px",
+              flexWrap: "wrap",
+              boxShadow: "0 4px 16px rgba(245, 158, 11, 0.15)"
+            }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                <div style={{
+                  width: "36px",
+                  height: "36px",
+                  borderRadius: "10px",
+                  background: "linear-gradient(135deg, #f59e0b, #d97706)",
+                  color: "#ffffff",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  flexShrink: 0
+                }}>
+                  <BellRing size={20} />
+                </div>
+                <div>
+                  <div style={{ fontWeight: 800, fontSize: "0.98rem", color: "var(--text-highlight)" }}>
+                    {t.overdueAlertTitle || "Overdue Medication Reminder"} ({overdueMeds.length})
+                  </div>
+                  <div style={{ fontSize: "0.82rem", color: "var(--text-muted)", marginTop: "2px" }}>
+                    {t.overdueAlertSub || "Scheduled dose pending. Please take with food or snooze."}
+                  </div>
+                </div>
+              </div>
+
+              <div style={{ display: "flex", gap: "8px", alignItems: "center", flexWrap: "wrap" }}>
+                {overdueMeds.map(m => (
+                  <span
+                    key={m.id}
+                    style={{
+                      fontSize: "0.78rem",
+                      fontWeight: 700,
+                      padding: "4px 10px",
+                      borderRadius: "6px",
+                      background: "var(--bg-card)",
+                      border: "1px solid rgba(245, 158, 11, 0.4)",
+                      color: "var(--text-highlight)",
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: "5px"
+                    }}
+                  >
+                    💊 {m.name} ({m.dosage}) • {getMedicationDueStatus(m).label}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
 
           {["morning", "afternoon", "night"].map((slotName) => {
             const rawSlotMeds = patient.todayMedications.filter(m => m.slot === slotName);
@@ -495,7 +597,10 @@ export default function MedicineTracker({
                                   type="button"
                                   onClick={(e) => {
                                     e.stopPropagation();
-                                    if (onSnoozeMedication) onSnoozeMedication(med.id, 15);
+                                    if (onSnoozeMedication) {
+                                      onSnoozeMedication(med.id, 15);
+                                      scheduleSnoozeNotification(med, 15);
+                                    }
                                   }}
                                   title="Delay dose reminder by 15 minutes"
                                   style={{
@@ -520,7 +625,10 @@ export default function MedicineTracker({
                                   type="button"
                                   onClick={(e) => {
                                     e.stopPropagation();
-                                    if (onSnoozeMedication) onSnoozeMedication(med.id, 60);
+                                    if (onSnoozeMedication) {
+                                      onSnoozeMedication(med.id, 60);
+                                      scheduleSnoozeNotification(med, 60);
+                                    }
                                   }}
                                   title="Delay dose reminder by 1 hour"
                                   style={{

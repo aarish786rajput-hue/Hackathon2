@@ -18,7 +18,8 @@ import {
   Plus,
   Volume2,
   VolumeX,
-  Square
+  Square,
+  Key
 } from "lucide-react";
 import { sendChatMessage, getStoredApiKey } from "../services/geminiService";
 
@@ -55,7 +56,7 @@ export default function FloatingCopilot({
   lang = "en", 
   onNavigate,
   _activeTab,
-  _onOpenApiKeyModal
+  onOpenApiKeyModal
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
@@ -883,6 +884,30 @@ export default function FloatingCopilot({
               >
                 <Maximize2 size={15} />
               </button>
+
+              {/* Gemini API Key Settings */}
+              {onOpenApiKeyModal && (
+                <button
+                  type="button"
+                  onClick={onOpenApiKeyModal}
+                  title="Google Gemini API Key Settings (एआई की सेटिंग्स)"
+                  style={{
+                    background: "rgba(255, 255, 255, 0.22)",
+                    border: "none",
+                    borderRadius: "8px",
+                    width: "30px",
+                    height: "30px",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    color: "#ffffff",
+                    cursor: "pointer",
+                    transition: "background 0.2s"
+                  }}
+                >
+                  <Key size={15} />
+                </button>
+              )}
 
               {/* Minimize / Close */}
               <button

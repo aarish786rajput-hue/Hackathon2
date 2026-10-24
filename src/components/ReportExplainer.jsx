@@ -19,7 +19,8 @@ import {
   RotateCcw,
   Pill,
   Stethoscope,
-  PlusCircle
+  PlusCircle,
+  Key
 } from "lucide-react";
 import { generatePatientReports, sampleReports } from "../data/sampleReports";
 import { analyzeReportFile } from "../services/geminiService";
@@ -34,7 +35,8 @@ export default function ReportExplainer({
   onUpdateVitals,
   onAddTimelineEvent,
   onAddMedication,
-  onUpdatePatient
+  onUpdatePatient,
+  onOpenApiKeyModal
 }) {
   const t = translations[lang] || translations.en;
   // User uploaded reports from storage
@@ -433,6 +435,33 @@ export default function ReportExplainer({
           </div>
 
           <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
+            {onOpenApiKeyModal && (
+              <button
+                type="button"
+                onClick={onOpenApiKeyModal}
+                className="btn btn-secondary"
+                style={{
+                  height: "44px",
+                  padding: "0 16px",
+                  fontSize: "0.88rem",
+                  fontWeight: 600,
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "7px",
+                  borderRadius: "12px",
+                  border: "1.5px solid var(--primary-border)",
+                  background: "var(--primary-soft)",
+                  color: "var(--primary)",
+                  cursor: "pointer",
+                  transition: "all 0.2s ease"
+                }}
+                title={lang === "hi" ? "Google Gemini API Key सेटिंग्स खोलें" : "Configure Gemini API Key"}
+              >
+                <Key size={17} color="var(--primary)" />
+                <span>{lang === "hi" ? "Gemini Key" : "Gemini Key"}</span>
+              </button>
+            )}
+
             <button
               type="button"
               onClick={() => cameraInputRef.current?.click()}

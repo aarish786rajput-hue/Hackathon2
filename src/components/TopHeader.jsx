@@ -16,7 +16,8 @@ import {
   Activity,
   Pill,
   User,
-  Menu
+  Menu,
+  Key
 } from "lucide-react";
 import { translations } from "../data/translations";
 import { triggerGoogleTranslate } from "../utils/translator";
@@ -122,7 +123,7 @@ export default function TopHeader({
   theme,
   setTheme,
   onNavigate,
-  _onOpenApiKeyModal
+  onOpenApiKeyModal
 }) {
   const t = translations[lang] || translations.en;
   const [searchQuery, setSearchQuery] = useState("");
@@ -505,6 +506,24 @@ export default function TopHeader({
             aria-label="Toggle theme"
           >
             {theme === "dark" ? <Sun size={17} color="#fbbf24" /> : <Moon size={17} color="#0284c7" />}
+          </button>
+        )}
+
+        {/* Gemini AI Key Configuration Button */}
+        {onOpenApiKeyModal && (
+          <button
+            type="button"
+            onClick={onOpenApiKeyModal}
+            className="header-icon-btn"
+            title="Google Gemini API Key (एआई की सेटिंग्स)"
+            aria-label="Gemini API Key Settings"
+            style={{
+              color: "var(--primary)",
+              borderColor: "var(--primary-border)",
+              background: "var(--primary-soft)"
+            }}
+          >
+            <Key size={17} />
           </button>
         )}
 

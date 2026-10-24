@@ -390,6 +390,7 @@ export default function App() {
                 onAddTimelineEvent={handleAddTimelineEvent}
                 onAddMedication={handleAddMedication}
                 onUpdatePatient={updateCurrentPatient}
+                onOpenApiKeyModal={() => setIsApiKeyModalOpen(true)}
               />
             )}
             {activeTab === 'discharge' && (
